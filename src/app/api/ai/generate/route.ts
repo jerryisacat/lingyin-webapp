@@ -1,0 +1,80 @@
+import { getUser, jsonError } from "@/lib/api-helpers";
+import { checkApiKey } from "@/lib/api-key-guard";
+import { generateDiary } from "@/lib/diary";
+import type { ApiProvider, Tone } from "@/types";
+import { NextRequest } from "next/server";
+
+export async function POST(request: NextRequest) {
+  const user = await getUser();
+  if (!user) return jsonError("Unauthorized", 401);
+
+  const apiKey = checkApiKey(request);
+  if (typeof apiKey !== "string") return apiKey;
+
+  let body: {
+    text?: string;
+    images?: { url: string; path: string; type: string; mime: string; size: number }[];
+    tone?: Tone;
+    date?: string;
+    provider?: ApiProvider;
+  };
+  try {
+    body = await request.json();
+  } catch {
+    return jsonError("Invalid JSON body");
+  }
+
+  const {
+    text = "",
+    images = [],
+    tone = "warm",
+    date = new Date().toISOString().slice(0, 10),
+    provider = "openai",
+  } = body;
+
+  const generator = generateDiary({
+    text,
+    images: images.map((img) => ({
+      url: img.url,
+      path: img.path,
+      type: img.type as "image",
+      mime: img.mime,
+      size: img.size,
+    })),
+    tone,
+    date,
+    apiKey,
+    provider,
+  });
+
+  const encoder = new TextEncoder();
+
+  const stream = new ReadableStream({
+    async start(controller) {
+      try {
+        for await (const chunk of generator) {
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ content: chunk })}\n\n`)
+          );
+        }
+        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Generation failed";
+        controller.enqueue(
+          encoder.encode(`data: ${JSON.stringify({ error: message })}\n\n`)
+        );
+      } finally {
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    },
+  });
+}

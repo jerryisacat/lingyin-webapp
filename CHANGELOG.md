@@ -2,7 +2,32 @@
 
 ---
 
-## 2026-05-20 (Stage 3)
+## 2026-05-20 (Stage 3+4)
+
+### Stage 4 Bugfixes (代码审计修复)
+- **修复 1** `PUT /api/entries/[id]` 忽略 URL id 参数 — 改为先用 `params.id` + `getEntry()` 查原条目（含所有权校验），再用原条目的 date 调用 `saveDiary()`，body 不再接受 date 字段
+- **修复 2** `POST /api/upload` `image/jpeg` 扩展名映射错误 — MIME type → 扩展名改用显式映射表 `{ "image/jpeg": "jpg", ... }`，`ALLOWED_TYPES` 直接从映射表 keys 派生
+- **因果链**：Stage 4 代码审计发现 2 个 critical bug → 按建议修复
+- **受影响文件**：`src/app/api/entries/[id]/route.ts`、`src/app/api/upload/route.ts`
+
+### Stage 4: API Routes 完成
+- **内容**：实现全部 6 个 API Route Handler，覆盖日记 CRUD、AI 生成/重写、图片上传、用户配置
+- **因果链**：Stage 3 (Backend Services) 完成后 → 按 AGENTS.md Stage 4 清单逐项实施
+- **新建文件**：
+  - `src/lib/api-helpers.ts` — 共享工具：`getUser()` (从 Supabase session 获取当前用户)、`jsonOk()` / `jsonError()` (统一 ApiResponse 格式)
+  - `src/app/api/ai/generate/route.ts` — `POST` SSE 流式日记生成。验证 Session + API Key → 调用 `generateDiary()` → ReadableStream 输出 SSE (`text/event-stream`)
+  - `src/app/api/ai/rewrite/route.ts` — `POST` 润色/重写日记。接收 `content` + `instruction` → 调用 `generateStream()` 流式返回润色结果
+  - `src/app/api/entries/route.ts` — `GET` cursor 分页列表（`getEntries()`）+ `POST` 保存日记（`saveDiary()` upsert）
+  - `src/app/api/entries/[id]/route.ts` — `GET` 单篇（含 R2 markdown 读取）+ `PUT` 更新 + `DELETE` 删除（R2 + DB 双删）
+  - `src/app/api/upload/route.ts` — `POST` multipart/form-data 图片上传。校验类型 (JPG/PNG/WebP) + 大小 (<10MB) → R2 上传 → 返回 MediaFile
+  - `src/app/api/user/config/route.ts` — `GET` 读取 User.tone 偏好 + `PUT` 更新 tone。API Key 绝不落库
+- **技术细节**：
+  - 所有 AI 路由接受 `provider` 参数（openai/deepseek/gemini），前端从 localStorage 读取后传入
+  - SSE 流格式：`data: {"content":"..."}\n\n` ... `data: [DONE]\n\n`，错误用 `data: {"error":"..."}\n\n`
+  - 分页使用 cursor-based（基于 Entry.id），返回 `{ entries, nextCursor }`
+  - 上传生成文件名 `IMG_{timestamp}_{random}.{ext}` 避免冲突
+  - API Key 通过 `X-API-Key` header 传入，server 不记录日志
+- **验证**：`npx tsc --noEmit` 零错误
 
 ### Stage 3: Backend Services 完成
 - **内容**：实现全部 lib/ 服务层 — R2 文件存储、LLM 客户端（流式 + 视觉）、API Key 守卫、日记编排引擎
