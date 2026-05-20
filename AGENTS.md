@@ -103,6 +103,36 @@ public/              — PWA icons, manifest.json, sw.js
 - R2 storage paths: `{bucket}/users/{userId}/entries/{YYYY}/{MM}/{YYYY-MM-DD}.md`
 - **Every change MUST be logged in `CHANGELOG.md`** — record: date, what changed, and the causal chain (why this change happened, what decision or discussion triggered it). If a change reverts or refines a prior change, link back to the original entry.
 
+## AI Agent workflow rules
+
+### 开发前：检索已有知识
+在开始任何开发工作前，使用 `brv search <关键词>` 检索 `.brv/context-tree/` 中已有的项目知识，理解现有的架构决策和模式。
+如果返回空结果，说明当前模块还未建立知识树，直接开始即可。
+
+### 开发后（git commit 之前）：整理记忆
+每次代码修改完成后按以下顺序操作：
+
+1. **更新 `CHANGELOG.md`** — 记录日期、变更内容、触发原因
+2. **整理 ByteRover 知识树** — 使用 `brv curate` 将新的模式、决策和架构变更保存到知识树
+
+   ```bash
+   # 好例子：包含实现路径和文件引用
+   brv curate "Auth uses Supabase Magic Link with @supabase/ssr cookie middleware" -f src/lib/auth.ts
+
+   # 批量分析整个模块
+   brv curate --folder src/lib/
+   ```
+   > **curate 写作规范：** 要写"Auth uses Supabase Magic Link with @supabase/ssr cookie middleware — src/lib/auth.ts"，不要只写"改了认证"这种模糊描述。好的 curate 包含：具体做了什么、实现路径、关联文件。
+
+3. **提交知识树变更** — 在 `.brv/context-tree/` 的 git 中记录版本
+   ```bash
+   git -C .brv/context-tree add -A
+   git -C .brv/context-tree commit -m "描述本次知识变更"
+   ```
+4. **最后才做正常的 `git add`、`git commit`、`git push`**
+
+> **注意：** `brv search` 是本地检索命令（离线可用，无需账号）。`brv query` 需要云账号登录且超时严重，慎用。
+
 ## Development milestones (Phase 1 MVP)
 
 Below are self-contained stages designed for vibe coding with AI. Each stage fits within ~120K effective context. Stages are ordered by dependency — do NOT skip or reorder.
@@ -118,8 +148,8 @@ Below are self-contained stages designed for vibe coding with AI. Each stage fit
 | **Goal** | Working Next.js dev server with Prisma, Tailwind, and Supabase Auth wiring |
 | **Estimated context** | ~30K tokens |
 | **Docs to load** | `docs/02-技术架构.md` §2.1, §7; `docs/05-数据模型.md` §1 (Prisma schema); `.env.example` |
-| **Files to create** | `package.json`, `tsconfig.json`, `next.config.ts`, `tailwind.config.ts`, `postcss.config.mjs`, `prisma/schema.prisma`, `src/types/index.ts`, `src/app/layout.tsx`, `src/app/page.tsx`, `src/app/globals.css`, `src/lib/db.ts`, `.gitignore` |
-| **■ Decision: Design tokens** | Before writing `tailwind.config.ts` and `globals.css`, ask: "Sakura pink #f0a8b0 and warm white #faf3e8 are the base palette. Do you have specific preferences for secondary colors, border radius, shadows, or the typography scale? Or should I derive them from the base palette?" |
+| **Files to create** | `package.json`, `tsconfig.json`, `next.config.mjs`, `tailwind.config.ts`, `postcss.config.mjs`, `prisma/schema.prisma`, `src/types/index.ts`, `src/app/layout.tsx`, `src/app/page.tsx`, `src/app/globals.css`, `src/lib/db.ts`, `.gitignore` |
+| **■ Decision: Design tokens** | 已选定 **现代优雅 (Modern Elegant)** 方案。详情见 `docs/03-Phase1-MVP说明.md` §3.1。 |
 
 **Verification checklist:**
 - [ ] `npm run dev` starts without errors
@@ -298,7 +328,7 @@ Below are self-contained stages designed for vibe coding with AI. Each stage fit
 | **Goal** | Installable PWA deployed on Vercel, responsive across devices |
 | **Estimated context** | ~40K tokens |
 | **Docs to load** | `docs/02-技术架构.md` §4 (PWA strategy), §7 (env vars); `docs/03-Phase1-MVP说明.md` §7 (deploy); `docs/06-用户体验与交互流程.md` §4 (PWA install flow) |
-| **Files to create** | `public/manifest.json`, `public/icons/icon-192.png`, `public/icons/icon-512.png`, `serwist.config.ts` (or `next.config.ts` Serwist integration), `src/app/sw.ts` (if Serwist needs), `vercel.json` |
+| **Files to create** | `public/manifest.json`, `public/icons/icon-192.png`, `public/icons/icon-512.png`, `serwist.config.ts` (or `next.config.mjs` Serwist integration), `src/app/sw.ts` (if Serwist needs), `vercel.json` |
 | **Files to modify** | `src/app/layout.tsx` (add `<link rel="manifest">` + meta tags), existing components (responsive pass) |
 
 **Context notes:**
@@ -337,4 +367,4 @@ Below are self-contained stages designed for vibe coding with AI. Each stage fit
 
 **Total: ~395K tokens across 8 stages, averaging ~50K per stage.**
 
-When starting a stage, tell the AI: "Work on Stage X of the roadmap in AGENTS.md. Load the referenced doc sections first, then ask me the tagged decision points (■) before writing code."
+When starting a stage, tell the AI: "Work on Stage X of the roadmap in AGENTS.md. Load the referenced doc sections first, ask me the tagged decision points (■) before writing code. Before writing any code, use `brv search` to understand existing code structure. After completing code changes, update CHANGELOG.md, curate with `brv curate`, commit `.brv/context-tree/` changes, then commit and push."

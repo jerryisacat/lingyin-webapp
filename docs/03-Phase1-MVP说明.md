@@ -125,12 +125,26 @@
 
 ## 3.  UI / UX 要点
 
-### 3.1 设计风格
+### 3.1 设计风格 — 现代优雅 (Modern Elegant) [2026-05-20 已选定]
 
-- **主色调:** 温柔樱花粉 (#f0a8b0) + 暖白 (#faf3e8)
-- **字体:** Noto Sans SC (Google Fonts)
-- **氛围:** 类似 Ghibli 的温暖手绘感，干净温柔
-- **图标:** Heroicons / Lucide 免费图标集
+- **色调配比与 Palette**:
+  - **主色/高亮/点缀 (Accent)**: 樱花粉 `#f0a8b0` (用于按钮激活、重点高亮、边框点缀)
+  - **基础背景 (Background)**: 温白 `#faf3e8` (全局背景，带来纸张般的舒适感)
+  - **辅助/功能色 (Secondary)**: 雾霾蓝/黛蓝 `#9caec1` 或 `#a1b5c1` (用于次要文字、辅助边框、未选中状态)
+  - **次要背景 (Surface)**: 质感暖灰 `#e2dedb` 略微加深的暗色，用于卡片、输入框背景 (如 `#f3ebe1`)
+  - **基础文字 (Text)**: 深炭黑/深褐 `#2c2c2c` (代替纯黑，阅读柔和，字重分明)
+- **圆角 (Border Radius)**: 标准偏小圆角，整体线条干净利落。
+  - 常规卡片/按钮: `rounded-lg` (8px)
+  - 小型标签/头像: `rounded-md` (6px)
+- **阴影与边框 (Shadow & Border)**: 极简干净，重边框轻阴影。
+  - 阴影: 基本使用 `shadow-none`，或极轻的环境阴影 `shadow-sm`。
+  - 边框: 使用 1px 的极细暖灰实体边框 (如 `border-[#e2dedb]` 或 `border-amber-100/50`) 进行区域划分，质感雅致。
+- **字体与排版 (Typography)**:
+  - 字体: Noto Sans SC (Google Fonts) 配合英文 Inter 或 system-ui。
+  - 排版: 粗细字重 (Font Weight: light, normal, medium, bold) 层级分明。
+  - 间距: 字间距略微收紧，日记详情页行高 `leading-relaxed` (1.75) 保证长文可读性。
+- **氛围**: 干净、极简、优雅的数字杂志/纸质本册质感，兼具现代效率美学与樱花粉的温馨点缀。
+- **图标**: Lucide 免费图标集 (保持细线条 1.5px 或 2px 描边)。
 
 ### 3.2 核心页面
 
