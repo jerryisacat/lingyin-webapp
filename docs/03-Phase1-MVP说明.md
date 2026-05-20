@@ -12,10 +12,10 @@
 
 | 模块 | 说明 | 验收标准 |
 |------|------|----------|
-| 用户注册/登录 | 邮箱注册，无密码验证码或 magic link | 用户可登录并创建自己的空间 |
+| 用户注册/登录 | 邮箱注册，Magic Link 登录 | 用户可登录并创建自己的空间 |
 | AI 写日记 | 用户写文字+传图片，AI 生成日记 | 1 次生成 < 5 秒（流式） |
 | Markdown 编辑器 | 显示 AI 结果，用户可手动修改 | 实时预览，基础 Markdown 工具栏 |
-| 日记保存 | AI 结果+图片存到服务器 | 刷新后数据不丢失 |
+| 日记保存 | AI 结果 Markdown 存 R2 + 元数据存 PostgreSQL | 刷新后数据不丢失 |
 | 时间线浏览 | 按日期倒序显示日记列表 | 可看到所有日记 |
 | 单篇查看 | 查看某篇日记的完整内容 | 图文混排展示 |
 | 图片上传 | 上传 JPG/PNG/WebP | 单图 < 10MB，支持预览 |
@@ -28,12 +28,13 @@
 | 功能 | 说明 |
 |------|------|
 | 视频上传 | Phase 2 |
-| S3 存储 | Phase 2 |
+| S3 用户外部备份 | Phase 2 |
 | 日历视图 | Phase 2 |
 | 多种语气 | Phase 2（Phase 1 固定「温暖知心姐姐」） |
 | 订阅支付 | Phase 3 |
 | 编辑已有日记 | Phase 2 |
 | 日记导出 | Phase 2 |
+| 前后端分离 | Phase 3+ |
 
 ### 1.3 用不用做的功能矩阵
 
@@ -80,9 +81,9 @@
        PWA 图标 (手机桌面)
            │
            ▼
-    日记列表 / 时间线
+     日记列表 / 时间线
            │
-    点击「写日记」
+     点击「写日记」
            │
            ▼
 ┌────────────────────────────┐
@@ -101,7 +102,7 @@
 │ AI 流式输出...               │
 │ "今天你来到了..."            │
 │
-│ (打typerwriter效果)         │
+│ (打字机效果)                 │
 └────────────┬───────────────┘
              ▼
 ┌────────────────────────────┐
@@ -115,7 +116,7 @@
 │ [保存] [重新生成]           │
 └────────────┬───────────────┘
              ▼
-       保存成功 ✓
+        保存成功 ✓
        → 跳转到日记详情
        → 回到时间线
 ```
@@ -135,7 +136,7 @@
 
 | 页面 | 功能 | 交互要点 |
 |------|------|----------|
-| **首页** | 今日日记/快速写入 | 打开即写，</p><p>at=blank | 引导用户开始 |
+| **首页** | 今日日记/快速写入 | 打开即写，引导用户开始 |
 | **时间线** | 日记列表，按日期分组 | 无限滚动加载 |
 | **写日记** | AI 编辑器 | 流式输出效果，打字机动画 |
 | **日记详情** | 查看完整内容 | Markdown 渲染 + 图片灯箱 |
@@ -222,13 +223,13 @@ const TONES = {
 | 5 | AI 生成 API (SSE) | LLM 调用 + 流式返回 | 1.5d |
 | 6 | 写日记页面 | 编辑器 + AI 输出 + 图片上传 | 2d |
 | 7 | Markdown 渲染 | react-markdown + 图片展示 | 1d |
-| 8 | 日记保存 API | 保存 Markdown + 图片到文件系统 | 1d |
+| 8 | 日记保存 API | 保存 Markdown 到 R2 + 元数据到 PostgreSQL | 1d |
 | 9 | 时间线页面 | 日记列表 + 分页 | 1d |
 | 10 | 日记详情页 | 展示完整日记 | 0.5d |
 | 11 | 响应式适配 | 手机/平板/PC | 1d |
-| 12 | 部署 | Docker + VPS + Caddy SSL | 1d |
+| 12 | 部署 | Vercel + Supabase Integration + R2 配置 | 0.5d |
 
-**总预估: ~11 天**（单人全栈开发）
+**总预估: ~10.5 天**（单人全栈开发）
 
 ---
 
@@ -278,27 +279,43 @@ const visionMessages = [
 
 ### 7.1 Phase 1 部署
 
-```yaml
-# docker-compose.yml (Phase 1)
-version: "3.8"
-services:
-  app:
-    build: .
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./data:/app/data  # 日记文件存储
-      - ./prisma:/app/prisma
-    env_file:
-      - .env.production
-    restart: unless-stopped
+**Vercel + Supabase Integration + CloudFlare R2**。流程：
+
+1. 创建 Supabase 项目，获取数据库连接串和项目密钥
+2. 创建 CloudFlare R2 Bucket，生成 API Token
+3. Vercel import GitHub 仓库，配置所有环境变量
+4. 在 Vercel Dashboard 安装 Supabase Integration 自动同步 Supabase 变量
+5. Push → Vercel 自动构建部署
+6. 配置自定义域名，Vercel 自动 SSL
+
+Vercel Hobby Plan 免费（100GB 带宽/月），Supabase 免费层（500MB DB），R2 免费层（10GB 存储 + 无出站费），Phase 1 零成本。
+
+### 7.2 环境变量
+
+```bash
+# .env.local (开发)
+
+# Supabase
+DATABASE_URL="postgresql://postgres:xxx@db.xxx.supabase.co:5432/postgres"
+SUPABASE_URL="https://xxx.supabase.co"
+SUPABASE_ANON_KEY="eyJ..."
+SUPABASE_SERVICE_ROLE_KEY="eyJ..."
+NEXT_PUBLIC_SUPABASE_URL="https://xxx.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJ..."
+
+# CloudFlare R2
+R2_ACCESS_KEY_ID="xxx"
+R2_SECRET_ACCESS_KEY="xxx"
+R2_ENDPOINT="https://<account-id>.r2.cloudflarestorage.com"
+R2_BUCKET="lingyin-diary"
+R2_PUBLIC_URL="https://pub-xxx.r2.dev"
 ```
 
-### 7.2 环境和域名
+### 7.3 域名
 
 | 项目 | 配置 |
 |------|------|
-| **服务器** | Linode $5-10/mo (2GB RAM) |
-| **域名** | 待定 (建议 lingyin.app 或类似) |
-| **反向代理** | Caddy (自动 Let's Encrypt SSL) |
-| **数据库** | SQLite (文件数据库，初期够用) |
+| **域名** | 待定 (建议 lingyin.app) |
+| **SSL** | Vercel 自动 |
+| **数据库** | Supabase PostgreSQL (云端托管) |
+| **文件存储** | CloudFlare R2 |
