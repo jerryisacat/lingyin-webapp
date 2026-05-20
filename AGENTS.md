@@ -3,7 +3,7 @@
 ## Project summary
 AI-powered diary PWA. Users submit text + images, AI generates a polished Markdown diary entry. Phase 1: user brings their own LLM API key; later phases add subscription billing.
 
-**Status: pre-code (design docs only). No source exists yet.**
+**Status: Stage 6 complete (Stages 1–6 done). Stages 7–8 pending.**
 
 ## Tech stack
 - **Framework:** Next.js 14+ (App Router), TypeScript, Tailwind CSS
@@ -152,14 +152,14 @@ Below are self-contained stages designed for vibe coding with AI. Each stage fit
 | **■ Decision: Design tokens** | 已选定 **现代优雅 (Modern Elegant)** 方案。详情见 `docs/03-Phase1-MVP说明.md` §3.1。 |
 
 **Verification checklist:**
-- [ ] `npm run dev` starts without errors
-- [ ] `npx prisma db push` creates tables in Supabase
-- [ ] `http://localhost:3000` renders a styled page
-- [ ] TypeScript compiles clean
+- [x] `npm run dev` starts without errors
+- [x] `npx prisma db push` creates tables in Supabase
+- [x] `http://localhost:3000` renders a styled page
+- [x] TypeScript compiles clean
 
 ---
 
-### Stage 2 — Auth System
+### Stage 2 — Auth System ✅ Complete
 
 | | |
 |---|---|
@@ -175,15 +175,15 @@ Below are self-contained stages designed for vibe coding with AI. Each stage fit
 - RLS policies are manual (run in Supabase SQL Editor). Apply policies for `User` and `Entry` tables now.
 
 **Verification checklist:**
-- [ ] Visiting `/` redirects unauthenticated user to `/login`
-- [ ] Magic Link sends and callback sets session
-- [ ] After login, redirects to `/` and middleware no longer redirects
-- [ ] `User` row appears in database after first login (verify trigger works)
-- [ ] `DELETE`, `INSERT` on other user's rows blocked by RLS
+- [x] Visiting `/` redirects unauthenticated user to `/login`
+- [x] Magic Link sends and callback sets session
+- [x] After login, redirects to `/` and middleware no longer redirects
+- [x] `User` row appears in database after first login (verify trigger works)
+- [x] `DELETE`, `INSERT` on other user's rows blocked by RLS
 
 ---
 
-### Stage 3 — Backend Services
+### Stage 3 — Backend Services ✅ Complete
 
 | | |
 |---|---|
@@ -202,15 +202,15 @@ Below are self-contained stages designed for vibe coding with AI. Each stage fit
 - **CRITICAL:** LLM API Key from `X-API-Key` header. Server MUST NOT log/store it. Only forward to LLM API.
 
 **Verification checklist:**
-- [ ] `storage.saveMarkdown()` writes to R2, `readMarkdown()` reads it back
-- [ ] `storage.uploadImage()` uploads and returns public URL
-- [ ] `aiClient.generate()` streams tokens (test with `curl -N`)
-- [ ] `diary.generateAndSave()` completes the full pipeline with mock data
-- [ ] No API key logged in server console
+- [x] `storage.saveMarkdown()` writes to R2, `readMarkdown()` reads it back
+- [x] `storage.uploadImage()` uploads and returns public URL
+- [x] `aiClient.generate()` streams tokens (test with `curl -N`)
+- [x] `diary.generateAndSave()` completes the full pipeline with mock data
+- [x] No API key logged in server console
 
 ---
 
-### Stage 4 — API Routes
+### Stage 4 — API Routes ✅ Complete
 
 | | |
 |---|---|
@@ -228,16 +228,16 @@ Below are self-contained stages designed for vibe coding with AI. Each stage fit
 - `/api/user/config`: GET/PUT. Store `tone` preference in User row. API key is NEVER stored server-side.
 
 **Verification checklist:**
-- [ ] `POST /api/ai/generate` returns SSE stream (test with `curl -N`)
-- [ ] `POST /api/upload` returns URL after uploading to R2
-- [ ] `GET /api/entries` returns paginated list from DB (no R2 reads)
-- [ ] `GET /api/entries/[id]` returns full markdown from R2
-- [ ] Unauthenticated requests return 401
-- [ ] `/api/ai/*` without `X-API-Key` returns 401
+- [x] `POST /api/ai/generate` returns SSE stream (test with `curl -N`)
+- [x] `POST /api/upload` returns URL after uploading to R2
+- [x] `GET /api/entries` returns paginated list from DB (no R2 reads)
+- [x] `GET /api/entries/[id]` returns full markdown from R2
+- [x] Unauthenticated requests return 401
+- [x] `/api/ai/*` without `X-API-Key` returns 401
 
 ---
 
-### Stage 5 — App Shell + Settings Page
+### Stage 5 — App Shell + Settings Page ✅ Complete
 
 | | |
 |---|---|
@@ -252,18 +252,18 @@ Below are self-contained stages designed for vibe coding with AI. Each stage fit
 - Settings page: radio buttons for provider (OpenAI / DeepSeek / Gemini), password-style API Key input, "Test Connection" button
 - `useLocalApiKey` hook: `{ provider, apiKey, setProvider, setApiKey, clearApiKey }`. Reads/writes `localStorage`. Exposes `isConfigured: boolean`.
 - API Key guard: if `isConfigured === false`, redirect from `/diary` to `/settings` with a toast.
-- **■ Decision: Home page behavior** — Ask: "When an authenticated user visits `/`, should they see a landing/splash with today's diary preview, or redirect straight to `/diary`?" If deferred, redirect to `/diary`.
+- **■ Decision: Home page behavior** — 用户选择 **Landing with diary preview** 模式。Stage 5 先做欢迎语 + CTA + 小贴士风格，Stage 6-7 再接入真实日记预览数据
 
 **Verification checklist:**
-- [ ] Mobile tab bar shows 3 tabs and highlights active tab
-- [ ] Settings page saves provider + API Key to localStorage
-- [ ] "Test Connection" calls a minimal LLM API and shows success/failure toast
-- [ ] Visiting `/diary` without API Key redirects to `/settings`
-- [ ] Login flow leads to correct destination (landing or /diary based on decision)
+- [x] Mobile tab bar shows 3 tabs and highlights active tab
+- [x] Settings page saves provider + API Key to localStorage
+- [x] "Test Connection" calls a minimal LLM API and shows success/failure toast
+- [x] Visiting `/diary` without API Key redirects to `/settings`
+- [x] Login flow leads to correct destination (landing or /diary based on decision)
 
 ---
 
-### Stage 6 — Diary Editor (core feature)
+### Stage 6 — Diary Editor (core feature) ✅ Complete
 
 | | |
 |---|---|
@@ -278,17 +278,17 @@ Below are self-contained stages designed for vibe coding with AI. Each stage fit
 - `TypewriterText`: renders text character-by-character with cursor animation. Performance: use `requestAnimationFrame` or a debounced interval.
 - `PhotoUploader`: 9-slot grid, drag-to-reorder, click-to-delete. Upload images immediately on selection (show progress bar per slot), store returned URLs. Pass image URLs (not files) to generate API.
 - `MarkdownEditor` / preview: use a split-pane or toggle between raw textarea and `react-markdown` preview. Basic toolbar: bold, italic, heading (use `@uiw/react-md-editor` or simple custom controls).
-- **■ Decision: Editor layout** — Ask: "For the editing view when AI output is ready — do you prefer (A) a single Markdown textarea with live preview toggle, or (B) a side-by-side split pane (left=edit, right=preview)?" If deferred, pick (A) for mobile-friendliness.
-- **■ Decision: Save UX** — Ask: "After the user saves a diary entry, should they be (A) redirected to the diary detail view, or (B) shown a success toast and stay on the editor page?" If deferred, pick (A) redirect to detail.
+- **■ Decision: Editor layout** — 用户选择 **(A) single textarea + toggle**，移动端优先
+- **■ Decision: Save UX** — 用户选择 **(A) redirect to detail**，保存后跳转 `/diary/{date}`
 
 **Verification checklist:**
-- [ ] User can type text + upload images, click "✨ 让铃英帮你写" 
-- [ ] SSE streaming shows typewriter animation in real-time
-- [ ] "Stop" button interrupts generation
-- [ ] User can edit generated Markdown before saving
-- [ ] "Save" persists markdown to R2 + metadata to DB
-- [ ] "Regenerate" clears output and re-calls the API
-- [ ] Error states handled: network error, API Key invalid, LLM timeout
+- [x] User can type text + upload images, click "✨ 让铃英帮你写" 
+- [x] SSE streaming shows typewriter animation in real-time
+- [x] "Stop" button interrupts generation
+- [x] User can edit generated Markdown before saving
+- [x] "Save" persists markdown to R2 + metadata to DB
+- [x] "Regenerate" clears output and re-calls the API
+- [x] Error states handled: network error, API Key invalid, LLM timeout
 
 ---
 

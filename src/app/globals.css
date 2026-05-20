@@ -50,4 +50,8 @@
   .card {
     @apply bg-surface border border-surface-border rounded-lg p-6 shadow-soft;
   }
+
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }

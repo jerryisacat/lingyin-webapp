@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Sans_SC } from "next/font/google";
+import AppShell from "@/components/AppShell";
 import "./globals.css";
 
 const notoSansSC = Noto_Sans_SC({
@@ -31,7 +32,7 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" className={notoSansSC.variable}>
       <body className="min-h-screen bg-warm-white text-ink font-sans">
-        <main className="mx-auto max-w-2xl px-4 py-6">{children}</main>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

@@ -2,6 +2,31 @@
 
 ---
 
+## 2026-05-21 (Stage 6 — Diary Editor)
+
+### Stage 6: Diary Editor 核心功能
+- **内容**：实现完整日记写作流程——输入 → AI 流式生成（打字机动画）→ Markdown 编辑（预览切换）→ 保存。含图片上传（9 宫格）、SSE 流式 Hook、错误处理。
+- **因果链**：Stage 5 (App Shell + Settings) 完成后 → 按 AGENTS.md Stage 6 清单实施。用户选择 (A) 单栏 textarea + 预览切换（移动端友好）、(A) 保存后跳转日记详情页。
+- **新建文件**：
+  - `src/hooks/useStreamGenerate.ts` — SSE 流式生成 Hook。封装 fetch + ReadableStream 读取，支持 AbortController 停止，累积 tokens 返回 `{ text, isStreaming, error, generate, stop, reset }`
+  - `src/components/TypewriterText.tsx` — 打字机动画组件。使用 `requestAnimationFrame` 逐字渲染，流式中显示闪烁光标
+  - `src/components/PhotoUploader.tsx` — 图片上传 9 宫格组件。拖拽排序、即时上传（调用 `/api/upload`）、进度条、错误重试、类型/大小校验 (JPG/PNG/WebP, <10MB)
+  - `src/components/DiaryEditor.tsx` — 主编辑器组件。3 状态机：`input` (文字输入 + 图片上传 + 生成按钮) → `generating` (TypewriterText + 停止按钮) → `editing` (textarea 编辑 + 预览切换 + 保存/重新生成)。保存调用 `POST /api/entries`，成功后跳转 `/diary/{date}`
+  - `src/app/diary/page.tsx` — 日记页面。检查 `useLocalApiKey` 配置，未配置跳转 `/settings`，已配置渲染 DiaryEditor
+- **技术细节**：
+  - `useStreamGenerate` 通过 `X-API-Key` header 传递用户密钥，body 含 `provider` 从前端 localStorage 读取
+  - SSE 解析按行处理，支持 `data: [DONE]` 结束标记和 `data: {"error":"..."}` 错误传递
+  - Typewriter 使用动态 chunk size（剩余字符/10）保证大文本流畅渲染
+  - PhotoUploader 文件选择后立即上传（带进度条），上传完成才加入 images 列表
+  - 生成失败显示错误状态 + 重试/修改输入按钮
+  - Editor 状态切换通过 `useEffect` 监听 streaming 完成状态，避免 render 中副作用
+- **决策记录**：
+  - 编辑器布局：单栏 textarea + 预览切换（选中方案 A，移动端优先）
+  - 保存 UX：保存后跳转 `/diary/{date}`（选中方案 A），即使 Stage 7 详情页尚未构建，此 URL 已预留
+- **验证**：`npx tsc --noEmit` 零错误
+
+---
+
 ## 2026-05-20 (Stage 3+4)
 
 ### Stage 4 Bugfixes (代码审计修复)
@@ -150,4 +175,20 @@
 ### Byterover 记忆库初始化
 - **内容**：建立 Byterover Context Tree（11 个 context.md，10 个 domain node），写入第一个 Session Memory 到 `.brv/memory-2026-05-20.json`
 - **因果链**：用户要求初始化 Byterover 记忆库 → 扫描现有项目状态 → 按 Byterover Context Tree 规范创建 Domain → Topic → Subtopic 结构 contexts
+
+### Stage 5: App Shell + Settings Page 完成
+- **内容**：实现全局导航（PC 顶部 NavBar + 移动端底部 TabBar）、API Key 设置页（含服务商选择 + 测试连接）、API Key localStorage Hook、AppShell 布局包装器、首页登录后 Landing 页面
+- **因果链**：Stage 4 (API Routes) 完成后 → 按 AGENTS.md Stage 5 清单逐项实施
+- **新建文件**：
+  - `src/hooks/useLocalApiKey.ts` — localStorage 持久化 API Key Hook。导出 `{ provider, apiKey, setProvider, setApiKey, clearApiKey, isConfigured, hydrated }`。SSR 安全（window 检测），JSON 序列化存储，key 为 `lingyin-api-config`
+  - `src/components/AppShell.tsx` — 客户端布局包装器。根据 `usePathname()` 判断：auth 路由（/login、/auth）无导航，其他路由渲染 NavBar + main + MobileTabBar。移动端 main 区 `pb-20` 避开底部 TabBar
+  - `src/components/NavBar.tsx` — PC 顶部导航（`hidden md:flex`）。左侧 Logo + "铃英日记"，右侧 写日记/时间线/设置 三个 Tab。`usePathname()` 匹配激活态（sakura 高亮背景）
+  - `src/components/MobileTabBar.tsx` — 移动端底部 TabBar（`md:hidden fixed bottom-0`）。三个 Tab（PenLine/Clock/Settings 图标），激活态 sakura 色 + 粗描边，带 `backdrop-blur-sm` 毛玻璃效果 + `safe-area-bottom`
+  - `src/app/settings/page.tsx` — 设置页。服务商选择（OpenAI/DeepSeek/Gemini 三选一 radio card），密码式 API Key 输入框（带显示/隐藏切换），「测试连接」按钮（调用 `/api/ai/test`），保存到 localStorage，「当前配置」状态卡片，「清除 API Key」按钮，「关于」信息区
+  - `src/app/api/ai/test/route.ts` — `POST` 测试连接 API。接收 `{ provider, apiKey }` → 调对应 LLM 提供商的 `/chat/completions` 发 "Hi" 测试请求（max_tokens: 5，15s 超时）→ 返回 `{ connected: true/false, error? }`。API Key 不走日志，不做服务端存储
+- **修改文件**：
+  - `src/app/layout.tsx` — 移除内联 `<main>` → 改为 `<AppShell>` 包裹 children
+  - `src/app/page.tsx` — 已登录用户首页改为 Landing 风格：欢迎语（你好，{email前缀}）+ CTA 按钮（开始写日记 / 浏览时间线）+「铃英小贴士」提示卡
+- **决策**：首页行为 — 用户选择「Landing with diary preview」模式（非 redirect 到 /diary）。当前 Stage 5 先做 Landing 风格（欢迎语 + CTA + 小贴士），Stage 6-7 完成后再接入日记预览数据
+- **验证**：`npx tsc --noEmit` 零错误
 - **影响文件**：`memory/context.md`, `memory/01-project-overview/` ~ `memory/10-pwa-deploy/`, `.brv/memory-2026-05-20.json`
