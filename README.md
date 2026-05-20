@@ -1,4 +1,4 @@
-# 铃英日记 (lingyin-webapp)
+# 玲音日记 (lingyin-webapp)
 
 AI-powered diary PWA. Users submit text + images, AI generates a polished Markdown diary entry.
 

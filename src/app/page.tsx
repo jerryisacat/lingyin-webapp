@@ -16,7 +16,7 @@ export default async function Home() {
             <BookOpen className="h-10 w-10 text-sakura" strokeWidth={1.5} />
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-ink">
-            铃英日记
+            玲音日记
           </h1>
           <p className="text-lg text-ink-light">你的 AI 日记助手</p>
         </div>
@@ -40,7 +40,7 @@ export default async function Home() {
           <BookOpen className="h-10 w-10 text-sakura" strokeWidth={1.5} />
         </div>
         <h1 className="text-3xl font-bold tracking-tight text-ink">
-          铃英日记
+          玲音日记
         </h1>
         <p className="text-lg text-ink-light">
           欢迎回来{user.email ? `，${user.email.split("@")[0]}` : ""}

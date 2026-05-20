@@ -1,4 +1,4 @@
-# AGENTS.md — 铃英日记 (lingyin-webapp)
+# AGENTS.md — 玲音日记 (lingyin-webapp)
 
 ## Project summary
 AI-powered diary PWA. Users submit text + images, AI generates a polished Markdown diary entry. Phase 1: user brings their own LLM API key; later phases add subscription billing.
@@ -282,7 +282,7 @@ Below are self-contained stages designed for vibe coding with AI. Each stage fit
 - **■ Decision: Save UX** — Ask: "After the user saves a diary entry, should they be (A) redirected to the diary detail view, or (B) shown a success toast and stay on the editor page?" If deferred, pick (A) redirect to detail.
 
 **Verification checklist:**
-- [ ] User can type text + upload images, click "✨ 让铃英帮你写" 
+- [ ] User can type text + upload images, click "✨ 让玲音帮你写" 
 - [ ] SSE streaming shows typewriter animation in real-time
 - [ ] "Stop" button interrupts generation
 - [ ] User can edit generated Markdown before saving
@@ -333,11 +333,11 @@ Below are self-contained stages designed for vibe coding with AI. Each stage fit
 
 **Context notes:**
 - Serwist: use `@serwist/next` integration. Cache strategy per docs/02 §4.1: App Shell `CacheFirst`, diary content `NetworkFirst`, images `CacheFirst`, API `NetworkOnly`, static assets `StaleWhileRevalidate`.
-- Install prompt: detect `beforeinstallprompt` event. Show a subtle banner: "📱 安装铃英日记到手机桌面" with [稍后] [安装] buttons. See docs/06 §4.1.
+- Install prompt: detect `beforeinstallprompt` event. Show a subtle banner: "📱 安装玲音日记到手机桌面" with [稍后] [安装] buttons. See docs/06 §4.1.
 - Offline: App Shell loads offline. Show cached diary list. Write attempt shows "需要网络" notice.
 - Responsive pass: verify all pages at 375px (iPhone SE), 768px (iPad), 1440px (desktop). Fix any layout breaks.
 - `vercel.json`: set `framework: "nextjs"`, configure `regions: "hkg1"` (Hong Kong, closest to Chinese users), set env vars.
-- **■ Decision: PWA icons** — Ask: "For PWA icons — do you have a logo/app icon design, or should I generate placeholder icons with the sakura pink gradient and '铃英' text?" If deferred, generate placeholder gradient icons with text.
+- **■ Decision: PWA icons** — Ask: "For PWA icons — do you have a logo/app icon design, or should I generate placeholder icons with the sakura pink gradient and '玲音' text?" If deferred, generate placeholder gradient icons with text.
 - **■ Decision: Analytics** — Ask: "Do you want to add Vercel Analytics or any other analytics (Plausible, Umami) in this stage, or skip for MVP?" If deferred, skip for MVP.
 
 **Verification checklist:**

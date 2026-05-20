@@ -41,7 +41,7 @@ export default function LoginPage() {
           <BookOpen className="h-8 w-8 text-sakura" strokeWidth={1.5} />
         </div>
         <h1 className="text-2xl font-bold tracking-tight text-ink">
-          登录铃英日记
+          登录玲音日记
         </h1>
         <p className="text-sm text-ink-light">
           输入邮箱，我们会发送一个魔法链接

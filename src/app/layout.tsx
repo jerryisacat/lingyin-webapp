@@ -14,11 +14,11 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "铃英日记",
+  title: "玲音日记",
   description: "AI 帮你写日记",
   manifest: "/manifest.json",
   appleWebApp: {
-    title: "铃英日记",
+    title: "玲音日记",
     statusBarStyle: "black-translucent",
   },
 };
