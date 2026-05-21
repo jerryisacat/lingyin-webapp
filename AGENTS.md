@@ -140,10 +140,16 @@ Phase 1 is complete (MVP: AI diary generation, Markdown editor, image upload, ti
 
 所有后续开发工作（Phase 2-4）通过 GitHub Issues 管理，不再依赖 `docs/` 中的 Phase 文档。Agent 按以下流程操作：
 
+### 分支策略
+- 每个 Issue 使用**独立分支**：`develop/issue-N`（从 `main` 分出）
+- Vercel 只部署 `main` 分支，develop 分支的 push **不会触发生产部署**
+- Agent **不**合并代码 — 用户手动创建 PR（`develop/issue-N` → `main`）并 close Issue
+
 ### 开始一个 Issue 前
 1. 用 `gh issue view <N>` 读取 Issue 完整内容（Issue body 中包含：目标、实现入口、涉及文件、组件规格、API 契约、参考模式、验收条件、边缘场景）
 2. 用 `brv search <关键词>` 检索项目知识树，理解现有架构
 3. 阅读涉及的现有文件，理解当前实现
+4. **创建开发分支**：`git checkout -b develop/issue-N`（从 `main` 分出）
 
 ### 开发中
 - 严格按照 Issue 中的"参考模式"复用现有代码模式
@@ -156,8 +162,24 @@ Phase 1 is complete (MVP: AI diary generation, Markdown editor, image upload, ti
 3. **更新 `CHANGELOG.md`** — 记录日期、变更内容、对应的 Issue 编号
 4. **整理 ByteRover 知识树** — `brv curate "..."` 保存新模式/决策
 5. **提交知识树变更** — `git -C .brv/context-tree add -A && git -C .brv/context-tree commit -m "..."`
-6. **提交代码** — `git add` + `git commit`（commit message 中引用 Issue 编号，如 `Closes #5`）
-7. `git push`
+6. **提交代码** — `git add` + `git commit`（commit message 引用 Issue 编号，如 `Fix #5: ...`）
+7. **Push 到 develop 分支** — `git push origin develop/issue-N`
+8. **在 Issue 下添加评论** — 使用 `gh issue comment <N> --body "..."` 通知用户修复完成。标准格式：
+
+   ```
+   ✅ 修复完成，已 push 到 `develop/issue-N`
+
+   改动摘要：
+   - 文件A：变更描述
+   - 文件B：变更描述
+
+   验收确认：
+   - [x] TypeScript 编译通过
+   - [x] 验收条件 1 通过
+   ...
+   ```
+
+9. 用户看到评论后，手动创建 PR（`develop/issue-N` → `main`）并 close Issue
 
 ### Issue Labels 速查
 
