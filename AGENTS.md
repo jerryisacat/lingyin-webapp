@@ -3,7 +3,7 @@
 ## Project summary
 AI-powered diary PWA. Users submit text + images, AI generates a polished Markdown diary entry. Phase 1: user brings their own LLM API key; later phases add subscription billing.
 
-**Status: Stage 6 complete (Stages 1–6 done). Stages 7–8 pending.**
+**Status: All 8 stages complete (Phase 1 MVP ready for deploy).**
 
 ## Tech stack
 - **Framework:** Next.js 14+ (App Router), TypeScript, Tailwind CSS
