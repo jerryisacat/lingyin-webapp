@@ -5,21 +5,14 @@
 ## 2026-05-22 (Magic Link 登录修复)
 
 ### Magic Link PKCE Cookie 修复
-- **内容**: 修复 Magic Link 登录时点击邮件链接无法登录的问题。浏览器端 cookie 的 `SameSite` 从 `Strict` 改为 `Lax`。
-- **因果链**: 用户点击邮件中的 Magic Link 属于跨站导航（邮件客户端 → 网站），`SameSite=Strict` 阻止 PKCE code verifier cookie 发送 → 回调路由收到 0 个 cookie → `exchangeCodeForSession` 报错 "PKCE code verifier not found in storage" → 改为 `SameSite=Lax`，允许 GET 跨站导航携带 cookie，同时仍防御 CSRF 跨站 POST 攻击
+- **内容**: 修复 Magic Link 登录时点击邮件链接无法登录的问题。为浏览器端 `createBrowserClient` 添加自定义 cookie handler，使用 `cookie` 包的 `serialize`/`parse` 确保编码/解码与 `@supabase/ssr` 内部行为一致，并设置 `SameSite=Lax`。
+- **因果链**: 用户点击邮件中的 Magic Link 属于跨站导航（邮件客户端 → 网站），`SameSite=Strict` 阻止 PKCE code verifier cookie 发送 → 回调路由收到 0 个 cookie → `exchangeCodeForSession` 报错 "PKCE code verifier not found in storage"
+  - 第一轮修复：手动实现 cookie set/get，使用 `encodeURIComponent`/`decodeURIComponent` → cookie 能发送了（从 0 到 1），但值编码不匹配 `@supabase/ssr` 内部的 `cookie` 包行为 → exchange 仍失败
+  - 第二轮修复：改用 `cookie` 包的 `serialize`/`parse`（与 `@supabase/ssr` 内部使用的相同），确保编码/解码完全一致 + `SameSite=Lax`
 - **修改文件**:
-  - `src/lib/supabase/client.ts` — 为 `createBrowserClient` 添加自定义 `cookies` 配置，手动设置 cookie 时默认使用 `SameSite=Lax`
-- **验证**: `npx tsc --noEmit` 编译通过（`client.ts` 零错误）
-
----
-
-## 2026-05-22 (Magic Link 登录修复)
-
-### Magic Link PKCE Cookie 修复
-- **内容**: 修复 Magic Link 登录时点击邮件链接无法登录的问题。浏览器端 cookie 的 `SameSite` 从 `Strict` 改为 `Lax`。
-- **因果链**: 用户点击邮件中的 Magic Link 属于跨站导航（邮件客户端 → 网站），`SameSite=Strict` 阻止 PKCE code verifier cookie 发送 → 回调路由收到 0 个 cookie → `exchangeCodeForSession` 报错 "PKCE code verifier not found in storage" → 改为 `SameSite=Lax`，允许 GET 跨站导航携带 cookie，同时仍防御 CSRF 跨站 POST 攻击
-- **修改文件**:
-  - `src/lib/supabase/client.ts` — 为 `createBrowserClient` 添加自定义 `cookies` 配置，手动设置 cookie 时默认使用 `SameSite=Lax`
+  - `src/lib/supabase/client.ts` — 引入 `cookie` 包的 `parse`/`serialize`，自定义 `cookies.get/set/remove` 与 `@supabase/ssr` 内部行为一致
+  - `src/app/auth/callback/route.ts` — 添加调试日志，用于诊断 cookie 值问题
+- **新增依赖**: `@types/cookie`（devDependency）
 - **验证**: `npx tsc --noEmit` 编译通过（`client.ts` 零错误）
 
 ---

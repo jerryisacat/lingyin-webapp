@@ -1,4 +1,5 @@
 import { createBrowserClient } from "@supabase/ssr";
+import { parse, serialize } from "cookie";
 
 export function createClient() {
   return createBrowserClient(
@@ -7,10 +8,8 @@ export function createClient() {
     {
       cookies: {
         get(name: string) {
-          const match = document.cookie.match(
-            new RegExp(`(?:^|; )${name}=([^;]*)`)
-          );
-          return match ? decodeURIComponent(match[1]) : undefined;
+          const parsed = parse(document.cookie);
+          return parsed[name];
         },
         set(
           name: string,
@@ -23,15 +22,15 @@ export function createClient() {
             path?: string;
           }
         ) {
-          let cookie = `${name}=${encodeURIComponent(value)}; path=${options?.path || "/"}`;
-          if (options?.secure) cookie += "; Secure";
-          if (options?.maxAge) cookie += `; Max-Age=${options.maxAge}`;
-          if (options?.domain) cookie += `; Domain=${options.domain}`;
-          // Use Lax instead of Strict — Strict blocks cookies when user
-          // clicks a magic link from an email client (cross-site navigation).
-          // Lax still protects against CSRF on cross-site POST requests.
-          cookie += `; SameSite=${options?.sameSite || "Lax"}`;
-          document.cookie = cookie;
+          // Use the same `cookie` package that @supabase/ssr uses internally,
+          // ensuring identical encoding/decoding behavior.
+          document.cookie = serialize(name, value, {
+            path: options?.path || "/",
+            sameSite: (options?.sameSite as "lax" | "strict" | "none") || "lax",
+            secure: options?.secure,
+            maxAge: options?.maxAge,
+            domain: options?.domain,
+          });
         },
         remove(
           name: string,
@@ -42,7 +41,12 @@ export function createClient() {
             path?: string;
           }
         ) {
-          document.cookie = `${name}=; path=${options?.path || "/"}; SameSite=${options?.sameSite || "Lax"}; Max-Age=0`;
+          document.cookie = serialize(name, "", {
+            path: options?.path || "/",
+            sameSite: (options?.sameSite as "lax" | "strict" | "none") || "lax",
+            maxAge: 0,
+            domain: options?.domain,
+          });
         },
       },
     }
