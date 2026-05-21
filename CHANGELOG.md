@@ -2,7 +2,115 @@
 
 ---
 
-## 2026-05-20 (Stage 3)
+## 2026-05-21 (Stage 8 — PWA + Deploy + Polish)
+
+### Stage 8: PWA 配置 + Vercel 部署准备 + 响应式审查
+- **内容**：将铃英日记打造为可安装的 PWA，配置 Serwist Service Worker 缓存策略，生成 PWA 图标，准备 Vercel 部署配置，完成响应式审查。
+- **因果链**：Stage 7 (Timeline + Detail) 完成 → 按 AGENTS.md Stage 8 清单实施。决策：PWA 图标使用 FLUX AI 生成（樱花+羽毛笔主题）、Analytics 跳过 MVP、安装提示横幅使用 Chrome 原生（自行触发）。
+- **新建文件**：
+  - `public/manifest.json` — PWA Manifest。name=铃英日记, display=standalone, theme_color=#f0a8b0, background=#faf3e8, icons 192+512
+  - `public/icons/icon-192.png` — FLUX AI 生成 PWA 图标 192×192（樱花花形 + 白色羽毛笔）
+  - `public/icons/icon-512.png` — FLUX AI 生成 PWA 图标 512×512（同设计，高对比度 v2）
+  - `src/sw.ts` — Serwist v9 Service Worker。`/// <reference lib="webworker" />`, 使用 `Serwist` class API + `addEventListeners()`。缓存策略：App Shell CacheFirst, API NetworkFirst, 图片 CacheFirst, 静态资源 StaleWhileRevalidate, 其他 API NetworkOnly, 字体 CacheFirst
+  - `vercel.json` — Vercel 部署配置。framework=nextjs, regions=["hkg1"], build 含 `prisma generate`
+- **修改文件**：
+  - `next.config.mjs` — 集成 `@serwist/next` (`withSerwist` wrapper, swSrc + swDest)
+  - `package.json` — 新增依赖：`@serwist/next`, `@serwist/precaching`, `@serwist/strategies`, `serwist`
+- **技术细节**：
+  - Serwist v9.5.11 class API: `new Serwist({...})` + `serwist.addEventListeners()`
+  - SW 使用 `@serwist/next/worker` 的 `defaultCache` + 自定义 runtimeCaching
+  - SW TypeScript 需 `/// <reference lib="webworker" />`（独立 tsc 无此 lib，构建时 webpack 已处理）
+  - 图标 v1 对比度太低（白色元素在浅粉背景不可见）→ v2 深粉渐变背景 + 实心樱花花形
+  - layout.tsx 已有 PWA meta（manifest + themeColor + appleWebApp），无需修改
+- **决策记录**：
+  - PWA 图标：FLUX AI 生成（选中方案 C），v1→v2 迭代解决对比度问题
+  - Analytics：跳过 MVP（默认 defer）
+  - 安装提示：使用 Chrome 原生 beforeinstallprompt（默认 defer）
+- **响应式审查通过**：所有页面和组件均为移动优先（max-w-约束 + md:断点），检查清单 — AppShell (pb-20/md:pb-6) ✓, NavBar (hidden md:flex) ✓, MobileTabBar (md:hidden + safe-area-bottom) ✓, 全部页面 (max-w-sm/lg/2xl) ✓, DiaryDetail 删除弹窗 (fixed inset-0) ✓
+
+---
+
+## 2026-05-21 (Stage 7 — Timeline + Diary Detail)
+
+### Stage 7: Timeline 时间线浏览 + Diary 日记详情页
+- **内容**：实现时间线浏览（按月分组、cursor 分页加载更多）+ 单篇日记详情页（Markdown 渲染、删除确认弹窗）。
+- **因果链**：Stage 6 (Diary Editor) 完成后 → 按 AGENTS.md Stage 7 清单实施。决策：按月分组（month headers）、确认弹窗删除（非滑动删除）、详情页路由使用 `/diary/[id]`（更简单，无需新 API）。
+- **新建文件**：
+  - `src/app/timeline/page.tsx` — 时间线页面（"use client"）。调用 `GET /api/entries` 获取日记列表，cursor 分页加载更多，传入 TimelineList 渲染。含加载态、错误态、空状态（"还没有日记哦～🌸"）。
+  - `src/components/TimelineList.tsx` — 时间线列表组件。按年月分组（`groupByMonth`），渲染月标题 + DiaryCard 列表。含加载骨架屏、空状态、加载更多按钮、"已经到底啦"提示。月标题 sticky 吸顶。
+  - `src/components/DiaryCard.tsx` — 日记卡片组件。显示日期方块（大号日期 + 星期）、标题（从 preview 首行提取）、预览文本（line-clamp 3 行）、字数、图片标记（📷 Icon）、标签列表。sakura 粉色圆角边框，hover 高亮。点击跳转 `/diary/[id]`。
+  - `src/app/diary/[id]/page.tsx` — 日记详情页（"use client"）。调用 `GET /api/entries/[id]` 获取完整 Markdown（含 R2 读取）。页面显示：返回按钮、删除按钮、日期行、元数据栏（字数/图片/标签）、MarkdownViewer 渲染正文、创建时间。删除按钮 → 确认弹窗 → 调用 `DELETE /api/entries/[id]` → 跳转 `/timeline`。
+  - `src/components/MarkdownViewer.tsx` — 可复用 Markdown 渲染器。使用 `react-markdown` + `remark-gfm`（GFM 表格/任务列表）。自定义组件渲染：next/image（支持 R2 remotePatterns）、代码块 / 行内代码（sakura 主题）、引用块（sakura 左边框）、表格等。移动端自适应。
+- **修改文件**：
+  - `src/components/DiaryEditor.tsx` — 保存后跳转 URL 从 `/diary/${entry.date}` 改为 `/diary/${entry.id}`（因为详情页使用 `/diary/[id]` 路由）。
+  - `package.json` — 新增依赖 `remark-gfm`（GFM 扩展支持）。
+- **技术细节**：
+  - 时间线分组使用 `groupByMonth` 按 `YYYY-MM` 聚合，按月降序排列
+  - 卡片预览直接使用 DB 中的 `Entry.preview`（前 200 字符，无 Markdown 语法），无需 R2 调用
+  - 详情页通过 `fetch(/api/entries/[id])` 获取完整 Markdown 内容（服务端从 R2 读取）
+  - MarkdownViewer 图片使用 `next/image` 组件，`remotePatterns` 已配置 R2 公共 URL（`pub-*.r2.dev`）
+  - 删除确认使用 modal 弹窗，backdrop 点击可取消；删除中显示 loading，防止重复操作
+  - 详情页错误状态：404 "日记不存在" / 网络错误 "加载失败"，含返回时间线按钮
+  - 时间线首次加载、加载更多均独立 loading 状态，避免闪烁
+- **决策记录**：
+  - 时间线分组：按月分组 + 月标题（选中方案 A — 结构清晰，便于浏览）
+  - 删除确认：确认弹窗（选中方案 A — 更安全，适合 MVP）
+  - 详情页路由：`/diary/[id]`（非 `/diary/[date]`）— 复用现有 `GET /api/entries/[id]`，无需新建 date→id 解析 API
+- **验证**：`npx tsc --noEmit` 零错误
+
+---
+
+## 2026-05-21 (Stage 6 — Diary Editor)
+
+### Stage 6: Diary Editor 核心功能
+- **内容**：实现完整日记写作流程——输入 → AI 流式生成（打字机动画）→ Markdown 编辑（预览切换）→ 保存。含图片上传（9 宫格）、SSE 流式 Hook、错误处理。
+- **因果链**：Stage 5 (App Shell + Settings) 完成后 → 按 AGENTS.md Stage 6 清单实施。用户选择 (A) 单栏 textarea + 预览切换（移动端友好）、(A) 保存后跳转日记详情页。
+- **新建文件**：
+  - `src/hooks/useStreamGenerate.ts` — SSE 流式生成 Hook。封装 fetch + ReadableStream 读取，支持 AbortController 停止，累积 tokens 返回 `{ text, isStreaming, error, generate, stop, reset }`
+  - `src/components/TypewriterText.tsx` — 打字机动画组件。使用 `requestAnimationFrame` 逐字渲染，流式中显示闪烁光标
+  - `src/components/PhotoUploader.tsx` — 图片上传 9 宫格组件。拖拽排序、即时上传（调用 `/api/upload`）、进度条、错误重试、类型/大小校验 (JPG/PNG/WebP, <10MB)
+  - `src/components/DiaryEditor.tsx` — 主编辑器组件。3 状态机：`input` (文字输入 + 图片上传 + 生成按钮) → `generating` (TypewriterText + 停止按钮) → `editing` (textarea 编辑 + 预览切换 + 保存/重新生成)。保存调用 `POST /api/entries`，成功后跳转 `/diary/{date}`
+  - `src/app/diary/page.tsx` — 日记页面。检查 `useLocalApiKey` 配置，未配置跳转 `/settings`，已配置渲染 DiaryEditor
+- **技术细节**：
+  - `useStreamGenerate` 通过 `X-API-Key` header 传递用户密钥，body 含 `provider` 从前端 localStorage 读取
+  - SSE 解析按行处理，支持 `data: [DONE]` 结束标记和 `data: {"error":"..."}` 错误传递
+  - Typewriter 使用动态 chunk size（剩余字符/10）保证大文本流畅渲染
+  - PhotoUploader 文件选择后立即上传（带进度条），上传完成才加入 images 列表
+  - 生成失败显示错误状态 + 重试/修改输入按钮
+  - Editor 状态切换通过 `useEffect` 监听 streaming 完成状态，避免 render 中副作用
+- **决策记录**：
+  - 编辑器布局：单栏 textarea + 预览切换（选中方案 A，移动端优先）
+  - 保存 UX：保存后跳转 `/diary/{date}`（选中方案 A），即使 Stage 7 详情页尚未构建，此 URL 已预留
+- **验证**：`npx tsc --noEmit` 零错误
+
+---
+
+## 2026-05-20 (Stage 3+4)
+
+### Stage 4 Bugfixes (代码审计修复)
+- **修复 1** `PUT /api/entries/[id]` 忽略 URL id 参数 — 改为先用 `params.id` + `getEntry()` 查原条目（含所有权校验），再用原条目的 date 调用 `saveDiary()`，body 不再接受 date 字段
+- **修复 2** `POST /api/upload` `image/jpeg` 扩展名映射错误 — MIME type → 扩展名改用显式映射表 `{ "image/jpeg": "jpg", ... }`，`ALLOWED_TYPES` 直接从映射表 keys 派生
+- **因果链**：Stage 4 代码审计发现 2 个 critical bug → 按建议修复
+- **受影响文件**：`src/app/api/entries/[id]/route.ts`、`src/app/api/upload/route.ts`
+
+### Stage 4: API Routes 完成
+- **内容**：实现全部 6 个 API Route Handler，覆盖日记 CRUD、AI 生成/重写、图片上传、用户配置
+- **因果链**：Stage 3 (Backend Services) 完成后 → 按 AGENTS.md Stage 4 清单逐项实施
+- **新建文件**：
+  - `src/lib/api-helpers.ts` — 共享工具：`getUser()` (从 Supabase session 获取当前用户)、`jsonOk()` / `jsonError()` (统一 ApiResponse 格式)
+  - `src/app/api/ai/generate/route.ts` — `POST` SSE 流式日记生成。验证 Session + API Key → 调用 `generateDiary()` → ReadableStream 输出 SSE (`text/event-stream`)
+  - `src/app/api/ai/rewrite/route.ts` — `POST` 润色/重写日记。接收 `content` + `instruction` → 调用 `generateStream()` 流式返回润色结果
+  - `src/app/api/entries/route.ts` — `GET` cursor 分页列表（`getEntries()`）+ `POST` 保存日记（`saveDiary()` upsert）
+  - `src/app/api/entries/[id]/route.ts` — `GET` 单篇（含 R2 markdown 读取）+ `PUT` 更新 + `DELETE` 删除（R2 + DB 双删）
+  - `src/app/api/upload/route.ts` — `POST` multipart/form-data 图片上传。校验类型 (JPG/PNG/WebP) + 大小 (<10MB) → R2 上传 → 返回 MediaFile
+  - `src/app/api/user/config/route.ts` — `GET` 读取 User.tone 偏好 + `PUT` 更新 tone。API Key 绝不落库
+- **技术细节**：
+  - 所有 AI 路由接受 `provider` 参数（openai/deepseek/gemini），前端从 localStorage 读取后传入
+  - SSE 流格式：`data: {"content":"..."}\n\n` ... `data: [DONE]\n\n`，错误用 `data: {"error":"..."}\n\n`
+  - 分页使用 cursor-based（基于 Entry.id），返回 `{ entries, nextCursor }`
+  - 上传生成文件名 `IMG_{timestamp}_{random}.{ext}` 避免冲突
+  - API Key 通过 `X-API-Key` header 传入，server 不记录日志
+- **验证**：`npx tsc --noEmit` 零错误
 
 ### Stage 3: Backend Services 完成
 - **内容**：实现全部 lib/ 服务层 — R2 文件存储、LLM 客户端（流式 + 视觉）、API Key 守卫、日记编排引擎
@@ -125,4 +233,20 @@
 ### Byterover 记忆库初始化
 - **内容**：建立 Byterover Context Tree（11 个 context.md，10 个 domain node），写入第一个 Session Memory 到 `.brv/memory-2026-05-20.json`
 - **因果链**：用户要求初始化 Byterover 记忆库 → 扫描现有项目状态 → 按 Byterover Context Tree 规范创建 Domain → Topic → Subtopic 结构 contexts
+
+### Stage 5: App Shell + Settings Page 完成
+- **内容**：实现全局导航（PC 顶部 NavBar + 移动端底部 TabBar）、API Key 设置页（含服务商选择 + 测试连接）、API Key localStorage Hook、AppShell 布局包装器、首页登录后 Landing 页面
+- **因果链**：Stage 4 (API Routes) 完成后 → 按 AGENTS.md Stage 5 清单逐项实施
+- **新建文件**：
+  - `src/hooks/useLocalApiKey.ts` — localStorage 持久化 API Key Hook。导出 `{ provider, apiKey, setProvider, setApiKey, clearApiKey, isConfigured, hydrated }`。SSR 安全（window 检测），JSON 序列化存储，key 为 `lingyin-api-config`
+  - `src/components/AppShell.tsx` — 客户端布局包装器。根据 `usePathname()` 判断：auth 路由（/login、/auth）无导航，其他路由渲染 NavBar + main + MobileTabBar。移动端 main 区 `pb-20` 避开底部 TabBar
+  - `src/components/NavBar.tsx` — PC 顶部导航（`hidden md:flex`）。左侧 Logo + "铃英日记"，右侧 写日记/时间线/设置 三个 Tab。`usePathname()` 匹配激活态（sakura 高亮背景）
+  - `src/components/MobileTabBar.tsx` — 移动端底部 TabBar（`md:hidden fixed bottom-0`）。三个 Tab（PenLine/Clock/Settings 图标），激活态 sakura 色 + 粗描边，带 `backdrop-blur-sm` 毛玻璃效果 + `safe-area-bottom`
+  - `src/app/settings/page.tsx` — 设置页。服务商选择（OpenAI/DeepSeek/Gemini 三选一 radio card），密码式 API Key 输入框（带显示/隐藏切换），「测试连接」按钮（调用 `/api/ai/test`），保存到 localStorage，「当前配置」状态卡片，「清除 API Key」按钮，「关于」信息区
+  - `src/app/api/ai/test/route.ts` — `POST` 测试连接 API。接收 `{ provider, apiKey }` → 调对应 LLM 提供商的 `/chat/completions` 发 "Hi" 测试请求（max_tokens: 5，15s 超时）→ 返回 `{ connected: true/false, error? }`。API Key 不走日志，不做服务端存储
+- **修改文件**：
+  - `src/app/layout.tsx` — 移除内联 `<main>` → 改为 `<AppShell>` 包裹 children
+  - `src/app/page.tsx` — 已登录用户首页改为 Landing 风格：欢迎语（你好，{email前缀}）+ CTA 按钮（开始写日记 / 浏览时间线）+「铃英小贴士」提示卡
+- **决策**：首页行为 — 用户选择「Landing with diary preview」模式（非 redirect 到 /diary）。当前 Stage 5 先做 Landing 风格（欢迎语 + CTA + 小贴士），Stage 6-7 完成后再接入日记预览数据
+- **验证**：`npx tsc --noEmit` 零错误
 - **影响文件**：`memory/context.md`, `memory/01-project-overview/` ~ `memory/10-pwa-deploy/`, `.brv/memory-2026-05-20.json`

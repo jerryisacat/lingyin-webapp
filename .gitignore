@@ -12,6 +12,7 @@ out/
 next-env.d.ts
 
 # Environment (contains secrets)
+.env
 .env.local
 .env.*.local
 
@@ -39,9 +40,8 @@ node_modules/.prisma/
 # Turbopack
 .turbo/
 
-# ByteRover — .brv/context-tree/ contains a nested .git managed by brv vc.
-# Without these entries, `git add .` fails with "does not have a commit checked out".
-.brv/
+# ByteRover — context-tree has its own nested .git (managed by brv vc)
+.brv/context-tree/
 
 # Kilo / AI tooling
 .kilocode/
