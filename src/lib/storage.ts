@@ -4,6 +4,7 @@ import {
   GetObjectCommand,
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import type { MediaFile } from "@/types";
 
 const s3 = new S3Client({
@@ -16,7 +17,6 @@ const s3 = new S3Client({
 });
 
 const BUCKET = process.env.R2_BUCKET!;
-const PUBLIC_URL = process.env.R2_PUBLIC_URL!;
 
 export function buildMarkdownPath(userId: string, date: string): string {
   const d = new Date(date);
@@ -35,6 +35,30 @@ export function buildAssetPath(
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, "0");
   return `users/${userId}/entries/${year}/${month}/assets/${filename}`;
+}
+
+function getImageUrl(key: string, contentType: string): string {
+  // If R2_PUBLIC_URL is configured, use it for direct access
+  const publicUrl = process.env.R2_PUBLIC_URL;
+  if (publicUrl) {
+    return `${publicUrl}/${key}`;
+  }
+
+  // Otherwise return a signed URL path — the frontend calls /api/image?key=... to proxy
+  return `/api/image?key=${encodeURIComponent(key)}`;
+}
+
+export async function getPresignedUrl(key: string, expiresIn = 3600): Promise<string> {
+  const publicUrl = process.env.R2_PUBLIC_URL;
+  if (publicUrl) {
+    return `${publicUrl}/${key}`;
+  }
+
+  return getSignedUrl(
+    s3,
+    new GetObjectCommand({ Bucket: BUCKET, Key: key }),
+    { expiresIn }
+  );
 }
 
 export async function saveMarkdown(
@@ -96,8 +120,10 @@ export async function uploadImage(
     })
   );
 
+  const signedUrl = await getPresignedUrl(key);
+
   return {
-    url: `${PUBLIC_URL}/${key}`,
+    url: signedUrl,
     path: key,
     type: "image",
     mime: contentType,

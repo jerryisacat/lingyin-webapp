@@ -2,6 +2,45 @@
 
 ---
 
+## 2026-05-22 (Pre-signed URL / R2 隐私修复 + 文档整理 + SW API 升级)
+
+### R2 用户文件隐私修复 (Closes #23)
+- **内容**: R2 公开 URL 泄露用户文件路径的安全隐患修复。替换为 pre-signed URL 方案：私有 bucket + 1h 有效签名 URL + `/api/image` 代理端点。
+- **因果链**: R2 bucket 当前用 public URL (pub-*.r2.dev)，任何知道文件路径的人都能下载用户日记图片 → Issue #23 "R2用户文件隐私审查与修复" → 调研确认 R2 支持 S3 pre-signed URL (AWS Signature V4) → 实施修复。关键发现: pre-signed URL 只支持 `*.r2.cloudflarestorage.com` 域名，不支持自定义域名（Cloudflare 官方文档确认）。
+- **新建文件**:
+  - `src/app/api/image/route.ts` — 图片代理 API。`GET /api/image?key=...&redirect=true` → 302 跳到 pre-signed URL 或返回 JSON `{url}`。支持 `redirect` 参数控制行为（浏览器 `<img>` 用 redirect, 程序用 JSON）
+- **修改文件**:
+  - `src/lib/storage.ts` — 从 `@aws-sdk/s3-request-presigner` 引入 `getSignedUrl()`。新增 `getPresignedUrl(key, expiresIn)` 和内部 `getImageUrl()`。移除硬编码 `PUBLIC_URL` 变量。`uploadImage()` 返回签名 URL 代替公开 URL
+  - `.env.example` — `R2_BUCKET` 改名为 `lingyin-webapp`，`R2_PUBLIC_URL` 改为可选（注释说明: 如果配了 public 域名才填，用 pre-signed URL 就留空）
+  - `next.config.mjs` — `remotePatterns` 添加 `*.r2.cloudflarestorage.com` 和 `lingyin-r2.jerryiscat.one`
+  - `package.json` — 新增依赖 `@aws-sdk/s3-request-presigner: ^3.1051.0`
+- **技术细节**: pre-signed URL 由客户端 SDK 计算（纯本地，不调 R2 API），有效期 1h，GET/PUT/HEAD/DELETE 均支持。`/api/image` 同时支持 redirect 和 JSON 两种返回模式
+- **安全影响**: R2 bucket 可切换为私有，用户文件不再可通过猜测路径直接访问
+
+### AGENTS.md 压缩 — 从 Stage 路线图转为 Issue-Driven 工作流
+- **内容**: AGENTS.md 从 369 行压缩到 181 行（-55%）。删除 Stage 1-8 详细清单（含 checkbox、context notes、验证清单），替换为 Issue-Driven 开发流程指引。
+- **因果链**: AGENTS.md 的 Stage 历史记录对 Phase 2-4 开发无参考价值，占用大量 token → 压缩为当前状态摘要 + Issue 工作流规范 → Agent 每次读取 Issue 获取精确 spec
+- **修改文件**: `AGENTS.md` — 新增「Current status」「Vibe Coding Workflow — Issue-Driven Development」「Issue Labels 速查」「Milestones」章节
+
+### PWA Manifest 名称修正
+- **内容**: PWA 应用名从「铃英日记」改为「玲音日记」
+- **因果链**: 项目名为「玲音日记」，「铃英」是早期笔误 → 修正 manifest display name
+- **修改文件**: `public/manifest.json` — `name`、`short_name` 均改为「玲音日记」
+
+### Serwist Service Worker API 升级
+- **内容**: SW 缓存策略从 Serwist v8 字符串 API (`handler: "CacheFirst"`) 升级到 v9 class API (`handler: new CacheFirst({...})`)
+- **因果链**: Serwist v9.5 推荐使用 class-based handler，字符串 handler 被废弃 → 所有 runtimeCaching 策略升级并添加 ExpirationPlugin
+- **修改文件**: `src/sw.ts` — 全部 6 条缓存规则迁移：`CacheFirst`/`NetworkFirst`/`StaleWhileRevalidate`/`NetworkOnly` 类实例化，`urlPattern` → `matcher`，`options.expiration` → `ExpirationPlugin`
+
+### Supabase 基础设施
+- **新建文件**:
+  - `scripts/supabase-setup.sql` — User 表同步触发器（`handle_new_user` + `on_auth_user_created`）
+  - `.agents/skills/supabase/` — supabase/agent-skills 安装
+  - `.agents/skills/supabase-postgres-best-practices/` — Postgres 最佳实践
+  - `skills-lock.json` — skills 版本锁定文件
+
+---
+
 ## 2026-05-21 (Stage 8 — PWA + Deploy + Polish)
 
 ### Stage 8: PWA 配置 + Vercel 部署准备 + 响应式审查

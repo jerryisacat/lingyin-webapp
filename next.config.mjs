@@ -11,7 +11,11 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "pub-*.r2.dev",
+        hostname: "*.r2.cloudflarestorage.com",
+      },
+      {
+        protocol: "https",
+        hostname: "lingyin-r2.jerryiscat.one",
       },
     ],
   },

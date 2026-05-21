@@ -3,6 +3,8 @@
 import { defaultCache } from "@serwist/next/worker";
 import type { PrecacheEntry } from "serwist";
 import { Serwist } from "serwist";
+import { CacheFirst, NetworkFirst, NetworkOnly, StaleWhileRevalidate } from "@serwist/strategies";
+import { ExpirationPlugin } from "serwist";
 
 declare const self: ServiceWorkerGlobalScope & {
   __SW_MANIFEST: (PrecacheEntry | string)[] | undefined;
@@ -16,55 +18,60 @@ const serwist = new Serwist({
   runtimeCaching: [
     // App Shell — CacheFirst
     {
-      urlPattern: ({ url }: { url: URL }) =>
+      matcher: ({ url }: { url: URL }) =>
         url.pathname === "/" || url.pathname === "/timeline",
-      handler: "CacheFirst",
-      options: {
+      handler: new CacheFirst({
         cacheName: "app-shell",
-        expiration: { maxAgeSeconds: 60 * 60 * 24 * 7 },
-      },
+        plugins: [
+          new ExpirationPlugin({ maxAgeSeconds: 60 * 60 * 24 * 7 }),
+        ],
+      }),
     },
     // Diary entries API — NetworkFirst
     {
-      urlPattern: /\/api\/entries.*/,
-      handler: "NetworkFirst",
-      options: {
+      matcher: /\/api\/entries.*/,
+      handler: new NetworkFirst({
         cacheName: "diary-api",
-        expiration: { maxAgeSeconds: 60 * 60 },
+        plugins: [
+          new ExpirationPlugin({ maxAgeSeconds: 60 * 60, maxEntries: 50 }),
+        ],
         networkTimeoutSeconds: 5,
-      },
+      }),
     },
     // Images (R2) — CacheFirst
     {
-      urlPattern: /\/api\/image.*/,
-      handler: "CacheFirst",
-      options: {
+      matcher: /\/api\/image.*/,
+      handler: new CacheFirst({
         cacheName: "images",
-        expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 * 30 },
-      },
+        plugins: [
+          new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 * 30 }),
+        ],
+      }),
     },
     // Static assets — StaleWhileRevalidate
     {
-      urlPattern: /^https?:\/\/.*\/_next\/static\/.*/i,
-      handler: "StaleWhileRevalidate",
-      options: {
+      matcher: /^https?:\/\/.*\/_next\/static\/.*/i,
+      handler: new StaleWhileRevalidate({
         cacheName: "static-assets",
-        expiration: { maxAgeSeconds: 60 * 60 * 24 * 30 },
-      },
+        plugins: [
+          new ExpirationPlugin({ maxAgeSeconds: 60 * 60 * 24 * 30 }),
+        ],
+      }),
     },
     // Other API — NetworkOnly
     {
-      urlPattern: /\/api\/.*/,
-      handler: "NetworkOnly",
+      matcher: /\/api\/.*/,
+      handler: new NetworkOnly(),
     },
     // Fonts — CacheFirst
     {
-      urlPattern: /\.(?:woff2?|ttf|otf)$/,
-      handler: "CacheFirst",
-      options: {
+      matcher: /\.(?:woff2?|ttf|otf)$/,
+      handler: new CacheFirst({
         cacheName: "fonts",
-        expiration: { maxAgeSeconds: 60 * 60 * 24 * 365 },
-      },
+        plugins: [
+          new ExpirationPlugin({ maxAgeSeconds: 60 * 60 * 24 * 365 }),
+        ],
+      }),
     },
     ...defaultCache,
   ],

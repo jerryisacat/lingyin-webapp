@@ -133,238 +133,50 @@ public/              — PWA icons, manifest.json, sw.js
 
 > **注意：** `brv search` 是本地检索命令（离线可用，无需账号）。`brv query` 需要云账号登录且超时严重，慎用。
 
-## Development milestones (Phase 1 MVP)
+## Current status
+Phase 1 is complete (MVP: AI diary generation, Markdown editor, image upload, timeline, PWA deploy). Phase 2-4 work is tracked as GitHub Issues — see below.
 
-Below are self-contained stages designed for vibe coding with AI. Each stage fits within ~120K effective context. Stages are ordered by dependency — do NOT skip or reorder.
+## Vibe Coding Workflow — Issue-Driven Development
 
-**Decision points:** Some stages have tagged questions for the user (■). The AI MUST pause and ask before proceeding when it hits one. If the user defers ("you decide"), the AI should pick the simplest option and note it.
+所有后续开发工作（Phase 2-4）通过 GitHub Issues 管理，不再依赖 `docs/` 中的 Phase 文档。Agent 按以下流程操作：
 
----
+### 开始一个 Issue 前
+1. 用 `gh issue view <N>` 读取 Issue 完整内容（Issue body 中包含：目标、实现入口、涉及文件、组件规格、API 契约、参考模式、验收条件、边缘场景）
+2. 用 `brv search <关键词>` 检索项目知识树，理解现有架构
+3. 阅读涉及的现有文件，理解当前实现
 
-### Stage 1 — Project Bootstrap
+### 开发中
+- 严格按照 Issue 中的"参考模式"复用现有代码模式
+- 遵循 Issue 中的"组件规格"和"API 契约"——它们是实现 spec
+- 注意"边缘场景 & 坑"中的已知陷阱
 
-| | |
-|---|---|
-| **Goal** | Working Next.js dev server with Prisma, Tailwind, and Supabase Auth wiring |
-| **Estimated context** | ~30K tokens |
-| **Docs to load** | `docs/02-技术架构.md` §2.1, §7; `docs/05-数据模型.md` §1 (Prisma schema); `.env.example` |
-| **Files to create** | `package.json`, `tsconfig.json`, `next.config.mjs`, `tailwind.config.ts`, `postcss.config.mjs`, `prisma/schema.prisma`, `src/types/index.ts`, `src/app/layout.tsx`, `src/app/page.tsx`, `src/app/globals.css`, `src/lib/db.ts`, `.gitignore` |
-| **■ Decision: Design tokens** | 已选定 **现代优雅 (Modern Elegant)** 方案。详情见 `docs/03-Phase1-MVP说明.md` §3.1。 |
+### 开发完成后
+1. 运行 `npx tsc --noEmit` 确保 TypeScript 零错误
+2. 逐项验证 Issue 中的"验收条件"
+3. **更新 `CHANGELOG.md`** — 记录日期、变更内容、对应的 Issue 编号
+4. **整理 ByteRover 知识树** — `brv curate "..."` 保存新模式/决策
+5. **提交知识树变更** — `git -C .brv/context-tree add -A && git -C .brv/context-tree commit -m "..."`
+6. **提交代码** — `git add` + `git commit`（commit message 中引用 Issue 编号，如 `Closes #5`）
+7. `git push`
 
-**Verification checklist:**
-- [x] `npm run dev` starts without errors
-- [x] `npx prisma db push` creates tables in Supabase
-- [x] `http://localhost:3000` renders a styled page
-- [x] TypeScript compiles clean
+### Issue Labels 速查
 
----
+| Label | 含义 |
+|-------|------|
+| `scope:frontend` / `scope:backend` / `scope:fullstack` | 变更范围 |
+| `layer:ui` / `layer:api` / `layer:db` / `layer:storage` / `layer:ai` | 修改层级 |
+| `priority:p0` / `priority:p1` / `priority:p2` / `priority:p3` | 优先级 |
+| `monetization` / `platform` | 业务域 |
+| `blocked` | 被其他 Issue 阻塞 |
+| `needs-decision` | 有架构选择待定 |
 
-### Stage 2 — Auth System ✅ Complete
+### Milestones
 
-| | |
-|---|---|
-| **Goal** | Magic Link login working end-to-end with session persistence and protected routes |
-| **Estimated context** | ~45K tokens |
-| **Docs to load** | `docs/02-技术架构.md` §2.2, §6.3, §6.4; `docs/05-数据模型.md` §1 (User model) |
-| **Files to create** | `src/lib/supabase/server.ts`, `src/lib/supabase/client.ts`, `src/lib/supabase/middleware.ts`, `src/middleware.ts`, `src/app/login/page.tsx`, `src/app/auth/callback/route.ts` |
-| **Files to modify** | `src/app/layout.tsx` (add auth provider wrapper if needed) |
+| Milestone | Issues | 说明 |
+|-----------|--------|------|
+| Phase 2 — 体验升级 | 8 个 | 日历、视频、编辑、多语气、备份、导出、灯箱、夜间 |
+| Phase 3 — 商业化 | 6 个 | 支付、额度、统一 Key、后台、迁移、导出 |
+| Phase 4 — 平台化 | 6 个 | 分享、话题、统计、自定义、原生、开放 API |
+| 基础设施 | 1 个 | 测试 + CI |
 
-**Context notes:**
-- Session cookie from `@supabase/ssr` is domain-bound — middleware runs on ALL routes
-- Database trigger for User sync is manual (run in Supabase SQL Editor)
-- RLS policies are manual (run in Supabase SQL Editor). Apply policies for `User` and `Entry` tables now.
-
-**Verification checklist:**
-- [x] Visiting `/` redirects unauthenticated user to `/login`
-- [x] Magic Link sends and callback sets session
-- [x] After login, redirects to `/` and middleware no longer redirects
-- [x] `User` row appears in database after first login (verify trigger works)
-- [x] `DELETE`, `INSERT` on other user's rows blocked by RLS
-
----
-
-### Stage 3 — Backend Services ✅ Complete
-
-| | |
-|---|---|
-| **Goal** | All `lib/` services ready: R2 storage, LLM client, diary operations |
-| **Estimated context** | ~55K tokens |
-| **Docs to load** | `docs/02-技术架构.md` §3.2 (R2 paths); `docs/05-数据模型.md` §2, §4 (types); `docs/03-Phase1-MVP说明.md` §4 (warm tone prompt), §6 |
-| **Files to create** | `src/lib/storage.ts`, `src/lib/ai/client.ts`, `src/lib/ai/prompts.ts`, `src/lib/diary.ts`, `src/lib/api-key-guard.ts` |
-| **Files to modify** | `src/lib/db.ts` (ensure Prisma singleton), `src/types/index.ts` (verify all types from §4 of docs/05) |
-
-**Context notes:**
-- `src/lib/storage.ts`: Use `@aws-sdk/client-s3` with R2 endpoint. Expose: `saveMarkdown(userId, date, content)`, `readMarkdown(userId, date)`, `uploadImage(userId, imageBuffer, filename)`, `deleteEntry(userId, date)`.
-- `src/lib/ai/client.ts`: Wraps `openai` npm package. Must accept `apiKey` and `baseURL` (for DeepSeek/Gemini compatibility). Implement streaming via `stream: true`.
-- `src/lib/ai/prompts.ts`: Single tone `warm` for Phase 1. System prompt from docs/03 §4.
-- `src/lib/diary.ts`: Orchestrates: ① call vision API for images, ② call LLM generate, ③ save markdown to R2, ④ upsert Entry metadata row. Writes `preview` (first 200 chars) on save.
-- `src/lib/api-key-guard.ts`: Export `extractApiKey(request: NextRequest): string | null` and `requireApiKey(): NextResponse` helper.
-- **CRITICAL:** LLM API Key from `X-API-Key` header. Server MUST NOT log/store it. Only forward to LLM API.
-
-**Verification checklist:**
-- [x] `storage.saveMarkdown()` writes to R2, `readMarkdown()` reads it back
-- [x] `storage.uploadImage()` uploads and returns public URL
-- [x] `aiClient.generate()` streams tokens (test with `curl -N`)
-- [x] `diary.generateAndSave()` completes the full pipeline with mock data
-- [x] No API key logged in server console
-
----
-
-### Stage 4 — API Routes ✅ Complete
-
-| | |
-|---|---|
-| **Goal** | All Route Handlers wired up and testable via HTTP |
-| **Estimated context** | ~50K tokens |
-| **Docs to load** | `docs/02-技术架构.md` §5 (API design table); `docs/03-Phase1-MVP说明.md` §5 |
-| **Files to create** | `src/app/api/ai/generate/route.ts`, `src/app/api/ai/rewrite/route.ts`, `src/app/api/entries/route.ts`, `src/app/api/entries/[id]/route.ts`, `src/app/api/upload/route.ts`, `src/app/api/user/config/route.ts` |
-
-**Context notes:**
-- Every route handler must: ① validate Supabase session, ② validate API Key for `/api/ai/*`, ③ return `ApiResponse<T>` shape
-- `/api/ai/generate`: SSE streaming with proper headers (`text/event-stream`, `Cache-Control: no-cache`). Read `X-API-Key` header → pass to aiClient.
-- `/api/entries`: GET (list with pagination via cursor or offset), POST (save new)
-- `/api/entries/[id]`: GET (single), PUT (update), DELETE. Markdown content read from R2 on GET.
-- `/api/upload`: Accept `multipart/form-data`, validate file type (jpg/png/webp) and size (<10MB), write to R2 via `storage.uploadImage()`, return URL + path.
-- `/api/user/config`: GET/PUT. Store `tone` preference in User row. API key is NEVER stored server-side.
-
-**Verification checklist:**
-- [x] `POST /api/ai/generate` returns SSE stream (test with `curl -N`)
-- [x] `POST /api/upload` returns URL after uploading to R2
-- [x] `GET /api/entries` returns paginated list from DB (no R2 reads)
-- [x] `GET /api/entries/[id]` returns full markdown from R2
-- [x] Unauthenticated requests return 401
-- [x] `/api/ai/*` without `X-API-Key` returns 401
-
----
-
-### Stage 5 — App Shell + Settings Page ✅ Complete
-
-| | |
-|---|---|
-| **Goal** | Navigation, layout, and API Key configuration page working |
-| **Estimated context** | ~45K tokens |
-| **Docs to load** | `docs/03-Phase1-MVP说明.md` §2.1 (first-time flow), §3 (UI/UX); `docs/06-用户体验与交互流程.md` §1, §2.1 (landing + settings screens) |
-| **Files to create** | `src/components/NavBar.tsx`, `src/components/MobileTabBar.tsx`, `src/app/settings/page.tsx`, `src/hooks/useLocalApiKey.ts` |
-| **Files to modify** | `src/app/layout.tsx` (add NavBar + TabBar), `src/app/page.tsx` (landing for unauthenticated, redirect to /diary for authenticated) |
-
-**Context notes:**
-- Navigation: mobile bottom tab bar (📝写日记 / 📋时间线 / ⚙️设置), PC top nav bar
-- Settings page: radio buttons for provider (OpenAI / DeepSeek / Gemini), password-style API Key input, "Test Connection" button
-- `useLocalApiKey` hook: `{ provider, apiKey, setProvider, setApiKey, clearApiKey }`. Reads/writes `localStorage`. Exposes `isConfigured: boolean`.
-- API Key guard: if `isConfigured === false`, redirect from `/diary` to `/settings` with a toast.
-- **■ Decision: Home page behavior** — 用户选择 **Landing with diary preview** 模式。Stage 5 先做欢迎语 + CTA + 小贴士风格，Stage 6-7 再接入真实日记预览数据
-
-**Verification checklist:**
-- [x] Mobile tab bar shows 3 tabs and highlights active tab
-- [x] Settings page saves provider + API Key to localStorage
-- [x] "Test Connection" calls a minimal LLM API and shows success/failure toast
-- [x] Visiting `/diary` without API Key redirects to `/settings`
-- [x] Login flow leads to correct destination (landing or /diary based on decision)
-
----
-
-### Stage 6 — Diary Editor (core feature) ✅ Complete
-
-| | |
-|---|---|
-| **Goal** | Full diary writing experience: input → AI generate (streaming) → edit → save |
-| **Estimated context** | ~80K tokens |
-| **Docs to load** | `docs/03-Phase1-MVP说明.md` §2.2 (daily flow), §3.3 (editor wireframe), §4 (prompt); `docs/06-用户体验与交互流程.md` §2.2 (write flow + states) |
-| **Files to create** | `src/app/diary/page.tsx`, `src/components/DiaryEditor.tsx`, `src/components/PhotoUploader.tsx`, `src/components/TypewriterText.tsx`, `src/hooks/useStreamGenerate.ts` |
-
-**Context notes:**
-- `DiaryEditor` has 3 states: `input` (text + image upload) → `generating` (SSE stream with typewriter) → `editing` (Markdown editor + preview). See docs/06 wireframes for exact layout.
-- `useStreamGenerate` hook: calls `/api/ai/generate` with `fetch()` reading `ReadableStream`, accumulates tokens, exposes `{ text, isStreaming, error, generate, stop }`.
-- `TypewriterText`: renders text character-by-character with cursor animation. Performance: use `requestAnimationFrame` or a debounced interval.
-- `PhotoUploader`: 9-slot grid, drag-to-reorder, click-to-delete. Upload images immediately on selection (show progress bar per slot), store returned URLs. Pass image URLs (not files) to generate API.
-- `MarkdownEditor` / preview: use a split-pane or toggle between raw textarea and `react-markdown` preview. Basic toolbar: bold, italic, heading (use `@uiw/react-md-editor` or simple custom controls).
-- **■ Decision: Editor layout** — 用户选择 **(A) single textarea + toggle**，移动端优先
-- **■ Decision: Save UX** — 用户选择 **(A) redirect to detail**，保存后跳转 `/diary/{date}`
-
-**Verification checklist:**
-- [x] User can type text + upload images, click "✨ 让铃英帮你写" 
-- [x] SSE streaming shows typewriter animation in real-time
-- [x] "Stop" button interrupts generation
-- [x] User can edit generated Markdown before saving
-- [x] "Save" persists markdown to R2 + metadata to DB
-- [x] "Regenerate" clears output and re-calls the API
-- [x] Error states handled: network error, API Key invalid, LLM timeout
-
----
-
-### Stage 7 — Timeline + Diary Detail
-
-| | |
-|---|---|
-| **Goal** | Browse all diaries in reverse chronological order and view a single diary |
-| **Estimated context** | ~50K tokens |
-| **Docs to load** | `docs/03-Phase1-MVP说明.md` §2.2 (timeline wireframe); `docs/06-用户体验与交互流程.md` §2.3, §2.4 (timeline + detail wireframes), §3.3 (empty states) |
-| **Files to create** | `src/app/timeline/page.tsx`, `src/components/TimelineList.tsx`, `src/components/DiaryCard.tsx`, `src/app/diary/[date]/page.tsx`, `src/components/MarkdownViewer.tsx` |
-
-**Context notes:**
-- `TimelineList`: infinite scroll or cursor-based "Load More". Each card shows: date, preview (first 200 chars from DB, no R2 call), image count indicator, tags. Wireframe from docs/06 §2.3.
-- `DiaryCard`: click navigates to `/diary/{date}`.
-- `MarkdownViewer`: renders markdown via `react-markdown` with image support. Images use `next/image` with `remotePatterns` allowing R2 public URL domain.
-- Diary detail page: fetch from `/api/entries/[id]` (which reads full markdown from R2). Show: full rendered content, tags, word count, created date.
-- Empty state for timeline: "还没有日记哦～ 点击「写日记」开始你的第一篇吧！🌸" with illustration. See docs/06 §3.3.
-- **■ Decision: Timeline grouping** — Ask: "Should the timeline group entries by month with month headers, or just show a flat reverse-chronological list?" If deferred, group by month with headers.
-- **■ Decision: Delete confirmation** — Ask: "Should deleting a diary entry require a confirmation dialog, or use a swipe-to-delete pattern with an undo snackbar?" If deferred, use confirmation dialog (simpler to implement, safer for MVP).
-
-**Verification checklist:**
-- [ ] Timeline shows all diary entries in reverse chronological order
-- [ ] Each card shows date, preview, image count, tags (no full markdown load)
-- [ ] Clicking a card navigates to detail page with full rendered markdown
-- [ ] Images render correctly from R2 public URLs
-- [ ] Empty timeline shows the empty state with CTA
-- [ ] Pagination / "Load More" works
-- [ ] Detail page supports delete (with confirmation flow)
-
----
-
-### Stage 8 — PWA + Deploy + Polish
-
-| | |
-|---|---|
-| **Goal** | Installable PWA deployed on Vercel, responsive across devices |
-| **Estimated context** | ~40K tokens |
-| **Docs to load** | `docs/02-技术架构.md` §4 (PWA strategy), §7 (env vars); `docs/03-Phase1-MVP说明.md` §7 (deploy); `docs/06-用户体验与交互流程.md` §4 (PWA install flow) |
-| **Files to create** | `public/manifest.json`, `public/icons/icon-192.png`, `public/icons/icon-512.png`, `serwist.config.ts` (or `next.config.mjs` Serwist integration), `src/app/sw.ts` (if Serwist needs), `vercel.json` |
-| **Files to modify** | `src/app/layout.tsx` (add `<link rel="manifest">` + meta tags), existing components (responsive pass) |
-
-**Context notes:**
-- Serwist: use `@serwist/next` integration. Cache strategy per docs/02 §4.1: App Shell `CacheFirst`, diary content `NetworkFirst`, images `CacheFirst`, API `NetworkOnly`, static assets `StaleWhileRevalidate`.
-- Install prompt: detect `beforeinstallprompt` event. Show a subtle banner: "📱 安装玲音日记到手机桌面" with [稍后] [安装] buttons. See docs/06 §4.1.
-- Offline: App Shell loads offline. Show cached diary list. Write attempt shows "需要网络" notice.
-- Responsive pass: verify all pages at 375px (iPhone SE), 768px (iPad), 1440px (desktop). Fix any layout breaks.
-- `vercel.json`: set `framework: "nextjs"`, configure `regions: "hkg1"` (Hong Kong, closest to Chinese users), set env vars.
-- **■ Decision: PWA icons** — Ask: "For PWA icons — do you have a logo/app icon design, or should I generate placeholder icons with the sakura pink gradient and '玲音' text?" If deferred, generate placeholder gradient icons with text.
-- **■ Decision: Analytics** — Ask: "Do you want to add Vercel Analytics or any other analytics (Plausible, Umami) in this stage, or skip for MVP?" If deferred, skip for MVP.
-
-**Verification checklist:**
-- [ ] PWA passes Lighthouse PWA audit (≥ 90)
-- [ ] "Add to Home Screen" prompt appears (test on mobile)
-- [ ] Installing the PWA opens in standalone mode with sakura pink theme color
-- [ ] Offline: App Shell loads, cached diaries visible
-- [ ] Deployed to Vercel at production URL
-- [ ] All env vars configured in Vercel dashboard
-- [ ] Custom domain (if available) SSL auto-provisioned
-- [ ] All pages responsive at 375px / 768px / 1440px
-
----
-
-## Milestone summary
-
-| Stage | What | Tokens | Deliverable |
-|-------|------|--------|-------------|
-| 1 | Project Bootstrap | ~30K | Dev server running |
-| 2 | Auth System | ~45K | Magic Link login |
-| 3 | Backend Services | ~55K | All lib/ ready |
-| 4 | API Routes | ~50K | All endpoints wired |
-| 5 | App Shell + Settings | ~45K | Navigation + API Key config |
-| 6 | Diary Editor | ~80K | Full write → save flow |
-| 7 | Timeline + Detail | ~50K | Browse + read diaries |
-| 8 | PWA + Deploy + Polish | ~40K | Installed PWA on Vercel |
-
-**Total: ~395K tokens across 8 stages, averaging ~50K per stage.**
-
-When starting a stage, tell the AI: "Work on Stage X of the roadmap in AGENTS.md. Load the referenced doc sections first, ask me the tagged decision points (■) before writing code. Before writing any code, use `brv search` to understand existing code structure. After completing code changes, update CHANGELOG.md, curate with `brv curate`, commit `.brv/context-tree/` changes, then commit and push."
+查看所有 Issue：`gh issue list --state open`
