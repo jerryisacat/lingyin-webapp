@@ -2,6 +2,36 @@
 
 ---
 
+## 2026-05-21 (Stage 7 — Timeline + Diary Detail)
+
+### Stage 7: Timeline 时间线浏览 + Diary 日记详情页
+- **内容**：实现时间线浏览（按月分组、cursor 分页加载更多）+ 单篇日记详情页（Markdown 渲染、删除确认弹窗）。
+- **因果链**：Stage 6 (Diary Editor) 完成后 → 按 AGENTS.md Stage 7 清单实施。决策：按月分组（month headers）、确认弹窗删除（非滑动删除）、详情页路由使用 `/diary/[id]`（更简单，无需新 API）。
+- **新建文件**：
+  - `src/app/timeline/page.tsx` — 时间线页面（"use client"）。调用 `GET /api/entries` 获取日记列表，cursor 分页加载更多，传入 TimelineList 渲染。含加载态、错误态、空状态（"还没有日记哦～🌸"）。
+  - `src/components/TimelineList.tsx` — 时间线列表组件。按年月分组（`groupByMonth`），渲染月标题 + DiaryCard 列表。含加载骨架屏、空状态、加载更多按钮、"已经到底啦"提示。月标题 sticky 吸顶。
+  - `src/components/DiaryCard.tsx` — 日记卡片组件。显示日期方块（大号日期 + 星期）、标题（从 preview 首行提取）、预览文本（line-clamp 3 行）、字数、图片标记（📷 Icon）、标签列表。sakura 粉色圆角边框，hover 高亮。点击跳转 `/diary/[id]`。
+  - `src/app/diary/[id]/page.tsx` — 日记详情页（"use client"）。调用 `GET /api/entries/[id]` 获取完整 Markdown（含 R2 读取）。页面显示：返回按钮、删除按钮、日期行、元数据栏（字数/图片/标签）、MarkdownViewer 渲染正文、创建时间。删除按钮 → 确认弹窗 → 调用 `DELETE /api/entries/[id]` → 跳转 `/timeline`。
+  - `src/components/MarkdownViewer.tsx` — 可复用 Markdown 渲染器。使用 `react-markdown` + `remark-gfm`（GFM 表格/任务列表）。自定义组件渲染：next/image（支持 R2 remotePatterns）、代码块 / 行内代码（sakura 主题）、引用块（sakura 左边框）、表格等。移动端自适应。
+- **修改文件**：
+  - `src/components/DiaryEditor.tsx` — 保存后跳转 URL 从 `/diary/${entry.date}` 改为 `/diary/${entry.id}`（因为详情页使用 `/diary/[id]` 路由）。
+  - `package.json` — 新增依赖 `remark-gfm`（GFM 扩展支持）。
+- **技术细节**：
+  - 时间线分组使用 `groupByMonth` 按 `YYYY-MM` 聚合，按月降序排列
+  - 卡片预览直接使用 DB 中的 `Entry.preview`（前 200 字符，无 Markdown 语法），无需 R2 调用
+  - 详情页通过 `fetch(/api/entries/[id])` 获取完整 Markdown 内容（服务端从 R2 读取）
+  - MarkdownViewer 图片使用 `next/image` 组件，`remotePatterns` 已配置 R2 公共 URL（`pub-*.r2.dev`）
+  - 删除确认使用 modal 弹窗，backdrop 点击可取消；删除中显示 loading，防止重复操作
+  - 详情页错误状态：404 "日记不存在" / 网络错误 "加载失败"，含返回时间线按钮
+  - 时间线首次加载、加载更多均独立 loading 状态，避免闪烁
+- **决策记录**：
+  - 时间线分组：按月分组 + 月标题（选中方案 A — 结构清晰，便于浏览）
+  - 删除确认：确认弹窗（选中方案 A — 更安全，适合 MVP）
+  - 详情页路由：`/diary/[id]`（非 `/diary/[date]`）— 复用现有 `GET /api/entries/[id]`，无需新建 date→id 解析 API
+- **验证**：`npx tsc --noEmit` 零错误
+
+---
+
 ## 2026-05-21 (Stage 6 — Diary Editor)
 
 ### Stage 6: Diary Editor 核心功能

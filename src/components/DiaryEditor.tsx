@@ -101,7 +101,7 @@ export default function DiaryEditor({ date, provider, apiKey }: DiaryEditorProps
 
       const { data: entry } = await res.json();
       setSaveStatus("saved");
-      router.push(`/diary/${entry.date}`);
+      router.push(`/diary/${entry.id}`);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Save failed";
       setSaveError(msg);
