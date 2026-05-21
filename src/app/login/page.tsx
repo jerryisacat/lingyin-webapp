@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { BookOpen, Mail, ArrowRight, Loader2 } from "lucide-react";
 
@@ -10,6 +10,23 @@ export default function LoginPage() {
     "idle"
   );
   const [error, setError] = useState("");
+  const [debugInfo, setDebugInfo] = useState("");
+
+  // Show error from callback redirect (?error=...&debug_...)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlError = params.get("error");
+    if (urlError && status === "idle") {
+      setStatus("error");
+      setError(decodeURIComponent(urlError));
+      // Show debug cookie info
+      const ncookies = params.get("debug_ncookies");
+      const names = params.get("debug_names");
+      if (ncookies || names) {
+        setDebugInfo(`[DEBUG] Request had ${ncookies} cookies. Names: ${names || "(none)"}`);
+      }
+    }
+  }, [status]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,6 +106,11 @@ export default function LoginPage() {
           {error && (
             <p className="text-sm text-red-500 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
               {error}
+            </p>
+          )}
+          {debugInfo && (
+            <p className="text-xs text-amber-600 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 font-mono break-all">
+              {debugInfo}
             </p>
           )}
 

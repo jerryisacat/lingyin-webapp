@@ -32,7 +32,10 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname.startsWith("/login") ||
     request.nextUrl.pathname.startsWith("/auth");
 
-  if (!user && !isAuthRoute) {
+  // 公开路由：Landing page 允许未登录访问
+  const PUBLIC_ROUTES = ["/"];
+
+  if (!user && !isAuthRoute && !PUBLIC_ROUTES.includes(request.nextUrl.pathname)) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 

@@ -9,6 +9,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/login?error=no_code`);
   }
 
+  // DEBUG: collect cookie names present at callback time
+  const debugCookies = request.cookies.getAll().map(c => c.name).join(",");
+  const rawCookieHeader = request.headers.get("cookie") || "(none)";
+
   // Create a response early so we can attach session cookies to it
   let response = NextResponse.redirect(`${origin}/`);
 
@@ -36,8 +40,9 @@ export async function GET(request: NextRequest) {
   const { error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error) {
+    const debug = `debug_ncookies=${request.cookies.getAll().length}&debug_names=${encodeURIComponent(debugCookies)}&raw_cookie=${encodeURIComponent(rawCookieHeader.substring(0, 200))}`;
     return NextResponse.redirect(
-      `${origin}/login?error=${encodeURIComponent(error.message)}`
+      `${origin}/login?error=${encodeURIComponent(error.message)}&${debug}`
     );
   }
 

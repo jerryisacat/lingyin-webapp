@@ -4,13 +4,13 @@ import { usePathname } from "next/navigation";
 import NavBar from "./NavBar";
 import MobileTabBar from "./MobileTabBar";
 
-const AUTH_ROUTES = ["/login", "/auth"];
+const NO_SHELL_ROUTES = ["/login", "/auth", "/"];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isAuthRoute = AUTH_ROUTES.some((route) => pathname.startsWith(route));
+  const noShell = NO_SHELL_ROUTES.some((route) => pathname.startsWith(route));
 
-  if (isAuthRoute) {
+  if (noShell) {
     return <>{children}</>;
   }
 

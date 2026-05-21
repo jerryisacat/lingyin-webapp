@@ -2,6 +2,17 @@
 
 ---
 
+## 2026-05-22 (Landing Page 新增)
+
+### Landing Page (首页重设计)
+- **内容**: 将原来的简易首页替换为完整的 Landing Page。同时更正了 middleware 的 auth 逻辑——原本所有未登录用户被 redirect 到 `/login`，未登录用户永远看不到首页。
+- **变更文件**:
+  - `src/app/page.tsx` — 重写：未登录时显示完整 Landing Page（Hero + 特性 + 使用步骤 + CTA + Footer），已登录时显示仪表盘（保持原有行为）
+  - `src/lib/supabase/middleware.ts` — 将 `/` 加入公开路由，未登录用户可访问 Landing Page
+  - `src/components/AppShell.tsx` — Landing Page 不渲染导航栏（NavBar + MobileTabBar），保持全屏展示效果
+- **设计**: 樱花粉主题，4 卡片特性区（AI智能生成/照片入文/隐私优先/随处可用），3 步骤引导，底部 CTA
+- **触发原因**: 用户要求增加 Landing Page。发现中间件阻止未登录用户访问首页，一并修复。
+
 ## 2026-05-22 (Pre-signed URL / R2 隐私修复 + 文档整理 + SW API 升级)
 
 ### R2 用户文件隐私修复 (Closes #23)
