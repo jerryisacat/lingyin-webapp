@@ -2,6 +2,34 @@
 
 ---
 
+## 2026-05-21 (Stage 8 — PWA + Deploy + Polish)
+
+### Stage 8: PWA 配置 + Vercel 部署准备 + 响应式审查
+- **内容**：将铃英日记打造为可安装的 PWA，配置 Serwist Service Worker 缓存策略，生成 PWA 图标，准备 Vercel 部署配置，完成响应式审查。
+- **因果链**：Stage 7 (Timeline + Detail) 完成 → 按 AGENTS.md Stage 8 清单实施。决策：PWA 图标使用 FLUX AI 生成（樱花+羽毛笔主题）、Analytics 跳过 MVP、安装提示横幅使用 Chrome 原生（自行触发）。
+- **新建文件**：
+  - `public/manifest.json` — PWA Manifest。name=铃英日记, display=standalone, theme_color=#f0a8b0, background=#faf3e8, icons 192+512
+  - `public/icons/icon-192.png` — FLUX AI 生成 PWA 图标 192×192（樱花花形 + 白色羽毛笔）
+  - `public/icons/icon-512.png` — FLUX AI 生成 PWA 图标 512×512（同设计，高对比度 v2）
+  - `src/sw.ts` — Serwist v9 Service Worker。`/// <reference lib="webworker" />`, 使用 `Serwist` class API + `addEventListeners()`。缓存策略：App Shell CacheFirst, API NetworkFirst, 图片 CacheFirst, 静态资源 StaleWhileRevalidate, 其他 API NetworkOnly, 字体 CacheFirst
+  - `vercel.json` — Vercel 部署配置。framework=nextjs, regions=["hkg1"], build 含 `prisma generate`
+- **修改文件**：
+  - `next.config.mjs` — 集成 `@serwist/next` (`withSerwist` wrapper, swSrc + swDest)
+  - `package.json` — 新增依赖：`@serwist/next`, `@serwist/precaching`, `@serwist/strategies`, `serwist`
+- **技术细节**：
+  - Serwist v9.5.11 class API: `new Serwist({...})` + `serwist.addEventListeners()`
+  - SW 使用 `@serwist/next/worker` 的 `defaultCache` + 自定义 runtimeCaching
+  - SW TypeScript 需 `/// <reference lib="webworker" />`（独立 tsc 无此 lib，构建时 webpack 已处理）
+  - 图标 v1 对比度太低（白色元素在浅粉背景不可见）→ v2 深粉渐变背景 + 实心樱花花形
+  - layout.tsx 已有 PWA meta（manifest + themeColor + appleWebApp），无需修改
+- **决策记录**：
+  - PWA 图标：FLUX AI 生成（选中方案 C），v1→v2 迭代解决对比度问题
+  - Analytics：跳过 MVP（默认 defer）
+  - 安装提示：使用 Chrome 原生 beforeinstallprompt（默认 defer）
+- **响应式审查通过**：所有页面和组件均为移动优先（max-w-约束 + md:断点），检查清单 — AppShell (pb-20/md:pb-6) ✓, NavBar (hidden md:flex) ✓, MobileTabBar (md:hidden + safe-area-bottom) ✓, 全部页面 (max-w-sm/lg/2xl) ✓, DiaryDetail 删除弹窗 (fixed inset-0) ✓
+
+---
+
 ## 2026-05-21 (Stage 7 — Timeline + Diary Detail)
 
 ### Stage 7: Timeline 时间线浏览 + Diary 日记详情页
