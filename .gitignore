@@ -44,3 +44,7 @@ node_modules/.prisma/
 # Kilo / AI tooling
 .kilocode/
 memory/
+.vercel
+
+# Vercel env dump (contains tokens)
+.env.vercel
