@@ -1,0 +1,19 @@
+{
+  "active_context": [
+    {
+      "importance": 50,
+      "path": "ui/landing/landing_page_and_auth_routing.md",
+      "tokens": 289,
+      "type": "context"
+    }
+  ],
+  "generated_at": "2026-05-21T19:12:39.380Z",
+  "lane_tokens": {
+    "contexts": 289,
+    "stubs": 0,
+    "summaries": 0
+  },
+  "source_fingerprint": "eea71368571ca362f8ec6bdd9eb309f84f60124e99f50d995471ba723dcddd15",
+  "total_tokens": 289,
+  "version": 1
+}

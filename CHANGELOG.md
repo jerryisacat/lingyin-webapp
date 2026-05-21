@@ -2,6 +2,28 @@
 
 ---
 
+## 2026-05-22 (Magic Link 登录修复)
+
+### Magic Link PKCE Cookie 修复
+- **内容**: 修复 Magic Link 登录时点击邮件链接无法登录的问题。浏览器端 cookie 的 `SameSite` 从 `Strict` 改为 `Lax`。
+- **因果链**: 用户点击邮件中的 Magic Link 属于跨站导航（邮件客户端 → 网站），`SameSite=Strict` 阻止 PKCE code verifier cookie 发送 → 回调路由收到 0 个 cookie → `exchangeCodeForSession` 报错 "PKCE code verifier not found in storage" → 改为 `SameSite=Lax`，允许 GET 跨站导航携带 cookie，同时仍防御 CSRF 跨站 POST 攻击
+- **修改文件**:
+  - `src/lib/supabase/client.ts` — 为 `createBrowserClient` 添加自定义 `cookies` 配置，手动设置 cookie 时默认使用 `SameSite=Lax`
+- **验证**: `npx tsc --noEmit` 编译通过（`client.ts` 零错误）
+
+---
+
+## 2026-05-22 (Magic Link 登录修复)
+
+### Magic Link PKCE Cookie 修复
+- **内容**: 修复 Magic Link 登录时点击邮件链接无法登录的问题。浏览器端 cookie 的 `SameSite` 从 `Strict` 改为 `Lax`。
+- **因果链**: 用户点击邮件中的 Magic Link 属于跨站导航（邮件客户端 → 网站），`SameSite=Strict` 阻止 PKCE code verifier cookie 发送 → 回调路由收到 0 个 cookie → `exchangeCodeForSession` 报错 "PKCE code verifier not found in storage" → 改为 `SameSite=Lax`，允许 GET 跨站导航携带 cookie，同时仍防御 CSRF 跨站 POST 攻击
+- **修改文件**:
+  - `src/lib/supabase/client.ts` — 为 `createBrowserClient` 添加自定义 `cookies` 配置，手动设置 cookie 时默认使用 `SameSite=Lax`
+- **验证**: `npx tsc --noEmit` 编译通过（`client.ts` 零错误）
+
+---
+
 ## 2026-05-22 (Landing Page 新增)
 
 ### Landing Page (首页重设计)

@@ -1,0 +1,14 @@
+{
+  "curationsSinceDream": 1,
+  "lastDreamAt": null,
+  "lastDreamLogId": null,
+  "pendingMerges": [],
+  "staleSummaryPaths": [
+    {
+      "enqueuedAt": 1779390759378,
+      "path": "ui/landing/landing_page_and_auth_routing.md"
+    }
+  ],
+  "totalDreams": 0,
+  "version": 1
+}
