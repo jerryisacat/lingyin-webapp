@@ -40,8 +40,6 @@ node_modules/.prisma/
 # Turbopack
 .turbo/
 
-# ByteRover — context-tree has its own nested .git (managed by brv vc)
-.brv/context-tree/
 
 # Kilo / AI tooling
 .kilocode/
