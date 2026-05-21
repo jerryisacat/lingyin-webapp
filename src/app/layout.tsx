@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Sans_SC } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import AppShell from "@/components/AppShell";
 import "./globals.css";
 
@@ -33,6 +34,7 @@ export default function RootLayout({
     <html lang="zh-CN" className={notoSansSC.variable}>
       <body className="min-h-screen bg-warm-white text-ink font-sans">
         <AppShell>{children}</AppShell>
+        <Analytics />
       </body>
     </html>
   );
