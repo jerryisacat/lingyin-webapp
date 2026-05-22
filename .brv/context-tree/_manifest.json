@@ -19,11 +19,17 @@
       "type": "summary"
     },
     {
+      "importance": 50,
+      "path": "project/context_curation/rlm_context_curation.md",
+      "tokens": 143,
+      "type": "context"
+    },
+    {
       "abstractPath": "structure/src_app/application_source.abstract.md",
-      "abstractTokens": 40,
+      "abstractTokens": 57,
       "importance": 50,
       "path": "structure/src_app/application_source.md",
-      "tokens": 40,
+      "tokens": 57,
       "type": "context"
     },
     {
@@ -32,6 +38,14 @@
       "importance": 50,
       "path": "structure/storage/r2_privacy_and_asset_management.md",
       "tokens": 66,
+      "type": "context"
+    },
+    {
+      "abstractPath": "ui/demo/ui_ux_interactive_demo_v2_0.abstract.md",
+      "abstractTokens": 50,
+      "importance": 50,
+      "path": "ui/demo/ui_ux_interactive_demo_v2_0.md",
+      "tokens": 50,
       "type": "context"
     },
     {
@@ -49,13 +63,13 @@
       "type": "context"
     }
   ],
-  "generated_at": "2026-05-22T12:07:19.604Z",
+  "generated_at": "2026-05-22T12:23:09.137Z",
   "lane_tokens": {
-    "contexts": 1015,
+    "contexts": 1225,
     "stubs": 0,
     "summaries": 787
   },
-  "source_fingerprint": "dd891eeaced58f55514e7687af27c576568c24577abc9391021b7572e144c34e",
-  "total_tokens": 1802,
+  "source_fingerprint": "3e600680029741f8aded414854f01dcee5337253318c941ccf175336cc895944",
+  "total_tokens": 2012,
   "version": 1
 }

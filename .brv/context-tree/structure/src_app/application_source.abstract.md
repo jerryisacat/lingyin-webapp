@@ -1,1 +1,1 @@
-The document overviews the src/app source structure for a Next.js application, covering API routes, components, and libraries via single-pass context curation.
+The document details the src/app structure in a Next.js app, covering auth flows, diary CRUD, timeline views, and an extensible OpenRouter LLM provider setup with Prisma DB and AI utilities for streaming and image description.

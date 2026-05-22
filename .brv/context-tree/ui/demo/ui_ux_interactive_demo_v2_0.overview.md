@@ -1,0 +1,7 @@
+- Interactive demo for 玲音日记 featuring sakura particles, dark mode, typewriter, breathing cards, PWA mockup, and animations
+- Changes include sakura snowfall particles, zero-FOUC dark mode toggle, typewriter cursor pulse, AI breathing card glow, spring toast animations, and PWA mobile mockup with tabs
+- Single-file demo using Tailwind CDN with custom CSS keyframes for snowfall, breathing, and slide-in-spring effects
+- Demo flow: Landing hero → Feature steps → Interactive editor → Mobile PWA preview
+- Highlights: GPU-accelerated 18 sakura particles, seamless dark mode, PWA tab slide with scale feedback
+- Structure summary: Sections cover Reason, Raw Concept (task/changes/files/flow), and Narrative (structure/dependencies/highlights)
+- Notable entities/patterns: public/demo.html, Tailwind + custom animations, 玲音日记 branding

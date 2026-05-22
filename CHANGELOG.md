@@ -1,5 +1,32 @@
 # CHANGELOG
 
+## 2026-05-22 — Issue #28: Landing Page 设计优化
+
+**触发原因**: Landing Page v1 设计感不足，缺少日记产品的温暖氛围、动态元素和视觉层次。
+
+### 修改
+- `src/app/page.tsx`: Landing Page 完整重写（已登录仪表盘视图不变）
+  - **Hero**: 18 个 GPU 加速 CSS 樱花飘落粒子 + 4 层 sakura 渐变光斑背景 + 渐变色副标题（"记下此时此刻，温暖治愈的 AI 日记伴侣"）+ 双 CTA 分离（「开启书写之旅」→ `/login`，「了解更多」→ `scrollIntoView('#features')` 平滑滚动）+ 向下探索箭头指示
+  - **Features**: 4 张卡片新增 hover 上浮 (`-translate-y-1`) + 左侧 sakura accent bar（`::before` 伪元素 `scaleY` 展开动画）+ 图标容器 `group-hover:scale-110`
+  - **How It Works**: 文案更新为 spec 版（日常倾诉→温暖润色→珍藏回味）+ 桌面端 SVG 贝塞尔虚线连接（含 `dash-move` 流动动画）+ 移动端竖线连接 + 序号 sakura 徽章 + 卡片 hover 上浮
+  - **CTA**: 渐变背景 `from-sakura/5 to-sakura/10` + 中心光斑 + 按钮 hover 上浮动效
+- `src/app/globals.css`: 新增 `scroll-behavior: smooth`（html）+ 樱花飘落 `@keyframes sakura-fall` + `.feature-card` 左侧 accent bar 动画 + `.step-connector` SVG 虚线流动动画 + `prefers-reduced-motion: reduce` 全面降级
+- `src/components/SakuraParticles.tsx`: 新建客户端组件 — 18 个花瓣粒子，`useEffect` 动态生成，`will-change: transform; translate3d(0,0,0)` 强制 GPU 加速，`prefers-reduced-motion` 下自动跳过
+
+### 设计决策
+- **纯 CSS 动画优先**: 所有动效使用 CSS keyframes + Tailwind utility，零第三方动画库依赖
+- **GPU 加速**: 樱花粒子使用 `translate3d` + `will-change: transform`，避免主线程重绘
+- **A11y 降级**: `prefers-reduced-motion: reduce` 下隐藏飘落粒子、禁用连线流动动画
+- **平滑滚动**: `html` 元素 `scroll-behavior: smooth`，无需 JS `scrollIntoView`
+
+## 2026-05-22 — Issue #30: 全站 UI/UX 设计升级（Epic 需求规约完善与 Demo 编写）
+
+**触发原因**: 全站 UI/UX 升级的 Epic #30 需求需要进一步精细化与技术规范确立，确保在不破坏现有 PWA 功能、性能与 Next.js SSR 机制的前提下提供温暖柔和的视觉、无闪烁的深色模式与极致的微交互体验。
+
+### 新建文档
+- `docs/issue-30-spec.md` — 建立《全站 UI/UX 设计升级（Epic #30）精细化技术需求规约》，涵盖双主题 CSS 变量（Tokens）设计、Landing Page 微动画与 SVG 连线、Next.js 暗色闪烁（FOUC）解决方案、毛玻璃导航与 iOS 底部安全区、沉浸式编辑器与 AI 呼吸状态光晕、详情页 Shimmer 骨架屏、自研弹簧 Toast 及 PWA 物理手势，并输出 6 大子任务开发清单及验收 DoD。
+- `public/demo.html` — 编写轻量、全交互的 UI/UX 高保真视觉特效 Demo（包含 GPU 加速樱花雪花背景、一键暗色模式抗闪转换、流式打字机动画配合卡片呼吸光晕、带有物理弹性的 Toast 与 PWA Tabbar 滑动反馈、图片手势 Lightbox 及拟真骨架屏切换），支持开箱即用。
+
 ## 2026-05-22 — Issue #33: API 密钥仅支持 OpenRouter
 
 **触发原因**: Phase 1 简化 Provider 管理，OpenRouter 作为统一网关一个 Key 可访问数百种模型，其他 Provider 留待后续 Phase。
