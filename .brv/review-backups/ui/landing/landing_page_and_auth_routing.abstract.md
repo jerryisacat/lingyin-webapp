@@ -1,1 +1,0 @@
-This document describes implementing a dual-state root page that renders a public landing page with hero, features, steps and CTA for guests while showing a personalized dashboard for authenticated users, using middleware to mark / as public and excluding it from the AppShell navigation.

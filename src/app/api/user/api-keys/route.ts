@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db"
 import type { ApiProvider } from "@/types"
 import { NextRequest } from "next/server"
 
-const VALID_PROVIDERS: ApiProvider[] = ["openai", "deepseek", "gemini"]
+const VALID_PROVIDERS: ApiProvider[] = ["openrouter"]
 
 export async function GET() {
   const user = await getSessionUserId()

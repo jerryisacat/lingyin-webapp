@@ -1,5 +1,25 @@
 # CHANGELOG
 
+## 2026-05-22 — Issue #33: API 密钥仅支持 OpenRouter
+
+**触发原因**: Phase 1 简化 Provider 管理，OpenRouter 作为统一网关一个 Key 可访问数百种模型，其他 Provider 留待后续 Phase。
+
+### 修改
+- `src/types/index.ts`: `ApiProvider` 改为 `"openrouter"`（union type，易于扩展）
+- `src/lib/ai/client.ts`: 重构为可扩展的 `ProviderConfig` 结构 — 单点配置 `baseURL` / `defaultModel` / `defaultVisionModel` / `defaultHeaders`，新增 Provider 只需在 `PROVIDER_CONFIGS` 加一条记录；导出 `createOpenAIClient` 和 `PROVIDER_CONFIGS` 供 test route 复用
+- `src/app/api/user/api-keys/route.ts`: `VALID_PROVIDERS` 改为 `["openrouter"]`
+- `src/app/api/ai/generate/route.ts`: 默认 provider 改为 `"openrouter"`
+- `src/app/api/ai/rewrite/route.ts`: 默认 provider 改为 `"openrouter"`
+- `src/app/api/ai/test/route.ts`: 移除 fetch 直连，改用共享的 `createOpenAIClient` + `PROVIDER_CONFIGS`
+- `src/app/settings/page.tsx`: Provider 列表改为仅 OpenRouter，placeholder 更新为 `sk-or-v1-...`
+- `src/app/diary/page.tsx`: `PROVIDER_ORDER` 改为 `["openrouter"]`
+- `AGENTS.md`: 更新 LLM providers 为 OpenRouter
+
+### 设计决策
+- **Extensible Provider Config**: 新增 Provider 仅需在 `PROVIDER_CONFIGS` 加一条 + 更新 `ApiProvider` union type，无需改动 `generateStream` / `describeImage` 等函数签名
+- **Test route 复用 client**: 测试连接直接用 `createOpenAIClient`，与生成流程一致，避免配置不一致
+- **OpenRouter Headers**: `HTTP-Referer` + `X-Title` 通过 `defaultHeaders` 统一注入
+
 ## 2026-05-22 — Issue #23: R2 用户文件隐私审查与修复
 
 **触发原因**: 图片和 Markdown 文件通过 R2 公开 URL 可被未授权访问，存在隐私泄露风险。

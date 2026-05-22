@@ -1,19 +1,8 @@
 import { getUser, jsonError, jsonOk } from "@/lib/api-helpers";
 import { getUserDecryptedApiKey } from "@/lib/api-key-guard";
+import { createOpenAIClient, PROVIDER_CONFIGS } from "@/lib/ai/client";
 import type { ApiProvider } from "@/types";
 import { NextRequest } from "next/server";
-
-const CHAT_MODELS: Record<ApiProvider, string> = {
-  openai: "gpt-4o-mini",
-  deepseek: "deepseek-chat",
-  gemini: "gemini-2.0-flash",
-};
-
-const BASE_URLS: Record<ApiProvider, string> = {
-  openai: "https://api.openai.com/v1",
-  deepseek: "https://api.deepseek.com",
-  gemini: "https://generativelanguage.googleapis.com/v1beta/openai",
-};
 
 export async function POST(request: NextRequest) {
   const user = await getUser();
@@ -26,9 +15,9 @@ export async function POST(request: NextRequest) {
     return jsonError("Invalid JSON body");
   }
 
-  const { provider = "openai", apiKey: bodyApiKey } = body;
+  const { provider = "openrouter", apiKey: bodyApiKey } = body;
 
-  const validProviders: ApiProvider[] = ["openai", "deepseek", "gemini"];
+  const validProviders: ApiProvider[] = ["openrouter"];
   if (!validProviders.includes(provider)) {
     return jsonError(`Unknown provider: ${provider}`, 400);
   }
@@ -38,41 +27,28 @@ export async function POST(request: NextRequest) {
     return jsonError("API Key is required to test connection", 400);
   }
 
-  const baseURL = BASE_URLS[provider];
-  const model = CHAT_MODELS[provider];
+  const config = PROVIDER_CONFIGS[provider];
+  const model = config.defaultModel;
 
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
 
-    const response = await fetch(`${baseURL}/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
+    const client = createOpenAIClient(apiKey, provider);
+
+    const response = await client.chat.completions.create(
+      {
         model,
         messages: [{ role: "user", content: "Hi" }],
         max_tokens: 5,
-      }),
-      signal: controller.signal,
-    });
+      },
+      { signal: controller.signal }
+    );
 
     clearTimeout(timeout);
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      let errorMessage = `API returned status ${response.status}`;
-      try {
-        const errorJson = JSON.parse(errorText);
-        if (errorJson.error?.message) {
-          errorMessage = errorJson.error.message;
-        }
-      } catch {
-        // use raw status
-      }
-      return jsonOk({ connected: false, error: errorMessage });
+    if (!response.choices || response.choices.length === 0) {
+      return jsonOk({ connected: false, error: "No response from API" });
     }
 
     return jsonOk({ connected: true });

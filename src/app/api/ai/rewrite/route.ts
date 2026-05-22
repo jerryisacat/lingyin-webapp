@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
   const {
     content = "",
     instruction = "请润色这篇日记，让语言更优美流畅",
-    provider = "openai",
+    provider = "openrouter",
   } = body;
 
   if (!content.trim()) {

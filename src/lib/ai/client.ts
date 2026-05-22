@@ -1,33 +1,32 @@
 import OpenAI from "openai";
 import type { ApiProvider } from "@/types";
 
-interface ProviderConfig {
-  baseURL?: string;
+export interface ProviderConfig {
+  baseURL: string;
+  defaultModel: string;
+  defaultVisionModel: string;
+  defaultHeaders?: Record<string, string>;
 }
 
-const PROVIDER_CONFIGS: Record<ApiProvider, ProviderConfig> = {
-  openai: {},
-  deepseek: { baseURL: "https://api.deepseek.com" },
-  gemini: { baseURL: "https://generativelanguage.googleapis.com/v1beta/openai" },
+export const PROVIDER_CONFIGS: Record<ApiProvider, ProviderConfig> = {
+  openrouter: {
+    baseURL: "https://openrouter.ai/api/v1",
+    defaultModel: "openai/gpt-4o-mini",
+    defaultVisionModel: "openai/gpt-4o-mini",
+    defaultHeaders: {
+      "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+      "X-Title": "玲音日记",
+    },
+  },
 };
 
-const CHAT_MODELS: Record<ApiProvider, string> = {
-  openai: "gpt-4o-mini",
-  deepseek: "deepseek-chat",
-  gemini: "gemini-2.0-flash",
-};
-
-const VISION_MODELS: Record<ApiProvider, string> = {
-  openai: "gpt-4o-mini",
-  deepseek: "deepseek-chat",
-  gemini: "gemini-2.0-flash",
-};
-
-function createOpenAIClient(apiKey: string, provider: ApiProvider): OpenAI {
+export function createOpenAIClient(apiKey: string, provider: ApiProvider): OpenAI {
   const config = PROVIDER_CONFIGS[provider];
+  const headers: Record<string, string> = { ...config.defaultHeaders };
   return new OpenAI({
     apiKey,
     baseURL: config.baseURL,
+    defaultHeaders: headers,
   });
 }
 
@@ -39,7 +38,7 @@ export async function* generateStream(params: {
 }): AsyncGenerator<string> {
   const { apiKey, provider, systemPrompt, userPrompt } = params;
   const client = createOpenAIClient(apiKey, provider);
-  const model = CHAT_MODELS[provider];
+  const model = PROVIDER_CONFIGS[provider].defaultModel;
 
   const stream = await client.chat.completions.create({
     model,
@@ -64,7 +63,7 @@ export async function describeImage(params: {
 }): Promise<string> {
   const { apiKey, provider, imageUrl, prompt } = params;
   const client = createOpenAIClient(apiKey, provider);
-  const model = VISION_MODELS[provider];
+  const model = PROVIDER_CONFIGS[provider].defaultVisionModel;
 
   try {
     const response = await client.chat.completions.create({

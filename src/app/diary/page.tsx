@@ -6,7 +6,7 @@ import { useApiKeys } from "@/hooks/useApiKeys";
 import DiaryEditor from "@/components/DiaryEditor";
 import type { ApiProvider } from "@/types";
 
-const PROVIDER_ORDER: ApiProvider[] = ["openai", "deepseek", "gemini"];
+const PROVIDER_ORDER: ApiProvider[] = ["openrouter"];
 
 export default function DiaryPage() {
   const router = useRouter();

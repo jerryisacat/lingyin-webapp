@@ -11,7 +11,7 @@ AI-powered diary PWA. Users submit text + images, AI generates a polished Markdo
 - **ORM:** Prisma — datasource `postgresql` pointing at Supabase connection string
 - **Auth:** Auth.js v5 (Credentials + JWT, bcrypt 12 rounds), Resend email
 - **PWA:** Serwist (`@serwist/next`) — do NOT use `next-pwa` (deprecated)
-- **LLM SDK:** `openai` npm package (compatible with OpenAI / DeepSeek / Gemini)
+- **LLM SDK:** `openai` npm package (compatible with OpenRouter API)
 - **Markdown:** `react-markdown` for rendering
 - **Image & file storage:** CloudFlare R2 (S3-compatible, `@aws-sdk/client-s3`)
 - **Deploy:** Vercel (monolith, region: hkg1)
@@ -63,7 +63,7 @@ AI diary generation (single tone: `warm`), Markdown editor, image upload, timeli
 | API Key storage | AES-256-GCM encrypted in PostgreSQL |
 | Database | Supabase PostgreSQL (Prisma direct) |
 | Image & file storage | CloudFlare R2 (S3 API via `@aws-sdk/client-s3`) |
-| LLM providers | OpenAI / DeepSeek / Gemini — all three |
+| LLM providers | OpenRouter (unified gateway) |
 | Timeline preview | first 200 chars in `Entry.preview` |
 | PWA offline | Serwist: CacheFirst for shell, NetworkFirst for entries |
 | Secrets management | `.env` in dev, Vercel Environment Variables in production |
@@ -110,6 +110,18 @@ See `docs/deploy.md` for full deployment guide. Key points:
 
 ## AI Agent workflow rules
 
+### 创建 Issue
+
+仅记录**需求**，不涉及实现方案。Agent 的任务是:
+1. **挖掘需求**: 从用户描述中提取核心问题，确保 Issue 描述清晰完整
+2. **不写方案**: 不涉及具体代码改动、技术选型、文件路径 — 这些留给开发阶段
+3. **必要时追问**: 如果需求模糊或存在多种理解，使用 `question` 工具弹出选项让用户选择
+
+Issue 应包含:
+- 概述（用户想达成什么）
+- 动机（为什么需要）
+- 验收标准（如何判断完成）
+
 ### 开发前：检索已有知识
 使用 `brv search <关键词>` 检索 `.brv/context-tree/` 中已有的项目知识。
 
@@ -122,7 +134,6 @@ See `docs/deploy.md` for full deployment guide. Key points:
 ## Vibe Coding Workflow — Issue-Driven Development
 
 - 每个 Issue 使用独立分支：`develop/issue-N`
-- Vercel 只部署 `main` 分支
 - Agent 不合并代码 — Agent 创建 PR，用户审核后手动合并
 
 ### 开发完成后
