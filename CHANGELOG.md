@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## 2026-05-22 — 商业化定价模型重构：Token 预算 + 存储配额
+
+**触发原因**: 弃用旧版「每日限额 + 功能门控」定价模式，改为 Token 预算 + 存储配额制。
+
+### 变更
+- `config/billing-pricing.json`: 新建定价配置，包含模型价格、套餐定义、加购包
+- `docs/07-商业化方案.md`: 全部重写定价章节 - Token 预算制、无日限额、百分比显示、高级模型倍率、加购包
+- `docs/04-Phase2到4路线图.md`: 更新 Phase 3 定价策略、成本估算、商业逻辑
+- `issues/10`: 更新订阅支付 Issue - Token + 存储配额模式
+- `issues/11`: 重写免费用户额度控制 Issue - 取消日限额，改为 Token 预算 + 百分比显示 + 加购
+- `issues/12`: 更新统一 API Key Issue - 增加 `config/billing-pricing.json` 定价引用
+- `issues/13`: 更新后台管理面板 Issue - 增加 Token 消耗统计
+- `issues/14`: 更新数据导出 Issue（无实质变动）
+- `issues/15`: 更新存量用户迁移 Issue - 更新定价引用
+
 ## 2026-05-22 — 切换默认模型为 DeepSeek V4 Flash + Qwen3.6+ 视觉
 
 **触发原因**: OpenRouter 默认模型从 `openai/gpt-4o-mini` 切换为更高性价比的 DeepSeek 系列。

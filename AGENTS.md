@@ -61,7 +61,7 @@ AI diary generation (single tone: `warm`), Markdown editor, image upload, timeli
 | Token generation | `crypto.randomUUID()` |
 | Token expiry | verification 24h, password reset 1h |
 | API Key storage | AES-256-GCM encrypted in PostgreSQL |
-| Database | Supabase PostgreSQL (Prisma direct) |
+| LLM 定价配置 | `config/billing-pricing.json` — 模型价格、套餐定义、加购包 |
 | Image & file storage | CloudFlare R2 (S3 API via `@aws-sdk/client-s3`) |
 | LLM providers | OpenRouter (unified gateway) |
 | Timeline preview | first 200 chars in `Entry.preview` |

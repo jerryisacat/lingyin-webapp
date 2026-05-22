@@ -1,0 +1,103 @@
+{
+  "$schema": "billing-pricing.schema.json",
+  "version": "1.0.0",
+  "updatedAt": "2026-05-22",
+
+  "description": "玲音日记 Token 计费价格配置。所有金额单位为 USD，换算为 Token 预算时乘以汇率（暂定 ¥7.5/$1）。",
+
+  "baseModel": "deepseek/deepseek-v4-flash",
+
+  "models": {
+    "deepseek/deepseek-v4-flash": {
+      "family": "deepseek",
+      "input": 0.14,
+      "output": 0.28
+    },
+    "deepseek/deepseek-v4-pro": {
+      "family": "deepseek",
+      "input": 0.435,
+      "output": 0.87
+    },
+    "openai/gpt-4o-mini": {
+      "family": "openai",
+      "input": 0.15,
+      "output": 0.6
+    },
+    "openai/gpt-4o": {
+      "family": "openai",
+      "input": 2.5,
+      "output": 10.0
+    },
+    "anthropic/claude-haiku-4.5": {
+      "family": "anthropic",
+      "input": 1.0,
+      "output": 5.0
+    },
+    "anthropic/claude-sonnet-4.6": {
+      "family": "anthropic",
+      "input": 3.0,
+      "output": 15.0
+    },
+    "google/gemini-2.0-flash-001": {
+      "family": "google",
+      "input": 0.10,
+      "output": 0.40
+    },
+    "x-ai/grok-4.3": {
+      "family": "xai",
+      "input": 1.25,
+      "output": 2.50
+    },
+    "qwen/qwen3.6-plus": {
+      "family": "qwen",
+      "input": 0.325,
+      "output": 1.95
+    }
+  },
+
+  "tiers": {
+    "free": {
+      "label": "免费版",
+      "priceMonth": 0,
+      "tokenBudgetUsd": 1.0,
+      "storageBytes": 52428800,
+      "rolloverFraction": 0,
+      "allowedModels": ["deepseek/deepseek-v4-flash"],
+      "features": {
+        "telegram": false
+      }
+    },
+    "basic": {
+      "label": "基础版",
+      "priceMonth": 29.9,
+      "tokenBudgetUsd": 4.0,
+      "storageBytes": 524288000,
+      "rolloverFraction": 0.25,
+      "allowedModels": "*",
+      "features": {
+        "telegram": true
+      }
+    },
+    "advanced": {
+      "label": "高级版",
+      "priceMonth": 149,
+      "tokenBudgetUsd": 20.0,
+      "storageBytes": 5368709120,
+      "rolloverFraction": 0.50,
+      "allowedModels": "*",
+      "features": {
+        "telegram": true
+      }
+    }
+  },
+
+  "topUp": {
+    "pricePerUsd": 7.5,
+    "minimumUsd": 0.5,
+    "bundles": [
+      { "usd": 0.5, "price": 5 },
+      { "usd": 2.5, "price": 20 },
+      { "usd": 5.0, "price": 38 }
+    ]
+  }
+}
