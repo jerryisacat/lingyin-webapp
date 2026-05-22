@@ -4,16 +4,28 @@ import { usePathname } from "next/navigation";
 import NavBar from "./NavBar";
 import MobileTabBar from "./MobileTabBar";
 
-const NO_SHELL_ROUTES = ["/login", "/auth", "/"];
+/** Routes that never show the navigation shell */
+const ALWAYS_NO_SHELL = ["/login", "/auth", "/register", "/forgot-password", "/reset-password", "/verify-email"];
 
-export default function AppShell({ children }: { children: React.ReactNode }) {
+interface AppShellProps {
+  children: React.ReactNode;
+  authenticated: boolean;
+}
+
+export default function AppShell({ children, authenticated }: AppShellProps) {
   const pathname = usePathname();
-  const noShell = NO_SHELL_ROUTES.some((route) => pathname.startsWith(route));
 
-  if (noShell) {
+  // Routes that always skip the shell
+  if (ALWAYS_NO_SHELL.some((route) => pathname.startsWith(route))) {
     return <>{children}</>;
   }
 
+  // Landing page (logged-out) → no shell
+  if (pathname === "/" && !authenticated) {
+    return <>{children}</>;
+  }
+
+  // All authenticated pages → show shell
   return (
     <>
       <NavBar />
