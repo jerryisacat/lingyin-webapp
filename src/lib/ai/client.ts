@@ -14,7 +14,10 @@ export const PROVIDER_CONFIGS: Record<ApiProvider, ProviderConfig> = {
     defaultModel: "openai/gpt-4o-mini",
     defaultVisionModel: "openai/gpt-4o-mini",
     defaultHeaders: {
-      "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+      "HTTP-Referer":
+        process.env.NEXT_PUBLIC_APP_URL ||
+        process.env.NEXT_PUBLIC_SITE_URL ||
+        "http://localhost:3000",
       "X-Title": "玲音日记",
     },
   },

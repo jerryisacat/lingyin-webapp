@@ -141,7 +141,8 @@ Issue 应包含:
 4. 有前置依赖的 Issue 打 `blocked` 并在正文标注 `> **前置 Issue:** #N`
 
 ### 开发前：检索已有知识
-使用 `brv search <关键词>` 检索 `.brv/context-tree/` 中已有的项目知识。
+1. Pull latest code from main.
+2. 使用 `brv search <关键词>` 检索 `.brv/context-tree/` 中已有的项目知识。
 
 ### 开发后（git commit 之前）
 1. 更新 `CHANGELOG.md`

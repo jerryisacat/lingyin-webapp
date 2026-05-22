@@ -34,6 +34,7 @@ export default function SettingsPage() {
     "idle" | "testing" | "success" | "error"
   >("idle")
   const [testError, setTestError] = useState("")
+  const [testDetail, setTestDetail] = useState("")
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState("")
@@ -95,6 +96,7 @@ export default function SettingsPage() {
     if (!draftApiKey) return
     setTestStatus("testing")
     setTestError("")
+    setTestDetail("")
 
     try {
       const res = await fetch("/api/ai/test", {
@@ -111,6 +113,7 @@ export default function SettingsPage() {
       } else {
         setTestStatus("error")
         setTestError(json.data?.error ?? "未知错误")
+        setTestDetail(json.data?.detail ?? "")
       }
     } catch {
       setTestStatus("error")
@@ -264,10 +267,17 @@ export default function SettingsPage() {
             </span>
           )}
           {testStatus === "error" && (
-            <span className="flex items-center gap-1 text-sm text-red-500">
-              <XCircle className="h-4 w-4" />
-              {testError}
-            </span>
+            <div>
+              <span className="flex items-center gap-1 text-sm text-red-500">
+                <XCircle className="h-4 w-4" />
+                {testError}
+              </span>
+              {testDetail && (
+                <p className="mt-1 text-xs text-ink-light leading-relaxed">
+                  {testDetail}
+                </p>
+              )}
+            </div>
           )}
         </div>
 
