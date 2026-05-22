@@ -1,21 +1,23 @@
 "use client"
 
-import { useActionState, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useTransition } from "react"
 import Link from "next/link"
-import { BookOpen, Loader2, Eye, EyeOff, CheckCircle } from "lucide-react"
-import { resetPasswordAction } from "@/lib/auth-actions"
+import { BookOpen, Loader2, CheckCircle } from "lucide-react"
+import PasswordInput from "@/components/auth/PasswordInput"
+
+interface FormState {
+  ok: boolean
+  error: string
+}
 
 export default function ResetPasswordPage({
   searchParams,
 }: {
   searchParams: { token?: string }
 }) {
-  const router = useRouter()
   const token = searchParams.token
-  const [state, action, pending] = useActionState(resetPasswordAction, null)
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirm, setShowConfirm] = useState(false)
+  const [isPending, startTransition] = useTransition()
+  const [state, setState] = useState<FormState | null>(null)
 
   if (!token) {
     return (
@@ -29,6 +31,28 @@ export default function ResetPasswordPage({
         </Link>
       </div>
     )
+  }
+
+  function handleSubmit(formData: FormData) {
+    const body = {
+      token,
+      password: formData.get("password") as string,
+      confirmPassword: formData.get("confirmPassword") as string,
+    }
+
+    startTransition(async () => {
+      try {
+        const res = await fetch("/api/auth/reset-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        })
+        const data = await res.json()
+        setState(data)
+      } catch {
+        setState({ ok: false, error: "网络错误，请稍后再试" })
+      }
+    })
   }
 
   if (state?.ok) {
@@ -59,56 +83,24 @@ export default function ResetPasswordPage({
         </h1>
       </div>
 
-      <form action={action} className="w-full max-w-sm space-y-4">
-        <input type="hidden" name="token" value={token} />
+      <form action={handleSubmit} className="w-full max-w-sm space-y-4">
+        <PasswordInput
+          id="password"
+          name="password"
+          label="新密码"
+          placeholder="至少 8 个字符"
+          required
+          minLength={8}
+          autoFocus
+        />
 
-        <div>
-          <label htmlFor="password" className="mb-2 block text-sm font-medium text-ink">
-            新密码
-          </label>
-          <div className="relative">
-            <input
-              id="password"
-              name="password"
-              type={showPassword ? "text" : "password"}
-              placeholder="至少 8 个字符"
-              required
-              minLength={8}
-              className="input-field pr-10"
-              autoFocus
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-light hover:text-ink"
-            >
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
-          </div>
-        </div>
-
-        <div>
-          <label htmlFor="confirmPassword" className="mb-2 block text-sm font-medium text-ink">
-            确认密码
-          </label>
-          <div className="relative">
-            <input
-              id="confirmPassword"
-              name="confirmPassword"
-              type={showConfirm ? "text" : "password"}
-              placeholder="再次输入密码"
-              required
-              className="input-field pr-10"
-            />
-            <button
-              type="button"
-              onClick={() => setShowConfirm(!showConfirm)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-light hover:text-ink"
-            >
-              {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
-          </div>
-        </div>
+        <PasswordInput
+          id="confirmPassword"
+          name="confirmPassword"
+          label="确认密码"
+          placeholder="再次输入密码"
+          required
+        />
 
         {state?.error && (
           <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
@@ -118,10 +110,10 @@ export default function ResetPasswordPage({
 
         <button
           type="submit"
-          disabled={pending}
+          disabled={isPending}
           className="btn-primary flex w-full items-center justify-center gap-2"
         >
-          {pending ? (
+          {isPending ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
               重置中...

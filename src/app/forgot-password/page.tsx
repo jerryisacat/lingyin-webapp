@@ -1,12 +1,35 @@
 "use client"
 
-import { useActionState } from "react"
+import { useState, useTransition } from "react"
 import Link from "next/link"
 import { BookOpen, Loader2, CheckCircle } from "lucide-react"
-import { forgotPasswordAction } from "@/lib/auth-actions"
+
+interface FormState {
+  ok: boolean
+  error: string
+}
 
 export default function ForgotPasswordPage() {
-  const [state, action, pending] = useActionState(forgotPasswordAction, null)
+  const [isPending, startTransition] = useTransition()
+  const [state, setState] = useState<FormState | null>(null)
+
+  function handleSubmit(formData: FormData) {
+    const email = formData.get("email") as string
+
+    startTransition(async () => {
+      try {
+        const res = await fetch("/api/auth/forgot-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        })
+        const data = await res.json()
+        setState(data)
+      } catch {
+        setState({ ok: false, error: "网络错误，请稍后再试" })
+      }
+    })
+  }
 
   if (state?.ok) {
     return (
@@ -39,7 +62,7 @@ export default function ForgotPasswordPage() {
         </p>
       </div>
 
-      <form action={action} className="w-full max-w-sm space-y-4">
+      <form action={handleSubmit} className="w-full max-w-sm space-y-4">
         <div>
           <label htmlFor="email" className="mb-2 block text-sm font-medium text-ink">
             邮箱地址
@@ -63,10 +86,10 @@ export default function ForgotPasswordPage() {
 
         <button
           type="submit"
-          disabled={pending}
+          disabled={isPending}
           className="btn-primary flex w-full items-center justify-center gap-2"
         >
-          {pending ? (
+          {isPending ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
               发送中...

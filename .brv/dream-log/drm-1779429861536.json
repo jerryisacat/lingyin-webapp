@@ -1,0 +1,34 @@
+{
+  "completedAt": 1779429902520,
+  "id": "drm-1779429861536",
+  "operations": [
+    {
+      "action": "MERGE",
+      "inputFiles": [
+        "ui/landing/landing_page_and_auth_routing.md",
+        "ui/landing/landing_page_and_auth_routing.abstract.md",
+        "ui/landing/landing_page_and_auth_routing.overview.md"
+      ],
+      "needsReview": true,
+      "outputFile": "ui/landing/landing_page_and_auth_routing.md",
+      "previousTexts": {
+        "ui/landing/landing_page_and_auth_routing.md": "---\ntitle: Landing Page and Auth Routing\nsummary: Landing page with hero/features/steps for guests; dashboard for users; middleware marks / as public; AppShell excludes / from nav shell\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-05-21T19:12:36.897Z'\nupdatedAt: '2026-05-21T19:12:36.897Z'\n---\n## Reason\nDocument home page dual-state rendering and public route handling\n\n## Raw Concept\n**Task:**\nImplement dual-state home page with public landing and private dashboard\n\n**Files:**\n- src/app/page.tsx\n- src/lib/supabase/middleware.ts\n- src/components/AppShell.tsx\n\n**Flow:**\nmiddleware: / in PUBLIC_ROUTES -> allow guest; AppShell: / in NO_SHELL_ROUTES -> no nav; page.tsx: if user show dashboard else full landing (Hero + 4 features + 3 steps + CTA + Footer)\n\n## Narrative\n### Structure\nUnauthenticated: Hero section with CTA to login, Features grid (AI generate, photo-to-text, privacy, PWA), Steps (record, AI polish, save), CTA, Footer. Authenticated: centered dashboard with greeting, Write Diary / Timeline buttons, tip card.\n\n### Highlights\nPWA installable, offline diary read, local API key only, photo analysis into diary, Markdown timeline\n",
+        "ui/landing/landing_page_and_auth_routing.abstract.md": "This document describes implementing a dual-state root page that renders a public landing page with hero, features, steps and CTA for guests while showing a personalized dashboard for authenticated users, using middleware to mark / as public and excluding it from the AppShell navigation.",
+        "ui/landing/landing_page_and_auth_routing.overview.md": "- Key points: Dual-state home page renders public landing for guests and dashboard for authenticated users; middleware treats / as PUBLIC_ROUTES to allow guests; AppShell excludes / via NO_SHELL_ROUTES to omit nav shell; page.tsx conditionally shows Hero/Features/Steps/CTA/Footer or centered dashboard; emphasizes PWA installability, offline diary access, local API keys, and photo-to-text analysis\n- Structure / sections summary: Frontmatter with title/summary/tags; Reason section; Raw Concept covering Task/Files/Flow; Narrative with Structure (unauth vs auth views) and Highlights (PWA/offline/Markdown features)\n- Notable entities/patterns/decisions: PUBLIC_ROUTES and NO_SHELL_ROUTES constants; files src/app/page.tsx, src/lib/supabase/middleware.ts, src/components/AppShell.tsx; decision for full landing (Hero + 4 features + 3 steps) vs minimal dashboard greeting/buttons/tip card; patterns include conditional rendering based on Supabase user session"
+      },
+      "reason": "All three files cover identical topic (dual-state landing page + auth routing) with substantial content overlap (>70%); abstract and overview are derived summaries of the main detailed file. Merge into the richest source to eliminate redundancy while preserving every unique detail, phrasing, and structured section.",
+      "type": "CONSOLIDATE"
+    }
+  ],
+  "startedAt": 1779429861536,
+  "status": "completed",
+  "summary": {
+    "consolidated": 1,
+    "errors": 0,
+    "flaggedForReview": 1,
+    "pruned": 0,
+    "synthesized": 0
+  },
+  "taskId": "cdca653f-457d-43a3-bf7b-47764c7a3241",
+  "trigger": "agent-idle"
+}

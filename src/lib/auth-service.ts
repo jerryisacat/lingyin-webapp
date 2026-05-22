@@ -1,35 +1,35 @@
-"use server"
-
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/db"
 import { sendVerificationEmail, sendPasswordResetEmail } from "@/lib/email"
 
-function generateToken(): string {
+export function generateToken(): string {
   return crypto.randomUUID()
 }
 
-function getBaseUrl(): string {
+export function getBaseUrl(): string {
   return process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
 }
 
-export type ActionResult<T = void> =
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+export type ServiceResult<T = void> =
   | { ok: true; data?: T }
   | { ok: false; error: string }
 
-export async function registerAction(
-  _prevState: ActionResult<{ email: string }> | null,
-  formData: FormData
-): Promise<ActionResult<{ email: string }>> {
-  const email = formData.get("email") as string | null
-  const password = formData.get("password") as string | null
-  const confirmPassword = formData.get("confirmPassword") as string | null
+export interface RegisterInput {
+  email: string
+  password: string
+  confirmPassword: string
+}
+
+export async function registerUser(input: RegisterInput): Promise<ServiceResult<{ email: string }>> {
+  const { email, password, confirmPassword } = input
 
   if (!email || !password || !confirmPassword) {
     return { ok: false, error: "请填写所有字段" }
   }
 
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  if (!emailPattern.test(email)) {
+  if (!EMAIL_PATTERN.test(email)) {
     return { ok: false, error: "邮箱格式不正确" }
   }
 
@@ -64,28 +64,22 @@ export async function registerAction(
       },
     })
 
-    await sendVerificationEmail({
-      to: email,
-      token,
-      baseUrl: getBaseUrl(),
-    })
+    await sendVerificationEmail({ to: email, token, baseUrl: getBaseUrl() })
 
     return { ok: true, data: { email: user.email } }
   } catch (err) {
-    console.error("registerAction error:", err)
+    console.error("registerUser error:", err)
     return { ok: false, error: "注册失败，请稍后再试" }
   }
 }
 
-export async function verifyEmailAction(token: string): Promise<ActionResult> {
+export async function verifyEmail(token: string): Promise<ServiceResult> {
   if (!token) {
     return { ok: false, error: "缺少验证令牌" }
   }
 
   try {
-    const record = await prisma.verificationToken.findUnique({
-      where: { token },
-    })
+    const record = await prisma.verificationToken.findUnique({ where: { token } })
 
     if (!record) {
       return { ok: false, error: "验证链接无效" }
@@ -106,28 +100,62 @@ export async function verifyEmailAction(token: string): Promise<ActionResult> {
 
     return { ok: true }
   } catch (err) {
-    console.error("verifyEmailAction error:", err)
+    console.error("verifyEmail error:", err)
     return { ok: false, error: "验证失败，请稍后再试" }
   }
 }
 
-export async function forgotPasswordAction(
-  _prevState: ActionResult | null,
-  formData: FormData
-): Promise<ActionResult> {
-  const email = formData.get("email") as string | null
-
+export async function resendVerification(email: string): Promise<ServiceResult> {
   if (!email) {
     return { ok: false, error: "请输入邮箱地址" }
   }
 
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  if (!emailPattern.test(email)) {
+  if (!EMAIL_PATTERN.test(email)) {
     return { ok: false, error: "邮箱格式不正确" }
   }
 
   try {
     const user = await prisma.user.findUnique({ where: { email } })
+
+    if (!user) {
+      return { ok: true }
+    }
+
+    if (user.emailVerified) {
+      return { ok: false, error: "该邮箱已验证，请直接登录" }
+    }
+
+    const token = generateToken()
+
+    await prisma.verificationToken.create({
+      data: {
+        userId: user.id,
+        token,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      },
+    })
+
+    await sendVerificationEmail({ to: email, token, baseUrl: getBaseUrl() })
+
+    return { ok: true }
+  } catch (err) {
+    console.error("resendVerification error:", err)
+    return { ok: false, error: "发送失败，请稍后再试" }
+  }
+}
+
+export async function forgotPassword(email: string): Promise<ServiceResult> {
+  if (!email) {
+    return { ok: false, error: "请输入邮箱地址" }
+  }
+
+  if (!EMAIL_PATTERN.test(email)) {
+    return { ok: false, error: "邮箱格式不正确" }
+  }
+
+  try {
+    const user = await prisma.user.findUnique({ where: { email } })
+
     if (!user) {
       return { ok: true }
     }
@@ -142,26 +170,23 @@ export async function forgotPasswordAction(
       },
     })
 
-    await sendPasswordResetEmail({
-      to: email,
-      token,
-      baseUrl: getBaseUrl(),
-    })
+    await sendPasswordResetEmail({ to: email, token, baseUrl: getBaseUrl() })
 
     return { ok: true }
   } catch (err) {
-    console.error("forgotPasswordAction error:", err)
+    console.error("forgotPassword error:", err)
     return { ok: false, error: "发送失败，请稍后再试" }
   }
 }
 
-export async function resetPasswordAction(
-  _prevState: ActionResult | null,
-  formData: FormData
-): Promise<ActionResult> {
-  const token = formData.get("token") as string | null
-  const password = formData.get("password") as string | null
-  const confirmPassword = formData.get("confirmPassword") as string | null
+export interface ResetPasswordInput {
+  token: string
+  password: string
+  confirmPassword: string
+}
+
+export async function resetPassword(input: ResetPasswordInput): Promise<ServiceResult> {
+  const { token, password, confirmPassword } = input
 
   if (!token) {
     return { ok: false, error: "缺少重置令牌" }
@@ -180,9 +205,7 @@ export async function resetPasswordAction(
   }
 
   try {
-    const record = await prisma.passwordResetToken.findUnique({
-      where: { token },
-    })
+    const record = await prisma.passwordResetToken.findUnique({ where: { token } })
 
     if (!record) {
       return { ok: false, error: "重置链接无效" }
@@ -205,7 +228,7 @@ export async function resetPasswordAction(
 
     return { ok: true }
   } catch (err) {
-    console.error("resetPasswordAction error:", err)
+    console.error("resetPassword error:", err)
     return { ok: false, error: "重置失败，请稍后再试" }
   }
 }

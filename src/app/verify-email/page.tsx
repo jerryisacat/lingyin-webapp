@@ -1,4 +1,4 @@
-import { verifyEmailAction } from "@/lib/auth-actions"
+import { verifyEmail } from "@/lib/auth-service"
 import Link from "next/link"
 import { CheckCircle, XCircle } from "lucide-react"
 
@@ -13,7 +13,7 @@ export default async function VerifyEmailPage({
     return <VerifyResult success={false} message="缺少验证令牌" />
   }
 
-  const result = await verifyEmailAction(token)
+  const result = await verifyEmail(token)
 
   if (result.ok) {
     return (
