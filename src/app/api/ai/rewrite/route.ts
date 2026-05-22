@@ -1,5 +1,5 @@
 import { getUser, jsonError } from "@/lib/api-helpers";
-import { checkApiKey } from "@/lib/api-key-guard";
+import { getUserDecryptedApiKey } from "@/lib/api-key-guard";
 import { generateStream } from "@/lib/ai/client";
 import { WARM_SYSTEM_PROMPT } from "@/lib/ai/prompts";
 import type { ApiProvider } from "@/types";
@@ -8,9 +8,6 @@ import { NextRequest } from "next/server";
 export async function POST(request: NextRequest) {
   const user = await getUser();
   if (!user) return jsonError("Unauthorized", 401);
-
-  const apiKey = checkApiKey(request);
-  if (typeof apiKey !== "string") return apiKey;
 
   let body: { content?: string; instruction?: string; provider?: ApiProvider };
   try {
@@ -27,6 +24,11 @@ export async function POST(request: NextRequest) {
 
   if (!content.trim()) {
     return jsonError("Content is required");
+  }
+
+  const apiKey = await getUserDecryptedApiKey(user.id, provider);
+  if (!apiKey) {
+    return jsonError("API Key not configured for this provider — configure it in Settings", 400);
   }
 
   const systemPrompt = WARM_SYSTEM_PROMPT;

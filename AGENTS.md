@@ -1,32 +1,25 @@
 # AGENTS.md — 玲音日记 (lingyin-webapp)
 
 ## Project summary
-AI-powered diary PWA. Users submit text + images, AI generates a polished Markdown diary entry. Phase 1: user brings their own LLM API key; later phases add subscription billing.
+AI-powered diary PWA. Users submit text + images, AI generates a polished Markdown diary entry. Phase 1: user brings their own LLM API key (encrypted server-side); later phases add subscription billing.
 
-**Status: All 8 stages complete (Phase 1 MVP ready for deploy).**
+**Status: Issue #29 complete — Supabase Auth removed, Auth.js v5 independent account system integrated.**
 
 ## Tech stack
 - **Framework:** Next.js 14+ (App Router), TypeScript, Tailwind CSS
-- **Database:** Supabase PostgreSQL (cloud-hosted)
+- **Database:** Supabase PostgreSQL (direct connection via Prisma)
 - **ORM:** Prisma — datasource `postgresql` pointing at Supabase connection string
-- **Auth:** Supabase Auth — built-in Magic Link, session via `@supabase/ssr` cookie
+- **Auth:** Auth.js v5 (Credentials + JWT, bcrypt 12 rounds), Resend email
 - **PWA:** Serwist (`@serwist/next`) — do NOT use `next-pwa` (deprecated)
 - **LLM SDK:** `openai` npm package (compatible with OpenAI / DeepSeek / Gemini)
 - **Markdown:** `react-markdown` for rendering
 - **Image & file storage:** CloudFlare R2 (S3-compatible, `@aws-sdk/client-s3`)
-- **Deploy:** Vercel (monolith; frontend-backend split evaluated and deferred to Phase 3+)
-
-## Deployment: frontend-backend split evaluation
-CF Pages (frontend) + Vercel (API) separation was evaluated and **rejected for MVP**. Key blockers:
-1. Supabase Auth session cookies are domain-bound — cross-domain requires token-based auth rewrite
-2. CORS adds latency (~100-200ms per request) and complexity
-3. Double deployment config for preview environments
-
-**Decision:** Deploy as Next.js monolith on Vercel. R2 is used for storage regardless of hosting. Revisit split in Phase 3+ when scale demands it.
+- **Deploy:** Vercel (monolith, region: hkg1)
 
 ## Critical privacy constraints
-- **User API Key is stored in browser `localStorage` only.** It is sent to the backend via `X-API-Key` header per request. The server MUST NOT log, persist, or store it — only forward it to the LLM API.
+- **API Keys are stored server-side** encrypted with AES-256-GCM in the `ApiKey` table. The server decrypts and forwards to LLM providers per-request. Never logged, never persisted in plaintext.
 - Diary content (Markdown) is stored in CloudFlare R2. The database holds only metadata (Prisma `Entry` model).
+- **`API_KEY_ENCRYPTION_KEY` must be backed up.** If lost, all stored API keys become permanently unrecoverable.
 
 ## Architecture: content vs metadata split
 Diary bodies live as `.md` files in CloudFlare R2, NOT in the database. The `Entry` table stores: `id`, `userId`, `date`, `tone`, `markdownPath`, `wordCount`, `hasImages`, `preview` (first 200 chars for timeline), `tags`, timestamps. There is a `@@unique([userId, date])` constraint — one entry per user per day.
@@ -34,171 +27,108 @@ Diary bodies live as `.md` files in CloudFlare R2, NOT in the database. The `Ent
 **Vercel note:** Vercel has no persistent filesystem, so all file content (`.md` diaries, uploaded images) MUST use CloudFlare R2. The `data/` directory is for local dev only (gitignore it).
 
 ## Auth & session management
-Using `@supabase/ssr` for Next.js App Router:
-- **Server-side:** Route Handlers + Server Components use `createServerClient` to read session from cookies
-- **Client-side:** `createBrowserClient` in browser components auto-manages cookies
-- **Middleware:** `middleware.ts` calls `updateSession` on ALL routes, redirects unauthenticated users to `/login`
+Using Auth.js v5 with Credentials provider + JWT strategy:
+- **Server-side:** `getSessionUserId()` reads JWT session via `auth()` from `next-auth`
+- **Client-side:** `signIn("credentials")`, `signOut()`, `useSession()` from `next-auth/react`
+- **Middleware:** `auth()` wrapper in `middleware.ts` protects page routes. API routes (`/api/*`) pass through and handle their own auth via `getSessionUserId()`
 
-Flow: User enters email → Supabase sends Magic Link → user clicks link → `@supabase/ssr` sets session cookie → redirected to home.
+Flow: User registers → verification email → clicks verify link → emailConfirmed set → logs in with email+password → JWT cookie set → all subsequent requests carry the session.
 
-## Prisma ↔ Supabase Auth user sync
-`User.id` = `supabase.auth.users.id`. Two approaches:
-1. **(Recommended)** Supabase Database Trigger: `CREATE OR REPLACE FUNCTION public.handle_new_user() RETURNS trigger AS $$ BEGIN INSERT INTO public."User" (id, email) VALUES (new.id, new.email); RETURN new; END; $$ LANGUAGE plpgsql SECURITY DEFINER; CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();`
-2. Fallback: first API request checks Prisma, creates User row if not found.
+## API Key management
+- **Storage:** AES-256-GCM encrypted in PostgreSQL `ApiKey` table, one per `(userId, provider)`
+- **API Routes:** `/api/user/api-keys` (GET/POST/DELETE) — CRUD operations, session-gated
+- **Usage:** LLM API routes call `getUserDecryptedApiKey(userId, provider)` to retrieve and decrypt on the fly
+- **Test:** `/api/ai/test` accepts optional `apiKey` in body (testing unsaved key) or reads from DB (testing saved key)
 
-## API Key guard
-Before accessing `/diary` or calling `/api/ai/*`, frontend checks `localStorage` for configured API key. If missing:
-- Redirect to `/settings` with a prompt to configure the key
-- API routes return `401` if `X-API-Key` header is missing
-
-## Row Level Security (RLS)
-All Supabase tables MUST have RLS enabled before production use. Storage (R2) doesn't need RLS — access is controlled server-side via S3 credentials.
-
-**RLS policies:**
-- `User` table: `(SELECT auth.uid()) = id` — users can only read/update their own row
-- `Entry` table: `(SELECT auth.uid()) = "userId"` — users can only CRUD their own entries
-- Service-side operations use `SUPABASE_SERVICE_ROLE_KEY` to bypass RLS
+## Prisma ↔ User management
+`User.id` is generated by Prisma (`@default(cuid())`). No Supabase Auth trigger needed. Prisma manages User lifecycle independently:
+- Registration creates User + VerificationToken in a transaction
+- `passwordHash` stored as bcrypt (12 rounds)
+- `emailVerified` set on successful verification
 
 ## Phase 1 scope (MVP)
-Refer to `docs/03-Phase1-MVP说明.md`. Only build: AI diary generation (single tone: `warm`), Markdown editor, image upload, timeline browsing, PWA install, API Key settings.
+AI diary generation (single tone: `warm`), Markdown editor, image upload, timeline browsing, PWA install, API Key settings.
 
 **Excluded from Phase 1:** video upload, calendar view, multiple tones, subscription, diary editing after save, diary export, frontend-backend split.
 
 ## Confirmed design decisions
 | Decision | Choice |
 |----------|--------|
-| Auth | Supabase Auth Magic Link |
-| Auth middleware | `middleware.ts` global interception on all routes |
-| Database | Supabase PostgreSQL |
+| Auth | Auth.js v5 Credentials + JWT |
+| Auth middleware | `middleware.ts` with `auth()` wrapper |
+| Password hashing | bcrypt 12 salt rounds |
+| Email | Resend (verification, password reset) |
+| Token generation | `crypto.randomUUID()` |
+| Token expiry | verification 24h, password reset 1h |
+| API Key storage | AES-256-GCM encrypted in PostgreSQL |
+| Database | Supabase PostgreSQL (Prisma direct) |
 | Image & file storage | CloudFlare R2 (S3 API via `@aws-sdk/client-s3`) |
-| Data backup | R2 objects immutable versioning + cron `rclone sync` to secondary R2 bucket or external S3 |
-| AI image handling | Always call vision API to describe photos before text generation |
-| LLM providers | OpenAI / DeepSeek / Gemini — all three supported in settings |
-| Timeline preview | Write first 200 chars to `Entry.preview` on save, query from DB |
-| PWA offline | Pre-cache App Shell + last 10 diary entries |
-| Secrets management | `.env.local` in dev, Vercel Environment Variables in production |
-| Deploy | Vercel monolith (with Supabase Integration) |
-
-## Source of truth
-- `docs/01-PRD.md` — product requirements
-- `docs/02-技术架构.md` — tech decisions, directory structure, API routes *(note: SQLite/VPS/Docker/S3 decisions here are superseded by this AGENTS.md)*
-- `docs/03-Phase1-MVP说明.md` — exact MVP scope and tasks
-- `docs/05-数据模型.md` — Prisma schema and TypeScript types (authoritative; overrides 02 if they conflict)
+| LLM providers | OpenAI / DeepSeek / Gemini — all three |
+| Timeline preview | first 200 chars in `Entry.preview` |
+| PWA offline | Serwist: CacheFirst for shell, NetworkFirst for entries |
+| Secrets management | `.env` in dev, Vercel Environment Variables in production |
+| Deploy | Vercel monolith, region hkg1 |
 
 ## Project structure
 ```
-src/app/             — Next.js App Router pages
-src/components/      — shared UI components
-src/lib/             — services: ai/ (LLM client, prompts), storage.ts (R2 S3 API), diary.ts, db.ts
-src/types/index.ts   — TypeScript types
-prisma/schema.prisma — database schema (datasource: postgresql → Supabase)
-data/                — development file storage (gitignore this)
-public/              — PWA icons, manifest.json, sw.js
+src/app/             — Next.js App Router pages (login, register, diary, timeline, settings, etc.)
+src/components/      — shared UI components (auth/, DiaryEditor, etc.)
+src/hooks/           — React hooks (useApiKeys, useStreamGenerate)
+src/lib/             — services:
+  auth.ts            — Auth.js v5 config
+  auth-helpers.ts    — getSessionUserId, json helpers
+  auth-service.ts    — register, verify, forgot/reset password business logic
+  crypto.ts          — AES-256-GCM encrypt/decrypt
+  email.ts           — Resend email sending
+  api-helpers.ts     — getUser() → getSessionUserId()
+  api-key-guard.ts   — getUserDecryptedApiKey(), extractApiKey()
+  ai/client.ts       — OpenAI SDK wrapper
+  ai/prompts.ts      — System/user prompts
+  storage.ts         — R2 S3 API
+  diary.ts           — Diary CRUD + AI generation
+  db.ts              — Prisma client singleton
+src/middleware.ts     — Auth.js route protection
+prisma/schema.prisma — database schema
+docs/                — architecture docs, deploy guide
 ```
 
 ## Conventions
 - Design: sakura pink (#f0a8b0) + warm white (#faf3e8), Noto Sans SC font, Lucide icons
 - LLM streaming via SSE with typewriter animation on frontend
-- `X-API-Key` header carries user's LLM key from client to server
-- R2 storage paths: `{bucket}/users/{userId}/entries/{YYYY}/{MM}/{YYYY-MM-DD}.md`
-- **Every change MUST be logged in `CHANGELOG.md`** — record: date, what changed, and the causal chain (why this change happened, what decision or discussion triggered it). If a change reverts or refines a prior change, link back to the original entry.
+- R2 storage paths: `users/{userId}/entries/{YYYY}/{MM}/{YYYY-MM-DD}.md`
+- Auth Service returns `ServiceResult<T>` (`{ ok, data? }` | `{ ok, error }`)
+- API routes return `{ ok, data }` or `{ ok, error }` via `jsonOk`/`jsonError`
+- **Every change MUST be logged in `CHANGELOG.md`**
+
+## Deploy
+
+See `docs/deploy.md` for full deployment guide. Key points:
+- Vercel deploys from `main` branch only
+- Build command: `npx prisma generate && next build`
+- Region: hkg1
+- All env vars must be set in Vercel dashboard (see `.env.example`)
 
 ## AI Agent workflow rules
 
 ### 开发前：检索已有知识
-在开始任何开发工作前，使用 `brv search <关键词>` 检索 `.brv/context-tree/` 中已有的项目知识，理解现有的架构决策和模式。
-如果返回空结果，说明当前模块还未建立知识树，直接开始即可。
+使用 `brv search <关键词>` 检索 `.brv/context-tree/` 中已有的项目知识。
 
-### 开发后（git commit 之前）：整理记忆
-每次代码修改完成后按以下顺序操作：
-
-1. **更新 `CHANGELOG.md`** — 记录日期、变更内容、触发原因
-2. **整理 ByteRover 知识树** — 使用 `brv curate` 将新的模式、决策和架构变更保存到知识树
-
-   ```bash
-   # 好例子：包含实现路径和文件引用
-   brv curate "Auth uses Supabase Magic Link with @supabase/ssr cookie middleware" -f src/lib/auth.ts
-
-   # 批量分析整个模块
-   brv curate --folder src/lib/
-   ```
-   > **curate 写作规范：** 要写"Auth uses Supabase Magic Link with @supabase/ssr cookie middleware — src/lib/auth.ts"，不要只写"改了认证"这种模糊描述。好的 curate 包含：具体做了什么、实现路径、关联文件。
-
-3. **提交知识树变更** — 在 `.brv/context-tree/` 的 git 中记录版本
-   ```bash
-   git -C .brv/context-tree add -A
-   git -C .brv/context-tree commit -m "描述本次知识变更"
-   ```
-4. **最后才做正常的 `git add`、`git commit`、`git push`**
-
-> **注意：** `brv search` 是本地检索命令（离线可用，无需账号）。`brv query` 需要云账号登录且超时严重，慎用。
-
-## Current status
-Phase 1 is complete (MVP: AI diary generation, Markdown editor, image upload, timeline, PWA deploy). Phase 2-4 work is tracked as GitHub Issues — see below.
+### 开发后（git commit 之前）
+1. 更新 `CHANGELOG.md`
+2. `brv curate "..."` 整理知识树
+3. `git -C .brv/context-tree add -A && git -C .brv/context-tree commit -m "..."`
+4. `git add` + `git commit` + `git push`
 
 ## Vibe Coding Workflow — Issue-Driven Development
 
-所有后续开发工作（Phase 2-4）通过 GitHub Issues 管理，不再依赖 `docs/` 中的 Phase 文档。Agent 按以下流程操作：
-
-### 分支策略
-- 每个 Issue 使用**独立分支**：`develop/issue-N`（从 `main` 分出）
-- Vercel 只部署 `main` 分支，develop 分支的 push **不会触发生产部署**
-- Agent **不**合并代码 — 用户手动创建 PR（`develop/issue-N` → `main`）并 close Issue
-
-### 开始一个 Issue 前
-1. 用 `gh issue view <N>` 读取 Issue 完整内容（Issue body 中包含：目标、实现入口、涉及文件、组件规格、API 契约、参考模式、验收条件、边缘场景）
-2. 用 `brv search <关键词>` 检索项目知识树，理解现有架构
-3. 阅读涉及的现有文件，理解当前实现
-4. **创建开发分支**：`git checkout -b develop/issue-N`（从 `main` 分出）
-
-### 开发中
-- 严格按照 Issue 中的"参考模式"复用现有代码模式
-- 遵循 Issue 中的"组件规格"和"API 契约"——它们是实现 spec
-- 注意"边缘场景 & 坑"中的已知陷阱
+- 每个 Issue 使用独立分支：`develop/issue-N`
+- Vercel 只部署 `main` 分支
+- Agent 不合并代码 — Agent 创建 PR，用户审核后手动合并
 
 ### 开发完成后
-1. 运行 `npx tsc --noEmit` 确保 TypeScript 零错误
-2. 逐项验证 Issue 中的"验收条件"
-3. **更新 `CHANGELOG.md`** — 记录日期、变更内容、对应的 Issue 编号
-4. **整理 ByteRover 知识树** — `brv curate "..."` 保存新模式/决策
-5. **提交知识树变更** — `git -C .brv/context-tree add -A && git -C .brv/context-tree commit -m "..."`
-6. **提交代码** — `git add` + `git commit`（commit message 引用 Issue 编号，如 `Fix #5: ...`）
-7. **Push 到 develop 分支** — `git push origin develop/issue-N`
-8. **在 Issue 下添加评论** — 使用 `gh issue comment <N> --body "..."` 通知用户修复完成。标准格式：
-
-   ```
-   ✅ 修复完成，已 push 到 `develop/issue-N`
-
-   改动摘要：
-   - 文件A：变更描述
-   - 文件B：变更描述
-
-   验收确认：
-   - [x] TypeScript 编译通过
-   - [x] 验收条件 1 通过
-   ...
-   ```
-
-9. 用户看到评论后，手动创建 PR（`develop/issue-N` → `main`）并 close Issue
-
-### Issue Labels 速查
-
-| Label | 含义 |
-|-------|------|
-| `scope:frontend` / `scope:backend` / `scope:fullstack` | 变更范围 |
-| `layer:ui` / `layer:api` / `layer:db` / `layer:storage` / `layer:ai` | 修改层级 |
-| `priority:p0` / `priority:p1` / `priority:p2` / `priority:p3` | 优先级 |
-| `monetization` / `platform` | 业务域 |
-| `blocked` | 被其他 Issue 阻塞 |
-| `needs-decision` | 有架构选择待定 |
-
-### Milestones
-
-| Milestone | Issues | 说明 |
-|-----------|--------|------|
-| Phase 2 — 体验升级 | 8 个 | 日历、视频、编辑、多语气、备份、导出、灯箱、夜间 |
-| Phase 3 — 商业化 | 6 个 | 支付、额度、统一 Key、后台、迁移、导出 |
-| Phase 4 — 平台化 | 6 个 | 分享、话题、统计、自定义、原生、开放 API |
-| 基础设施 | 1 个 | 测试 + CI |
-
-查看所有 Issue：`gh issue list --state open`
+1. `npx tsc --noEmit` 确保 TypeScript 零错误
+2. 更新 `CHANGELOG.md`
+3. 整理 ByteRover 知识树
+4. `git add` + `git commit` + `git push origin develop/issue-N`
+5. 使用 `gh issue comment <N> --body "..."` 通知用户
+6. 使用 `gh pr create` 创建 PR (base: main, head: develop/issue-N)

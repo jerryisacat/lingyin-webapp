@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
+import { decryptApiKey } from "@/lib/crypto";
+import type { ApiProvider } from "@/types";
 
 export function extractApiKey(request: NextRequest): string | null {
   return request.headers.get("X-API-Key");
@@ -17,4 +20,22 @@ export function checkApiKey(
   const apiKey = extractApiKey(request);
   if (!apiKey) return requireApiKey();
   return apiKey;
+}
+
+export async function getUserDecryptedApiKey(
+  userId: string,
+  provider: ApiProvider
+): Promise<string | null> {
+  const key = await prisma.apiKey.findUnique({
+    where: { userId_provider: { userId, provider } },
+  });
+
+  if (!key || !key.isActive) return null;
+
+  try {
+    return decryptApiKey(key.encryptedKey);
+  } catch {
+    console.error("Failed to decrypt API key for user", userId);
+    return null;
+  }
 }

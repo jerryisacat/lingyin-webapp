@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { auth } from "@/lib/auth";
 import {
   BookOpen,
   PenLine,
@@ -55,10 +55,8 @@ const STEPS = [
 ];
 
 export default async function Home() {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const session = await auth();
+  const user = session?.user;
 
   // ─── 已登录：仪表盘 ─────────────────────────────
   if (user) {

@@ -1,55 +1,49 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { BookOpen, Mail, ArrowRight, Loader2 } from "lucide-react";
+import { useState, useTransition } from "react"
+import { signIn } from "next-auth/react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { BookOpen, Loader2 } from "lucide-react"
+import PasswordInput from "@/components/auth/PasswordInput"
+import VerifyEmailBanner from "@/components/auth/VerifyEmailBanner"
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "sent" | "error">(
-    "idle"
-  );
-  const [error, setError] = useState("");
-  const [debugInfo, setDebugInfo] = useState("");
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
+  const [error, setError] = useState("")
+  const [showVerifyBanner, setShowVerifyBanner] = useState(false)
+  const [loginEmail, setLoginEmail] = useState("")
 
-  // Show error from callback redirect (?error=...&debug_...)
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const urlError = params.get("error");
-    if (urlError && status === "idle") {
-      setStatus("error");
-      setError(decodeURIComponent(urlError));
-      // Show debug cookie info
-      const ncookies = params.get("debug_ncookies");
-      const names = params.get("debug_names");
-      if (ncookies || names) {
-        setDebugInfo(`[DEBUG] Request had ${ncookies} cookies. Names: ${names || "(none)"}`);
+  function handleSubmit(formData: FormData) {
+    const email = formData.get("email") as string
+    const password = formData.get("password") as string
+
+    if (!email || !password) return
+
+    setLoginEmail(email)
+    setError("")
+    setShowVerifyBanner(false)
+
+    startTransition(async () => {
+      try {
+        const result = await signIn("credentials", {
+          email,
+          password,
+          redirect: false,
+        })
+
+        if (result?.error) {
+          setError("邮箱或密码错误，或邮箱未验证")
+        } else if (result?.ok) {
+          router.push("/")
+          router.refresh()
+        }
+      } catch {
+        setError("登录失败，请稍后再试")
       }
-    }
-  }, [status]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-
-    setStatus("loading");
-    setError("");
-
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-
-    if (error) {
-      setStatus("error");
-      setError(error.message);
-    } else {
-      setStatus("sent");
-    }
-  };
+    })
+  }
 
   return (
     <div className="flex min-h-[80vh] flex-col items-center justify-center gap-8">
@@ -60,79 +54,78 @@ export default function LoginPage() {
         <h1 className="text-2xl font-bold tracking-tight text-ink">
           登录玲音日记
         </h1>
-        <p className="text-sm text-ink-light">
-          输入邮箱，我们会发送一个魔法链接
-        </p>
       </div>
 
-      {status === "sent" ? (
-        <div className="card flex max-w-sm flex-col items-center gap-4 text-center">
-          <Mail className="h-10 w-10 text-sakura" strokeWidth={1.5} />
-          <h2 className="text-lg font-medium text-ink">查看你的邮箱</h2>
-          <p className="text-sm text-ink-light">
-            我们已向{" "}
-            <span className="font-medium text-ink">{email}</span>{" "}
-            发送了一个魔法链接。点击链接即可登录。
-          </p>
-          <p className="text-xs text-ink-light">
-            没收到？检查一下垃圾邮件文件夹
-          </p>
-          <button
-            onClick={() => setStatus("idle")}
-            className="btn-ghost mt-2 text-sm"
-          >
-            换一个邮箱
-          </button>
+      <form action={handleSubmit} className="w-full max-w-sm space-y-4">
+        <div>
+          <label htmlFor="email" className="mb-2 block text-sm font-medium text-ink">
+            邮箱地址
+          </label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            placeholder="hello@example.com"
+            required
+            className="input-field"
+            autoFocus
+          />
         </div>
-      ) : (
-        <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
-          <div>
-            <label htmlFor="email" className="mb-2 block text-sm font-medium text-ink">
-              邮箱地址
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="hello@example.com"
-              required
-              disabled={status === "loading"}
-              className="input-field"
-              autoFocus
-            />
+
+        <PasswordInput
+          id="password"
+          name="password"
+          label="密码"
+          placeholder="输入密码"
+          required
+        />
+
+        {error && (
+          <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
+            {error}
           </div>
+        )}
 
-          {error && (
-            <p className="text-sm text-red-500 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
-              {error}
-            </p>
-          )}
-          {debugInfo && (
-            <p className="text-xs text-amber-600 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 font-mono break-all">
-              {debugInfo}
-            </p>
-          )}
-
-          <button
-            type="submit"
-            disabled={status === "loading" || !email}
-            className="btn-primary flex w-full items-center justify-center gap-2"
-          >
-            {status === "loading" ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                发送中...
-              </>
+        {error && (
+          <div className="text-center">
+            {showVerifyBanner ? (
+              <VerifyEmailBanner email={loginEmail} />
             ) : (
-              <>
-                发送魔法链接
-                <ArrowRight className="h-4 w-4" />
-              </>
+              <button
+                type="button"
+                onClick={() => setShowVerifyBanner(true)}
+                className="text-xs text-sakura hover:text-sakura-dark transition-colors"
+              >
+                未收到验证邮件？点击重发
+              </button>
             )}
-          </button>
-        </form>
-      )}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={isPending}
+          className="btn-primary flex w-full items-center justify-center gap-2"
+        >
+          {isPending ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              登录中...
+            </>
+          ) : (
+            "登录"
+          )}
+        </button>
+
+        <div className="flex items-center justify-between text-sm">
+          <Link href="/register" className="text-sakura hover:text-sakura-dark transition-colors">
+            注册账号
+          </Link>
+          <Link href="/forgot-password" className="text-ink-light hover:text-ink transition-colors">
+            忘记密码？
+          </Link>
+        </div>
+      </form>
     </div>
-  );
+  )
 }

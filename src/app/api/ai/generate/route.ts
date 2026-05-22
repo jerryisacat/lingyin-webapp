@@ -1,5 +1,5 @@
 import { getUser, jsonError } from "@/lib/api-helpers";
-import { checkApiKey } from "@/lib/api-key-guard";
+import { getUserDecryptedApiKey } from "@/lib/api-key-guard";
 import { generateDiary } from "@/lib/diary";
 import type { ApiProvider, Tone } from "@/types";
 import { NextRequest } from "next/server";
@@ -7,9 +7,6 @@ import { NextRequest } from "next/server";
 export async function POST(request: NextRequest) {
   const user = await getUser();
   if (!user) return jsonError("Unauthorized", 401);
-
-  const apiKey = checkApiKey(request);
-  if (typeof apiKey !== "string") return apiKey;
 
   let body: {
     text?: string;
@@ -31,6 +28,11 @@ export async function POST(request: NextRequest) {
     date = new Date().toISOString().slice(0, 10),
     provider = "openai",
   } = body;
+
+  const apiKey = await getUserDecryptedApiKey(user.id, provider);
+  if (!apiKey) {
+    return jsonError("API Key not configured for this provider — configure it in Settings", 400);
+  }
 
   const generator = generateDiary({
     text,

@@ -1,0 +1,1 @@
+The document overviews the src/app source structure for a Next.js application, covering API routes, components, and libraries via single-pass context curation.

@@ -1,0 +1,7 @@
+- Key points: RLM single-pass curation of inline context for src/app module
+- Task is to document Next.js application source in src/app
+- Flow consists of context extraction followed by curation
+- Covers application source structure for a Next.js app
+- Highlights include API routes, components, and lib directories
+- Structure / sections summary: Frontmatter metadata, Reason, Raw Concept (Task/Flow), Narrative (Structure/Highlights)
+- Notable entities/patterns: Next.js app, src/app module, API routes, components, lib; single-pass curation decision
