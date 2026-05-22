@@ -1,7 +1,16 @@
+import { getUser, jsonError } from "@/lib/api-helpers";
 import { getPresignedUrl } from "@/lib/storage";
 import { NextRequest, NextResponse } from "next/server";
 
+function extractUserIdFromKey(key: string): string | null {
+  const match = key.match(/^users\/([^/]+)\//);
+  return match ? match[1] : null;
+}
+
 export async function GET(request: NextRequest) {
+  const user = await getUser();
+  if (!user) return jsonError("Unauthorized", 401);
+
   const { searchParams } = new URL(request.url);
   const key = searchParams.get("key");
   const redirect = searchParams.get("redirect");
@@ -10,17 +19,20 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Missing 'key' parameter" }, { status: 400 });
   }
 
+  const ownerId = extractUserIdFromKey(key);
+  if (!ownerId || ownerId !== user.id) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
   try {
     const signedUrl = await getPresignedUrl(key, 3600);
 
-    // When redirect=true, the user gets a 302 redirect to the signed CloudFlare URL
     if (redirect === "true") {
       return NextResponse.redirect(signedUrl);
     }
 
-    // Otherwise return the signed URL as JSON (for programmatic use)
     return NextResponse.json({ url: signedUrl });
   } catch {
-    return NextResponse.json({ error: "Failed to generate image URL" }, { status: 500 });
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 }
