@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { useLocalApiKey } from "@/hooks/useLocalApiKey";
 import type { ApiProvider } from "@/types";
 import {
@@ -62,17 +61,11 @@ export default function SettingsPage() {
     setTestStatus("testing");
     setTestError("");
 
-    const supabase = createClient();
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
     try {
       const res = await fetch("/api/ai/test", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.access_token ?? ""}`,
         },
         body: JSON.stringify({ provider, apiKey: draftApiKey }),
       });

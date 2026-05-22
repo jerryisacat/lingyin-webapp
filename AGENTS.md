@@ -79,12 +79,6 @@ Refer to `docs/03-Phase1-MVP说明.md`. Only build: AI diary generation (single 
 | Secrets management | `.env.local` in dev, Vercel Environment Variables in production |
 | Deploy | Vercel monolith (with Supabase Integration) |
 
-## Source of truth
-- `docs/01-PRD.md` — product requirements
-- `docs/02-技术架构.md` — tech decisions, directory structure, API routes *(note: SQLite/VPS/Docker/S3 decisions here are superseded by this AGENTS.md)*
-- `docs/03-Phase1-MVP说明.md` — exact MVP scope and tasks
-- `docs/05-数据模型.md` — Prisma schema and TypeScript types (authoritative; overrides 02 if they conflict)
-
 ## Project structure
 ```
 src/app/             — Next.js App Router pages
@@ -107,7 +101,7 @@ public/              — PWA icons, manifest.json, sw.js
 
 ### 开发前：检索已有知识
 在开始任何开发工作前，使用 `brv search <关键词>` 检索 `.brv/context-tree/` 中已有的项目知识，理解现有的架构决策和模式。
-如果返回空结果，说明当前模块还未建立知识树，直接开始即可。
+如果返回空结果，说明当前模块还未建立知识树，直接开始即可。如果是按照 Issues 相关的开发，先初始化 `develop/issue-N` 独立分支。
 
 ### 开发后（git commit 之前）：整理记忆
 每次代码修改完成后按以下顺序操作：
@@ -138,7 +132,7 @@ Phase 1 is complete (MVP: AI diary generation, Markdown editor, image upload, ti
 
 ## Vibe Coding Workflow — Issue-Driven Development
 
-所有后续开发工作（Phase 2-4）通过 GitHub Issues 管理，不再依赖 `docs/` 中的 Phase 文档。Agent 按以下流程操作：
+所有后续开发工作（Phase 2-4）通过 GitHub Issues 管理。Agent 按以下流程操作：
 
 ### 分支策略
 - 每个 Issue 使用**独立分支**：`develop/issue-N`（从 `main` 分出）

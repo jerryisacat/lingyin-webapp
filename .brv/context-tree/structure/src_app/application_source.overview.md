@@ -1,0 +1,7 @@
+- Next.js app router structure with API routes, components, hooks, and lib utilities focused on diary, auth, and timeline features
+- Core files documented: src/app/layout.tsx and src/app/page.tsx
+- Flow covers app router pages and API endpoints for auth, diary entries, timeline, and settings
+- Structure uses Next.js app directory with layout plus pages for login/register, diary, timeline, and settings
+- Components handle UI, hooks manage local state and streaming, lib supports auth/db/ai
+- Highlights include diary editor, markdown viewer, photo upload, and auth actions as active curation focus
+- Notable decision: src/app curated as core module for diary/auth/timeline implementation

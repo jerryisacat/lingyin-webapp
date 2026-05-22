@@ -1,0 +1,1 @@
+The document outlines the Next.js app router architecture in src/app, including layouts, auth/diary/timeline pages, and supporting components, hooks, and utilities for core features.
