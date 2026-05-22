@@ -6,7 +6,7 @@ import { Sparkles, StopCircle, Eye, EyeOff, Save, RefreshCw, ArrowLeft } from "l
 import { useStreamGenerate } from "@/hooks/useStreamGenerate";
 import TypewriterText from "@/components/TypewriterText";
 import PhotoUploader from "@/components/PhotoUploader";
-import type { ApiProvider, MediaFile } from "@/types";
+import type { ApiProvider, MediaFile, Tone } from "@/types";
 
 type EditorState = "input" | "generating" | "editing";
 
@@ -34,6 +34,7 @@ export default function DiaryEditor({ date, provider }: DiaryEditorProps) {
   const [showPreview, setShowPreview] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [selectedTone, setSelectedTone] = useState<Tone>("warm");
 
   const { text: streamedText, isStreaming, error: streamError, generate, stop, reset } =
     useStreamGenerate({
@@ -41,6 +42,7 @@ export default function DiaryEditor({ date, provider }: DiaryEditorProps) {
       images,
       date,
       provider,
+      tone: selectedTone,
     });
 
   useEffect(() => {
@@ -87,7 +89,7 @@ export default function DiaryEditor({ date, provider }: DiaryEditorProps) {
         body: JSON.stringify({
           date,
           markdown,
-          tone: "warm",
+          tone: selectedTone,
           imagePaths: images.map((img) => img.path),
         }),
       });
@@ -105,7 +107,7 @@ export default function DiaryEditor({ date, provider }: DiaryEditorProps) {
       setSaveError(msg);
       setSaveStatus("error");
     }
-  }, [markdown, date, images, router]);
+  }, [markdown, date, images, selectedTone, router]);
 
   const handleRegenerate = useCallback(() => {
     reset();
@@ -165,6 +167,32 @@ export default function DiaryEditor({ date, provider }: DiaryEditorProps) {
 
           <div className="card">
             <PhotoUploader images={images} onImagesChange={setImages} />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs text-ink-light/60 mr-1">语气：</span>
+            {(["warm", "genki", "minimal", "literary"] as const).map((tone) => {
+              const labels: Record<string, string> = {
+                warm: "温暖姐姐",
+                genki: "元气少女",
+                minimal: "简约派",
+                literary: "文艺风",
+              };
+              return (
+                <button
+                  key={tone}
+                  type="button"
+                  onClick={() => setSelectedTone(tone)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                    selectedTone === tone
+                      ? "bg-sakura text-white"
+                      : "border border-sakura/30 text-ink-light hover:border-sakura/60"
+                  }`}
+                >
+                  {labels[tone]}
+                </button>
+              );
+            })}
           </div>
 
           <button

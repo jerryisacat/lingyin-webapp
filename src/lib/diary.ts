@@ -4,7 +4,14 @@ import {
   describeImages,
   generateStream,
 } from "@/lib/ai/client";
-import { WARM_SYSTEM_PROMPT, buildDiaryPrompt, VISION_PROMPT } from "@/lib/ai/prompts";
+import {
+  WARM_SYSTEM_PROMPT,
+  GENKI_SYSTEM_PROMPT,
+  MINIMAL_SYSTEM_PROMPT,
+  LITERARY_SYSTEM_PROMPT,
+  buildDiaryPrompt,
+  VISION_PROMPT,
+} from "@/lib/ai/prompts";
 import type { ApiProvider, MediaFile, Tone, DiarySummary } from "@/types";
 
 export async function* generateDiary(params: {
@@ -28,7 +35,14 @@ export async function* generateDiary(params: {
         })
       : [];
 
-  const systemPrompt = tone === "warm" ? WARM_SYSTEM_PROMPT : WARM_SYSTEM_PROMPT;
+  const systemPrompt =
+    tone === "warm"
+      ? WARM_SYSTEM_PROMPT
+      : tone === "genki"
+        ? GENKI_SYSTEM_PROMPT
+        : tone === "minimal"
+          ? MINIMAL_SYSTEM_PROMPT
+          : LITERARY_SYSTEM_PROMPT;
   const userPrompt = buildDiaryPrompt({
     userText: text,
     imageDescriptions,
