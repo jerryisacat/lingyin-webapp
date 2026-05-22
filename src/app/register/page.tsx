@@ -1,13 +1,11 @@
 "use client"
 
 import { useActionState, useState } from "react"
-import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { BookOpen, Loader2, Eye, EyeOff, CheckCircle } from "lucide-react"
 import { registerAction } from "@/lib/auth-actions"
 
 export default function RegisterPage() {
-  const router = useRouter()
   const [state, action, pending] = useActionState(registerAction, null)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
@@ -29,13 +27,7 @@ export default function RegisterPage() {
             前往登录
           </Link>
           <p className="text-xs text-ink-light/70">
-            没收到邮件？检查垃圾箱或{" "}
-            <button
-              onClick={() => router.refresh()}
-              className="text-sakura underline"
-            >
-              重新发送
-            </button>
+            没收到邮件？检查垃圾箱或稍后重试。
           </p>
         </div>
       </div>

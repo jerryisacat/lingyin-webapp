@@ -72,8 +72,8 @@ export async function registerAction(
 
     return { ok: true, data: { email: user.email } }
   } catch (err) {
-    const message = err instanceof Error ? err.message : "注册失败，请稍后再试"
-    return { ok: false, error: message }
+    console.error("registerAction error:", err)
+    return { ok: false, error: "注册失败，请稍后再试" }
   }
 }
 
@@ -85,7 +85,6 @@ export async function verifyEmailAction(token: string): Promise<ActionResult> {
   try {
     const record = await prisma.verificationToken.findUnique({
       where: { token },
-      include: { user: true },
     })
 
     if (!record) {
@@ -107,8 +106,8 @@ export async function verifyEmailAction(token: string): Promise<ActionResult> {
 
     return { ok: true }
   } catch (err) {
-    const message = err instanceof Error ? err.message : "验证失败，请稍后再试"
-    return { ok: false, error: message }
+    console.error("verifyEmailAction error:", err)
+    return { ok: false, error: "验证失败，请稍后再试" }
   }
 }
 
@@ -122,10 +121,15 @@ export async function forgotPasswordAction(
     return { ok: false, error: "请输入邮箱地址" }
   }
 
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailPattern.test(email)) {
+    return { ok: false, error: "邮箱格式不正确" }
+  }
+
   try {
     const user = await prisma.user.findUnique({ where: { email } })
     if (!user) {
-      return { ok: false, error: "该邮箱未注册" }
+      return { ok: true }
     }
 
     const token = generateToken()
@@ -146,8 +150,8 @@ export async function forgotPasswordAction(
 
     return { ok: true }
   } catch (err) {
-    const message = err instanceof Error ? err.message : "发送失败，请稍后再试"
-    return { ok: false, error: message }
+    console.error("forgotPasswordAction error:", err)
+    return { ok: false, error: "发送失败，请稍后再试" }
   }
 }
 
@@ -201,7 +205,7 @@ export async function resetPasswordAction(
 
     return { ok: true }
   } catch (err) {
-    const message = err instanceof Error ? err.message : "重置失败，请稍后再试"
-    return { ok: false, error: message }
+    console.error("resetPasswordAction error:", err)
+    return { ok: false, error: "重置失败，请稍后再试" }
   }
 }

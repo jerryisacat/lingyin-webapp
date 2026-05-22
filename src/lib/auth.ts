@@ -3,6 +3,13 @@ import Credentials from "next-auth/providers/credentials"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/db"
 
+if (!process.env.AUTH_SECRET) {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("AUTH_SECRET environment variable is required")
+  }
+  console.warn("⚠ AUTH_SECRET not set — using random secret (sessions will be invalidated on restart)")
+}
+
 declare module "next-auth" {
   interface Session {
     user: {
