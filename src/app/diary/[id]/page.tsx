@@ -10,6 +10,9 @@ import {
   Hash,
   Type,
   ImageIcon,
+  Pencil,
+  Save,
+  X,
 } from "lucide-react";
 import MarkdownViewer from "@/components/MarkdownViewer";
 import type { DiarySummary, ApiResponse } from "@/types";
@@ -40,6 +43,9 @@ export default function DiaryDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState("");
+  const [editSaveStatus, setEditSaveStatus] = useState<"idle" | "saving" | "error">("idle");
 
   useEffect(() => {
     let cancelled = false;
@@ -100,6 +106,47 @@ export default function DiaryDetailPage() {
     }
   }, [entryId, router]);
 
+  const handleStartEdit = useCallback(() => {
+    setEditContent(entry?.markdown ?? "");
+    setIsEditing(true);
+    setEditSaveStatus("idle");
+  }, [entry]);
+
+  const handleEditSave = useCallback(async () => {
+    if (!editContent.trim() || !entry) return;
+    setEditSaveStatus("saving");
+
+    try {
+      const res = await fetch(`/api/entries/${entryId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ markdown: editContent }),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error((body as { error?: string }).error ?? "保存失败");
+      }
+
+      const json: ApiResponse<unknown> = await res.json();
+      if (!json.ok) throw new Error(json.error ?? "保存失败");
+
+      setEntry((prev) =>
+        prev ? { ...prev, markdown: editContent } : prev
+      );
+      setIsEditing(false);
+      setEditSaveStatus("idle");
+    } catch {
+      setEditSaveStatus("error");
+    }
+  }, [editContent, entry, entryId]);
+
+  const handleEditCancel = useCallback(() => {
+    setIsEditing(false);
+    setEditContent("");
+    setEditSaveStatus("idle");
+  }, []);
+
   if (isLoading) {
     return (
       <div className="max-w-2xl mx-auto py-20 flex flex-col items-center justify-center gap-3">
@@ -143,14 +190,26 @@ export default function DiaryDetailPage() {
           返回
         </button>
 
-        <button
-          type="button"
-          onClick={() => setShowDeleteConfirm(true)}
-          className="btn-ghost text-sm text-red-400 hover:text-red-500 hover:bg-red-50 flex items-center gap-1.5"
-        >
-          <Trash2 className="w-4 h-4" />
-          删除
-        </button>
+        <div className="flex items-center gap-2">
+          {!isEditing && (
+            <button
+              type="button"
+              onClick={handleStartEdit}
+              className="btn-ghost text-sm flex items-center gap-1.5"
+            >
+              <Pencil className="w-4 h-4" />
+              编辑
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setShowDeleteConfirm(true)}
+            className="btn-ghost text-sm text-red-400 hover:text-red-500 hover:bg-red-50 flex items-center gap-1.5"
+          >
+            <Trash2 className="w-4 h-4" />
+            删除
+          </button>
+        </div>
       </div>
 
       {/* Date + metadata bar */}
@@ -191,7 +250,48 @@ export default function DiaryDetailPage() {
 
       {/* Content */}
       <div className="card min-h-[50vh]">
-        {markdown ? (
+        {isEditing ? (
+          <div className="space-y-3">
+            <textarea
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              rows={20}
+              className="input-field resize-none font-mono text-sm w-full"
+            />
+            {editSaveStatus === "error" && (
+              <p className="text-sm text-red-400 text-center">保存失败，请重试</p>
+            )}
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleEditCancel}
+                disabled={editSaveStatus === "saving"}
+                className="btn-secondary flex-1 text-sm flex items-center justify-center gap-1.5"
+              >
+                <X className="w-4 h-4" />
+                取消
+              </button>
+              <button
+                type="button"
+                onClick={handleEditSave}
+                disabled={editSaveStatus === "saving" || !editContent.trim()}
+                className="btn-primary flex-1 text-sm flex items-center justify-center gap-1.5"
+              >
+                {editSaveStatus === "saving" ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    保存中...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    保存
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        ) : markdown ? (
           <MarkdownViewer markdown={markdown} />
         ) : (
           <p className="text-ink-light text-sm text-center py-12">暂无内容</p>
