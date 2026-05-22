@@ -9,11 +9,20 @@
 </p>
 
 <p align="center">
+  <a href="https://lingyindiary.app">lingyindiary.app</a>
+</p>
+
+<p align="center">
+  <a href="#what-is-lingyin">About</a> ·
   <a href="#features">Features</a> ·
   <a href="#quick-start">Quick Start</a> ·
   <a href="#deploy">Deploy</a> ·
   <a href="#architecture">Architecture</a> ·
   <a href="#roadmap">Roadmap</a>
+</p>
+
+<p align="center">
+  <sub>📖 <a href="README_CN.md">中文</a> · 🇯🇵 <a href="README_JA.md">日本語</a></sub>
 </p>
 
 ---
@@ -25,9 +34,10 @@
 - 🧠 **AI-generated prose** — natural, warm, markdown-formatted diary writing
 - 📷 **Photo to prose** — upload images, AI describes what it sees and weaves it into the story
 - 📱 **Install as PWA** — works offline, lives on your home screen, caches recent entries
-- 🔐 **Your keys, your data** — bring your own LLM API key; diary content stored in your own CloudFlare R2 bucket
+- 🔐 **Your keys, encrypted** — API keys AES-256-GCM encrypted on the server, never exposed to the browser
 - 🪄 **Markdown editor** — fine-tune the AI output before saving
 - 🕰️ **Timeline** — browse your diary history with preview snippets
+- ✉️ **Email + password auth** — independent account system with email verification and password reset
 
 ## Features
 
@@ -37,13 +47,14 @@
 | Markdown editor with preview | ✅ Phase 1 |
 | Image upload + AI vision description | ✅ Phase 1 |
 | PWA install (offline-capable) | ✅ Phase 1 |
-| Magic Link email login | ✅ Phase 1 |
+| Email/password login + password reset | ✅ Phase 1 |
+| Email verification via Resend | ✅ Phase 1 |
+| Server-side encrypted API keys (AES-256-GCM) | ✅ Phase 1 |
 | Multiple LLM providers (OpenAI / DeepSeek / Gemini) | ✅ Phase 1 |
 | Calendar view | 🗓️ Phase 2 |
 | Video upload in diary | 📹 Phase 2 |
 | Edit saved diaries | ✏️ Phase 2 |
 | Dark mode | 🌙 Phase 2 |
-| Password login | 🔐 Phase 2 |
 | Export (MD / PDF / ZIP) | 📤 Phase 2 |
 | Subscription billing | 💳 Phase 3 |
 | Admin dashboard | 🛠️ Phase 3 |
@@ -60,7 +71,8 @@ Full roadmap: [GitHub Issues](https://github.com/jerryisacat/lingyin-webapp/issu
 | Language | TypeScript |
 | Styling | Tailwind CSS |
 | Database | [Supabase](https://supabase.com/) PostgreSQL |
-| Auth | Supabase Auth (Magic Link) |
+| Auth | [Auth.js v5](https://authjs.dev/) (Credentials + JWT) |
+| Email | [Resend](https://resend.com/) |
 | ORM | [Prisma](https://www.prisma.io/) |
 | File Storage | [CloudFlare R2](https://www.cloudflare.com/developer-platform/r2/) (S3-compatible) |
 | LLM SDK | `openai` (compatible with OpenAI / DeepSeek / Gemini) |
@@ -77,24 +89,29 @@ Full roadmap: [GitHub Issues](https://github.com/jerryisacat/lingyin-webapp/issu
 │  │  Editor  │  │  (API Key)│  │  (Entry previews)  │ │
 │  └────┬─────┘  └───────────┘  └─────────┬─────────┘ │
 │       │                                  │           │
-│       │  X-API-Key header               │           │
+│       │     Auth.js JWT session          │           │
 └───────┼──────────────────────────────────┼───────────┘
         │                                  │
    ┌────▼──────────────────────────────────▼─────────┐
    │              Next.js API Routes                  │
    │  /api/ai/generate   /api/entries   /api/upload   │
-   └────┬──────────────┬──────────────┬──────────────┘
-        │              │              │
-   ┌────▼────┐   ┌─────▼──────┐  ┌───▼──────────┐
-   │  LLM    │   │  Supabase  │  │  CloudFlare   │
-   │  API    │   │  (Auth +   │  │  R2 (Diary    │
-   │         │   │   Metadata)│  │  + Images)    │
-   └─────────┘   └────────────┘  └───────────────┘
+   │       │                                       │
+   │       │ getUserDecryptedApiKey(userId, provider)│
+   └───────┼──────────────────────────────────┬──────┘
+           │              │                   │
+   ┌───────▼──────┐  ┌────▼────────┐  ┌───────▼──────┐
+   │   LLM API    │  │ PostgreSQL  │  │  CloudFlare  │
+   │  (OpenAI /   │  │ (Auth +     │  │  R2 (Diary   │
+   │  DeepSeek /  │  │  Metadata + │  │  + Images)   │
+   │  Gemini)     │  │  API Keys)  │  │              │
+   └──────────────┘  └─────────────┘  └──────────────┘
 ```
 
 **Key design decisions:**
-- **Content vs metadata split:** Diary markdown lives in R2; only metadata (title, date, preview, word count) is in PostgreSQL. This keeps database queries fast and storage cheap.
-- **User-managed API keys:** Each user brings their own LLM API key (stored in browser `localStorage`, sent via `X-API-Key` header). The server never stores or logs it.
+
+- **Content vs metadata split:** Diary markdown lives in R2; only metadata (title, date, preview, word count) is in PostgreSQL. Fast queries, cheap storage.
+- **Server-side encrypted API keys:** Keys are AES-256-GCM encrypted in PostgreSQL. The server decrypts per-request and forwards to LLM providers. Never exposed to the browser, never logged.
+- **Auth.js v5 independent accounts:** Email + password login with JWT sessions. No external auth provider dependency.
 - **Pre-signed URLs:** R2 bucket is private. All file access goes through short-lived pre-signed URLs, verified per user.
 - **One entry per day:** `@@unique([userId, date])` constraint — one diary entry per user per calendar day.
 
@@ -104,8 +121,9 @@ Full roadmap: [GitHub Issues](https://github.com/jerryisacat/lingyin-webapp/issu
 
 - Node.js 20+
 - npm 10+
-- A [Supabase](https://supabase.com) project (free tier works)
+- A PostgreSQL database (e.g. [Supabase](https://supabase.com) free tier)
 - A [CloudFlare R2](https://www.cloudflare.com/developer-platform/r2/) bucket (free tier: 10 GB)
+- A [Resend](https://resend.com) account for email sending (free tier: 100 emails/day)
 - An API key from one of: [OpenAI](https://platform.openai.com/), [DeepSeek](https://platform.deepseek.com/), or [Google AI](https://aistudio.google.com/)
 
 ### 1. Clone & install
@@ -116,43 +134,51 @@ cd lingyin-webapp
 npm install
 ```
 
-### 2. Set up Supabase
+### 2. Set up PostgreSQL
 
-1. Create a project at [supabase.com](https://supabase.com)
-2. Go to **SQL Editor** and run the setup script from `scripts/supabase-setup.sql`
-3. Go to **Authentication → Settings**:
-   - Enable **Email provider** with Magic Link
-   - Set **Site URL** to `http://localhost:3000` (for local dev)
-4. Copy your project URL and anon key from **Settings → API**
+Create a PostgreSQL database. You can use Supabase (Database only, no Auth), Neon, or any PostgreSQL provider.
+
+Get your connection string:
+```
+postgresql://postgres:<password>@<host>:5432/postgres
+```
 
 ### 3. Set up CloudFlare R2
 
-1. Create an R2 bucket named `lingyin-webapp`
+1. Create an R2 bucket (e.g. `lingyin-webapp`)
 2. Generate an API token with **Object Read & Write** permission
 3. Note your `Access Key ID`, `Secret Access Key`, and endpoint URL
 
-### 4. Configure environment
+### 4. Generate encryption keys
+
+```bash
+openssl rand -hex 32  # AUTH_SECRET
+openssl rand -hex 32  # API_KEY_ENCRYPTION_KEY
+```
+
+### 5. Configure environment
 
 ```bash
 cp .env.example .env.local
 ```
 
-Edit `.env.local` and fill in the values:
+Edit `.env.local`:
 
 ```env
-DATABASE_URL="postgresql://postgres:...@db.xxx.supabase.co:5432/postgres"
-SUPABASE_URL="https://xxx.supabase.co"
-SUPABASE_ANON_KEY="eyJ..."
-SUPABASE_SERVICE_ROLE_KEY="eyJ..."
-NEXT_PUBLIC_SUPABASE_URL="https://xxx.supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJ..."
+DATABASE_URL="postgresql://postgres:...@host:5432/postgres"
+AUTH_SECRET="<64 hex chars from step 4>"
+AUTH_URL="http://localhost:3000"
+API_KEY_ENCRYPTION_KEY="<64 hex chars from step 4>"
+RESEND_API_KEY="re_..."
+EMAIL_FROM="noreply@lingyindiary.app"
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
 R2_ACCESS_KEY_ID="..."
 R2_SECRET_ACCESS_KEY="..."
 R2_ENDPOINT="https://<account-id>.r2.cloudflarestorage.com"
 R2_BUCKET="lingyin-webapp"
 ```
 
-### 5. Push database & start
+### 6. Push database & start
 
 ```bash
 npx prisma db push
@@ -170,51 +196,68 @@ Or manually:
 1. Push this repo to GitHub
 2. Import the repo in [Vercel](https://vercel.com/new)
 3. Set **Build Command** to: `npx prisma generate && next build`
-4. Add all environment variables from `.env.example` in Vercel → Settings → Environment Variables
-5. ⚠️ **Important:** Vercel does NOT expand `${VAR}` references. Paste the actual values, not `"${SUPABASE_ANON_KEY}"`.
+4. Set **Region** to `Hong Kong (hkg1)` for lowest latency to Chinese users
+5. Add all environment variables from `.env.example` in Vercel → Settings → Environment Variables
 6. Deploy
 
-After deploy, update Supabase **Site URL** and **Redirect URLs** to your production domain.
+See [docs/deploy.md](docs/deploy.md) for the full deployment guide.
 
 ### Env var checklist for Vercel
 
-| Variable | Required |
-|----------|----------|
-| `DATABASE_URL` | ✅ Supabase connection string |
-| `SUPABASE_URL` | ✅ Supabase project URL |
-| `SUPABASE_ANON_KEY` | ✅ Supabase anon key |
-| `SUPABASE_SERVICE_ROLE_KEY` | ✅ For server-side operations |
-| `NEXT_PUBLIC_SUPABASE_URL` | ✅ Same as SUPABASE_URL (literal value) |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ Same as SUPABASE_ANON_KEY (literal value) |
-| `R2_ACCESS_KEY_ID` | ✅ |
-| `R2_SECRET_ACCESS_KEY` | ✅ |
-| `R2_ENDPOINT` | ✅ |
-| `R2_BUCKET` | ✅ |
+| Variable | Required | Notes |
+|----------|----------|-------|
+| `DATABASE_URL` | ✅ | PostgreSQL connection string |
+| `AUTH_SECRET` | ✅ | 64 hex chars (`openssl rand -hex 32`) |
+| `AUTH_URL` | ✅ | `https://your-domain.vercel.app` |
+| `API_KEY_ENCRYPTION_KEY` | ✅ | 64 hex chars — **back this up** |
+| `RESEND_API_KEY` | ✅ | Resend API key |
+| `EMAIL_FROM` | ✅ | Verified sender address |
+| `NEXT_PUBLIC_APP_URL` | ✅ | Same as AUTH_URL |
+| `R2_ACCESS_KEY_ID` | ✅ | |
+| `R2_SECRET_ACCESS_KEY` | ✅ | |
+| `R2_ENDPOINT` | ✅ | |
+| `R2_BUCKET` | ✅ | |
 
 ## Project Structure
 
 ```
 src/
 ├── app/                    # Next.js App Router pages
-│   ├── diary/              # Diary editor
-│   ├── login/              # Auth (Magic Link)
+│   ├── diary/              # Diary editor + detail
+│   ├── login/              # Email/password login
+│   ├── register/           # User registration
+│   ├── verify-email/       # Email verification
+│   ├── forgot-password/    # Password reset request
+│   ├── reset-password/     # Set new password
 │   ├── settings/           # API key config
 │   ├── timeline/           # Entry browsing
 │   └── api/                # API routes
+│       ├── auth/           # Auth (register, verify, reset)
 │       ├── ai/             # LLM generation (SSE streaming)
 │       ├── entries/        # Entry CRUD
 │       ├── upload/         # Image upload
-│       └── image/          # Pre-signed URL proxy
+│       ├── image/          # Pre-signed URL proxy
+│       └── user/           # User config + API keys
 ├── components/             # Shared UI components
+│   └── auth/               # PasswordInput, VerifyEmailBanner
+├── hooks/                  # React hooks (useApiKeys, useStreamGenerate)
 ├── lib/                    # Core logic
+│   ├── auth.ts             # Auth.js v5 config
+│   ├── auth-helpers.ts     # Session helpers
+│   ├── auth-service.ts     # Register/verify/reset logic
+│   ├── crypto.ts           # AES-256-GCM encrypt/decrypt
+│   ├── email.ts            # Resend email sending
+│   ├── api-helpers.ts      # API utilities
+│   ├── api-key-guard.ts    # API key retrieval + decryption
 │   ├── ai/                 # LLM client + prompts
 │   ├── storage.ts          # R2 S3 operations
 │   ├── diary.ts            # Entry CRUD helpers
 │   └── db.ts               # Prisma client
+├── middleware.ts            # Auth.js route protection
 └── types/                  # TypeScript type definitions
 
 prisma/
-├── schema.prisma           # Database schema
+└── schema.prisma           # Database schema
 
 docs/                       # Architecture docs (Chinese)
 ```
@@ -223,9 +266,10 @@ docs/                       # Architecture docs (Chinese)
 
 | Document | Content |
 |----------|---------|
-| [docs/01-PRD.md](docs/01-PRD.md) | Product requirements |
-| [docs/02-技术架构.md](docs/02-技术架构.md) | Technical architecture decisions |
-| [docs/05-数据模型.md](docs/05-数据模型.md) | Data models & Prisma schema |
+| [docs/01-PRD.md](docs/01-PRD.md) | Product requirements (Chinese) |
+| [docs/02-技术架构.md](docs/02-技术架构.md) | Technical architecture (Chinese) |
+| [docs/05-数据模型.md](docs/05-数据模型.md) | Data models & Prisma schema (Chinese) |
+| [docs/deploy.md](docs/deploy.md) | Deployment guide (Chinese) |
 | [AGENTS.md](AGENTS.md) | Agent workflow & conventions |
 | [CHANGELOG.md](CHANGELOG.md) | Change history |
 
@@ -233,21 +277,22 @@ docs/                       # Architecture docs (Chinese)
 
 玲音日记 is developed in phases. All future work is tracked as [GitHub Issues](https://github.com/jerryisacat/lingyin-webapp/issues):
 
-| Phase | Focus | Issues |
+| Phase | Focus | Status |
 |-------|-------|--------|
-| **1 — MVP** ✅ | AI diary, editor, PWA | Done |
-| **2 — UX** 🚧 | Calendar, video, dark mode, password login, export | 8 issues |
-| **3 — Monetization** | Subscriptions, admin dashboard, unified keys | 6 issues |
-| **4 — Platform** | Sharing, stats, native apps, open API | 6 issues |
+| **1 — MVP** | AI diary, editor, PWA, auth, encrypted API keys | ✅ Done |
+| **2 — UX** | Calendar, video, dark mode, export | 🚧 Planned |
+| **3 — Monetization** | Subscriptions, admin dashboard | 📋 Planned |
+| **4 — Platform** | Sharing, stats, native apps | 📋 Planned |
 
 ## Privacy & Security
 
-- **Your API key never touches our servers.** It's stored in your browser's `localStorage` and sent per-request via `X-API-Key` header. The server forwards it to the LLM provider and never logs it.
-- **Your diary content is in your R2 bucket.** We store only metadata (date, title, word count) in the database. The actual diary text lives in CloudFlare R2 under your own account.
-- **Pre-signed URLs.** Images are served through short-lived pre-signed URLs, verified against your user session. No public bucket access.
-- **Row Level Security.** Every database query is scoped to the authenticated user.
+- **API Keys encrypted on server.** Stored in PostgreSQL with AES-256-GCM encryption. Decrypted per-request in memory, forwarded to the LLM provider, never logged or exposed to the browser.
+- **Independent auth system.** Auth.js v5 with bcrypt-hashed passwords. No third-party auth provider dependency.
+- **Your diary content in R2.** We store only metadata (date, title, word count) in the database. The actual diary text lives in CloudFlare R2.
+- **Pre-signed URLs.** Images are served through short-lived pre-signed URLs. No public bucket access.
+- **User-scoped queries.** All database queries are scoped to the authenticated user via `getSessionUserId()`.
 
-See [docs/02-技术架构.md](docs/02-技术架构.md) for the full security model.
+See [docs/02-技术架构.md](docs/02-技术架构.md) for the full security model (Chinese).
 
 ## Contributing
 
@@ -258,8 +303,6 @@ See [docs/02-技术架构.md](docs/02-技术架构.md) for the full security mod
 3. Make your changes, following the conventions in [AGENTS.md](AGENTS.md)
 4. Run `npx tsc --noEmit` to verify TypeScript is clean
 5. Push and open a Pull Request
-
-For significant changes, please open an issue first to discuss what you'd like to change.
 
 ## License
 
