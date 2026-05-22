@@ -75,7 +75,7 @@ export async function registerUser(input: RegisterInput): Promise<ServiceResult<
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
     console.error("registerUser error:", message)
-    return { ok: false, error: `注册失败: ${message}` }
+    return { ok: false, error: "注册失败，请稍后再试" }
   }
 }
 

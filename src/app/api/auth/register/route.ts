@@ -11,10 +11,9 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(result, { status: 400 })
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
+  } catch {
     return NextResponse.json(
-      { ok: false, error: `注册失败: ${message}` },
+      { ok: false, error: "注册失败，请稍后再试" },
       { status: 500 }
     )
   }
