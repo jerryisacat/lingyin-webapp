@@ -48,3 +48,4 @@ memory/
 
 # Vercel env dump (contains tokens)
 .env.vercel
+.env*

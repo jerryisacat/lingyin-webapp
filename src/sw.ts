@@ -38,15 +38,10 @@ const serwist = new Serwist({
         networkTimeoutSeconds: 5,
       }),
     },
-    // Images (R2) — CacheFirst
+    // Images (R2) — NetworkOnly (presigned URLs are time-sensitive)
     {
       matcher: /\/api\/image.*/,
-      handler: new CacheFirst({
-        cacheName: "images",
-        plugins: [
-          new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 * 30 }),
-        ],
-      }),
+      handler: new NetworkOnly(),
     },
     // Static assets — StaleWhileRevalidate
     {

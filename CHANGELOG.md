@@ -1,5 +1,22 @@
 # CHANGELOG
 
+## 2026-05-22 — Issue #23: R2 用户文件隐私审查与修复
+
+**触发原因**: 图片和 Markdown 文件通过 R2 公开 URL 可被未授权访问，存在隐私泄露风险。
+
+### 修改
+- `src/lib/storage.ts`: 移除 `getImageUrl()` 死代码；移除 `getPresignedUrl()` 中的 `R2_PUBLIC_URL` 回退（始终使用真实预签名 URL）；新增 `deleteDirectory()` 批量删除目录
+- `src/app/api/image/route.ts`: 添加 Auth.js session 鉴权 + 路径 owner 验证（userId 不匹配返回 404）
+- `src/lib/diary.ts`: `deleteDiary()` 增加关联 assets 清理（`ListObjectsV2Command` + `DeleteObjectsCommand`）
+- `src/sw.ts`: `/api/image.*` 缓存策略从 `CacheFirst` 改为 `NetworkOnly`（预签名 URL 时效性）
+- `next.config.mjs`: 移除 `lingyin-r2.jerryiscat.one` 远程图片域名
+
+### 安全改进
+- `/api/image` 未登录访问 → 401
+- 用户 A 无法访问用户 B 的图片（路径 userId 不匹配 → 404，不区分不存在与无权限）
+- R2 Bucket 关闭 Public Access 后所有文件仅通过预签名 URL 访问
+- 删除日记时同步清理关联图片，避免孤儿文件
+
 ## 2026-05-22 — Issue #29: Remove Supabase Auth, Build Independent Account System
 
 **触发原因**: 降低对 Supabase Auth 的耦合，掌控完整认证逻辑。使用 Auth.js v5 (Credentials + JWT) + Resend email + AES-256-GCM API Key 加密存储搭建自建账户系统。

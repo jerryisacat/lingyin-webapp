@@ -20,10 +20,16 @@
     },
     {
       "abstractPath": "structure/src_app/application_source.abstract.md",
-      "abstractTokens": 46,
+      "abstractTokens": 40,
       "importance": 50,
       "path": "structure/src_app/application_source.md",
-      "tokens": 46,
+      "tokens": 40,
+      "type": "context"
+    },
+    {
+      "importance": 50,
+      "path": "structure/storage/r2_privacy_and_asset_management.md",
+      "tokens": 840,
       "type": "context"
     },
     {
@@ -33,13 +39,13 @@
       "type": "context"
     }
   ],
-  "generated_at": "2026-05-22T09:17:18.168Z",
+  "generated_at": "2026-05-22T10:43:31.360Z",
   "lane_tokens": {
-    "contexts": 893,
+    "contexts": 1727,
     "stubs": 0,
     "summaries": 787
   },
-  "source_fingerprint": "2586e857a3b16ad08f8c1d5a7a6fc3ac2ec8e38a8f10f18d7adbcb46d8982bb0",
-  "total_tokens": 1680,
+  "source_fingerprint": "240b6213209997ce1a81243f70396ef75c9b61195064b7787ea09af76b2eca0b",
+  "total_tokens": 2514,
   "version": 1
 }

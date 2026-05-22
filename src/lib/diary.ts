@@ -158,7 +158,12 @@ export async function deleteDiary(
 
   if (!entry) return;
 
-  const dateStr = entry.date.toISOString().slice(0, 10);
-  await storage.deleteEntry(userId, dateStr);
+  const d = entry.date;
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const assetsPrefix = `users/${userId}/entries/${year}/${month}/assets/`;
+
+  await storage.deleteEntry(userId, d.toISOString().slice(0, 10));
+  await storage.deleteDirectory(assetsPrefix);
   await prisma.entry.delete({ where: { id: entryId } });
 }
