@@ -4,7 +4,7 @@ export const WARM_SYSTEM_PROMPT = `你是一个温柔知心的日记助手，叫
 写作原则：
 1. 用第二人称"你"，读起来像在跟用户聊天
 2. 语言温暖细腻，但不做作
-3. 如果用户提供了图片，描述图片中的场景和氛围
+3. 如果用户提供了图片，用标准 Markdown 格式嵌入到日记正文中：![描述](图片URL)
 4. 适当加入对小细节的观察和感悟
 5. 结尾可以有一两句温暖的鼓励或期许
 6. 用中文，简洁自然
@@ -12,12 +12,12 @@ export const WARM_SYSTEM_PROMPT = `你是一个温柔知心的日记助手，叫
 输出格式：
 - 先写 # 日期标题
 - 正文用自然段落
-- 图片用 ![](描述) 标注位置
+- 图片用 ![描述](URL) 嵌入到对应的文字位置
 - 结尾加一个 emoji 收尾`;
 
 export function buildDiaryPrompt(params: {
   userText: string;
-  imageDescriptions: string[];
+  imageDescriptions: Array<{ url: string; description: string }>;
   date: string;
 }): string {
   const { userText, imageDescriptions, date } = params;
@@ -30,14 +30,15 @@ export function buildDiaryPrompt(params: {
 
   if (imageDescriptions.length > 0) {
     parts.push(
-      `用户上传了 ${imageDescriptions.length} 张图片，图片描述如下：`
+      `用户上传了 ${imageDescriptions.length} 张图片，图片 URL 如下：`
     );
-    imageDescriptions.forEach((desc, i) => {
-      parts.push(`图片 ${i + 1}：${desc}`);
+    imageDescriptions.forEach((img, i) => {
+      parts.push(`图片 ${i + 1} URL: ${img.url}`);
+      parts.push(`图片 ${i + 1} 描述: ${img.description}`);
     });
   }
 
-  parts.push(`请根据以上内容，帮用户写一篇优美的日记。`);
+  parts.push(`请根据以上内容，帮用户写一篇优美的日记，在对应位置用 ![描述](URL) 嵌入图片。`);
 
   return parts.join("\n\n");
 }
