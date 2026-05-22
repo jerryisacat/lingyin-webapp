@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Sans_SC } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { auth } from "@/lib/auth";
 import AppShell from "@/components/AppShell";
 import "./globals.css";
 
@@ -25,15 +26,18 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await auth();
+  const authenticated = !!session?.user;
+
   return (
     <html lang="zh-CN" className={notoSansSC.variable}>
       <body className="min-h-screen bg-warm-white text-ink font-sans">
-        <AppShell>{children}</AppShell>
+        <AppShell authenticated={authenticated}>{children}</AppShell>
         <Analytics />
       </body>
     </html>
