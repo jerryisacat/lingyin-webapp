@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     images = [],
     tone = "warm",
     date = new Date().toISOString().slice(0, 10),
-    provider = "openai",
+    provider = "openrouter",
   } = body;
 
   const apiKey = await getUserDecryptedApiKey(user.id, provider);

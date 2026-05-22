@@ -1,0 +1,8 @@
+- Key points: R2 storage privacy fixes enforce presigned URLs only with no public fallbacks or dead code
+- Owner auth added to /api/image route returning 404 on mismatch to prevent info leaks
+- deleteDirectory implemented for batch prefix-based R2 cleanup via ListObjectsV2 + DeleteObjects
+- deleteDiary now performs full asset and markdown cleanup before Prisma removal
+- SW /api/image switched to NetworkOnly strategy for time-bound presigned URLs
+- Removed R2_PUBLIC_URL and remote image domains from next.config for security
+- Structure / sections summary: Frontmatter with title/summary, Reason section, Raw Concept (task/changes/files/flow), Narrative (Structure/Dependencies/Highlights), and Facts list of functions/entities
+- Notable entities/patterns/decisions: src/lib/storage.ts (r2_client, buildMarkdownPath/buildAssetPath, getPresignedUrl, deleteDirectory), src/app/api/image/route.ts (auth via getUser), src/lib/diary.ts (upsertDiary/getEntries/getEntry/deleteDiary using Prisma Entry model), src/sw.ts; DiarySummary type; user/year/month path patterns; 3600s expiry; privacy-first decisions avoiding public access

@@ -1,6 +1,6 @@
 export type Tone = "warm" | "genki" | "minimal" | "literary";
 
-export type ApiProvider = "openai" | "deepseek" | "gemini";
+export type ApiProvider = "openrouter";
 
 export interface UserConfig {
   apiProvider: ApiProvider;

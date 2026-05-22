@@ -18,26 +18,16 @@ const STORAGE_KEY = "lingyin-api-config"
 
 const PROVIDERS: { value: ApiProvider; label: string; description: string }[] = [
   {
-    value: "openai",
-    label: "OpenAI",
-    description: "GPT-4o-mini，速度快效果好",
-  },
-  {
-    value: "deepseek",
-    label: "DeepSeek",
-    description: "国产大模型，性价比高",
-  },
-  {
-    value: "gemini",
-    label: "Google Gemini",
-    description: "Gemini 2.0 Flash，多模态强",
+    value: "openrouter",
+    label: "OpenRouter",
+    description: "统一网关，一个 Key 访问数百种模型",
   },
 ]
 
 export default function SettingsPage() {
   const { keys, loading, saveKey, deleteKey, hasKey } = useApiKeys()
 
-  const [provider, setProvider] = useState<ApiProvider>("openai")
+  const [provider, setProvider] = useState<ApiProvider>("openrouter")
   const [draftApiKey, setDraftApiKey] = useState("")
   const [showKey, setShowKey] = useState(false)
   const [testStatus, setTestStatus] = useState<
@@ -228,7 +218,7 @@ export default function SettingsPage() {
                 setSaveError("")
               }}
               placeholder={
-                provider === "openai" ? "sk-..." : "输入你的 API Key"
+                "sk-or-v1-..."
               }
               className="input-field pr-10 font-mono text-sm"
               autoComplete="off"

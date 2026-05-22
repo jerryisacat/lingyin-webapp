@@ -1,0 +1,1 @@
+This document describes R2 storage privacy fixes using presigned URLs exclusively, owner authentication on the image API that returns 404 on mismatch, deleteDirectory for batch cleanup, NetworkOnly service worker caching, and automatic asset removal in deleteDiary.

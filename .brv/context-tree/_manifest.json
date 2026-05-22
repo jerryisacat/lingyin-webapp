@@ -27,9 +27,19 @@
       "type": "context"
     },
     {
+      "abstractPath": "structure/storage/r2_privacy_and_asset_management.abstract.md",
+      "abstractTokens": 66,
       "importance": 50,
       "path": "structure/storage/r2_privacy_and_asset_management.md",
-      "tokens": 840,
+      "tokens": 66,
+      "type": "context"
+    },
+    {
+      "abstractPath": "ui/epic_30/full_site_ui_ux_design_upgrade_spec.abstract.md",
+      "abstractTokens": 62,
+      "importance": 50,
+      "path": "ui/epic_30/full_site_ui_ux_design_upgrade_spec.md",
+      "tokens": 62,
       "type": "context"
     },
     {
@@ -39,13 +49,13 @@
       "type": "context"
     }
   ],
-  "generated_at": "2026-05-22T10:43:31.360Z",
+  "generated_at": "2026-05-22T12:07:19.604Z",
   "lane_tokens": {
-    "contexts": 1727,
+    "contexts": 1015,
     "stubs": 0,
     "summaries": 787
   },
-  "source_fingerprint": "240b6213209997ce1a81243f70396ef75c9b61195064b7787ea09af76b2eca0b",
-  "total_tokens": 2514,
+  "source_fingerprint": "dd891eeaced58f55514e7687af27c576568c24577abc9391021b7572e144c34e",
+  "total_tokens": 1802,
   "version": 1
 }
