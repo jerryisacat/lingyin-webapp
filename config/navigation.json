@@ -1,0 +1,21 @@
+{
+  "brand": {
+    "label": "铃英日记",
+    "href": "/",
+    "icon": "BookOpen"
+  },
+  "items": [
+    { "id": "home", "href": "/", "label": "首页", "icon": "Home", "show": "always" },
+    { "id": "diary", "href": "/diary", "label": "写日记", "icon": "PenLine", "show": "authenticated" },
+    { "id": "timeline", "href": "/timeline", "label": "时间线", "icon": "Clock", "show": "authenticated" },
+    { "id": "settings", "href": "/settings", "label": "设置", "icon": "Settings", "show": "authenticated" },
+    { "id": "social", "href": null, "label": "社交网络", "icon": "Users", "show": "always", "disabled": true },
+    { "id": "login", "href": "/login", "label": "登陆", "icon": "LogIn", "show": "unauthenticated" }
+  ],
+  "mobileItems": [
+    { "id": "home", "href": "/", "label": "首页", "icon": "Home" },
+    { "id": "diary", "href": "/diary", "label": "写日记", "icon": "PenLine" },
+    { "id": "timeline", "href": "/timeline", "label": "时间线", "icon": "Clock" },
+    { "id": "settings", "href": "/settings", "label": "设置", "icon": "Settings" }
+  ]
+}

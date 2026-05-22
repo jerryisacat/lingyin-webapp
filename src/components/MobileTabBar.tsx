@@ -2,13 +2,21 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { PenLine, Clock, Settings } from "lucide-react";
+import {
+  Home,
+  PenLine,
+  Clock,
+  Settings,
+  type LucideIcon,
+} from "lucide-react";
+import navConfig from "@/../config/navigation.json";
 
-const TAB_ITEMS = [
-  { href: "/diary", label: "写日记", icon: PenLine },
-  { href: "/timeline", label: "时间线", icon: Clock },
-  { href: "/settings", label: "设置", icon: Settings },
-];
+const ICON_MAP: Record<string, LucideIcon> = {
+  Home,
+  PenLine,
+  Clock,
+  Settings,
+};
 
 export default function MobileTabBar() {
   const pathname = usePathname();
@@ -16,18 +24,19 @@ export default function MobileTabBar() {
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-surface-border bg-warm-white/95 backdrop-blur-sm safe-area-bottom">
       <div className="flex items-center justify-around h-16">
-        {TAB_ITEMS.map((item) => {
+        {(navConfig.mobileItems as { id: string; href: string; label: string; icon: string }[]).map((item) => {
           const isActive =
             pathname === item.href || pathname.startsWith(item.href + "/");
+          const Icon = ICON_MAP[item.icon] || Home;
           return (
             <Link
-              key={item.href}
+              key={item.id}
               href={item.href}
               className={`flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 h-full transition-colors ${
                 isActive ? "text-sakura" : "text-ink-light"
               }`}
             >
-              <item.icon className="h-5 w-5" strokeWidth={isActive ? 2 : 1.5} />
+              <Icon className="h-5 w-5" strokeWidth={isActive ? 2 : 1.5} />
               <span className="text-2xs font-medium">{item.label}</span>
             </Link>
           );
