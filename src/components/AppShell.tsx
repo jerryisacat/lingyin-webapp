@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import NavBar from "./NavBar";
 import MobileTabBar from "./MobileTabBar";
@@ -9,11 +10,28 @@ const ALWAYS_NO_SHELL = ["/login", "/auth", "/register", "/forgot-password", "/r
 
 interface AppShellProps {
   children: React.ReactNode;
+  /** SSR-time auth hint, used as initial value before client fetch resolves */
   authenticated: boolean;
 }
 
-export default function AppShell({ children, authenticated }: AppShellProps) {
+export default function AppShell({ children, authenticated: ssrAuth }: AppShellProps) {
   const pathname = usePathname();
+
+  // Client-side auth — always fresh, even after client navigation
+  const [authenticated, setAuthenticated] = useState(ssrAuth);
+  const [authLoaded, setAuthLoaded] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/auth/session")
+      .then((res) => res.json())
+      .then((data) => {
+        setAuthenticated(!!data?.user);
+        setAuthLoaded(true);
+      })
+      .catch(() => {
+        setAuthLoaded(true);
+      });
+  }, [pathname]);
 
   // Routes that always skip the shell
   if (ALWAYS_NO_SHELL.some((route) => pathname.startsWith(route))) {
