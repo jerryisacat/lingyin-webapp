@@ -26,28 +26,28 @@
 
 玲音日记 (LINGYIN Diary) is an open-source AI diary app. You describe your day in your own words — upload photos, jot down thoughts — and a large language model transforms it into a polished, publishable diary entry.
 
-- 🧠 **AI 智能生成** — 用自然语言描述今天，AI 自动生成温暖、格式化的 Markdown 日记
-- 📷 **照片入文** — 上传照片，AI 分析场景和氛围，自然融入日记
-- ✏️ **Markdown 编辑** — 编辑 AI 生成的内容；编辑模式下支持预览、插入和删除图片
-- 📱 **PWA 离线可用** — 安装到桌面，离线也能阅读日记
-- 🔐 **邮箱 + 密码登录** — Auth.js v5 Credentials，邮件验证 + JWT 会话
-- 🗝️ **自管 API Key** — 用户绑定 OpenRouter Key，服务端 AES-256-GCM 加密存储
-- 🕰️ **时间线浏览** — 按日期浏览所有日记，带预览摘要
+- 🧠 **AI Generation** — describe your day in natural language, AI crafts warm, formatted Markdown diary entries
+- 📷 **Photo to Prose** — upload photos, AI analyzes scenes and atmosphere, weaving them naturally into your story
+- ✏️ **Markdown Editor** — refine AI-generated content; preview, insert, and delete images while editing
+- 📱 **PWA Offline** — install to home screen, read diaries offline
+- 🔐 **Email + Password Login** — Auth.js v5 Credentials, email verification + JWT sessions
+- 🗝️ **Bring Your Own API Key** — bind your OpenRouter key, encrypted server-side with AES-256-GCM
+- 🕰️ **Timeline** — browse all diaries by date with preview snippets
 
 ## Features
 
 | Feature | Description |
 |---------|-------------|
-| AI 日记生成 | 描述今天 + 上传照片 → AI 生成温暖感性的 Markdown 日记 |
-| Markdown 编辑器 | 实时预览、编辑 AI 输出，编辑模式支持图片预览/插入/删除 |
-| 图片上传管理 | 上传最多 9 张，拖拽排序，编辑时可增删 |
-| PWA 安装 | 桌面/手机安装，Service Worker 离线缓存 |
-| 时间线浏览 | 按日期查看所有日记，预览摘要，游标分页 |
-| 邮箱密码注册 | Auth.js v5 Credentials + JWT，Resend 邮件验证 |
-| API Key 管理 | 用户绑定 OpenRouter Key，AES-256-GCM 服务端加密 |
-| 日记编辑保存 | 编辑已保存日记内容（含图片），保存后自动更新 R2 |
+| AI Diary Generation | Describe your day + upload photos → AI generates warm Markdown diary |
+| Markdown Editor | Live preview, edit AI output, image preview/insert/delete in edit mode |
+| Image Management | Upload up to 9 images, drag-to-reorder, add/remove while editing |
+| PWA Install | Desktop & mobile install, Service Worker offline caching |
+| Timeline Browsing | Browse all diaries by date, preview snippets, cursor-based pagination |
+| Email + Password Auth | Auth.js v5 Credentials + JWT, Resend email verification |
+| API Key Management | Bind your OpenRouter key, AES-256-GCM server-side encryption |
+| Diary Editing | Edit saved diary content (including images), auto-updates R2 on save |
 
-[查看完整路线图 →](https://github.com/jerryisacat/lingyin-webapp/issues)
+[View full roadmap →](https://github.com/jerryisacat/lingyin-webapp/issues)
 
 ## Tech Stack
 
@@ -57,10 +57,12 @@
 | Language | TypeScript |
 | Styling | Tailwind CSS |
 | Database | [Supabase](https://supabase.com/) PostgreSQL |
-| Auth | Supabase Auth (Magic Link) |
+| Auth | Auth.js v5 (Credentials + JWT) |
+| Email | [Resend](https://resend.com/) |
 | ORM | [Prisma](https://www.prisma.io/) |
 | File Storage | [CloudFlare R2](https://www.cloudflare.com/developer-platform/r2/) (S3-compatible) |
-| LLM SDK | `openai` (compatible with OpenAI / DeepSeek / Gemini) |
+| LLM Gateway | [OpenRouter](https://openrouter.ai/) |
+| Markdown | [react-markdown](https://github.com/remarkjs/react-markdown) |
 | PWA | [Serwist](https://serwist.pages.dev/) |
 | Deploy | [Vercel](https://vercel.com/) |
 
@@ -74,7 +76,6 @@
 │  │  Editor  │  │  (API Key)│  │  (Entry previews)  │ │
 │  └────┬─────┘  └───────────┘  └─────────┬─────────┘ │
 │       │                                  │           │
-│       │  X-API-Key header               │           │
 └───────┼──────────────────────────────────┼───────────┘
         │                                  │
    ┌────▼──────────────────────────────────▼─────────┐
@@ -84,16 +85,16 @@
         │              │              │
    ┌────▼────┐   ┌─────▼──────┐  ┌───▼──────────┐
    │  LLM    │   │  Supabase  │  │  CloudFlare   │
-   │  API    │   │  (Auth +   │  │  R2 (Diary    │
-   │         │   │   Metadata)│  │  + Images)    │
+   │  API    │   │  (Metadata)│  │  R2 (Diary    │
+   │         │   │            │  │  + Images)    │
    └─────────┘   └────────────┘  └───────────────┘
 ```
 
 **Key design decisions:**
-- **Content vs metadata split:** Diary markdown lives in R2; only metadata (title, date, preview, word count) is in PostgreSQL. This keeps database queries fast and storage cheap.
-- **User-managed API keys:** Each user brings their own LLM API key (stored in browser `localStorage`, sent via `X-API-Key` header). The server never stores or logs it.
-- **Pre-signed URLs:** R2 bucket is private. All file access goes through short-lived pre-signed URLs, verified per user.
-- **One entry per day:** `@@unique([userId, date])` constraint — one diary entry per user per calendar day.
+- **Content vs metadata split:** Diary markdown lives in R2; only metadata (date, preview, word count) is in PostgreSQL.
+- **Server-encrypted API keys:** User API keys are AES-256-GCM encrypted in PostgreSQL. The server decrypts on-the-fly per request.
+- **Pre-signed URLs:** R2 bucket is private. All file access uses short-lived pre-signed URLs, verified per user.
+- **One entry per day:** `@@unique([userId, date])` — one diary entry per user per calendar day.
 
 ## Quick Start
 
@@ -103,7 +104,7 @@
 - npm 10+
 - A [Supabase](https://supabase.com) project (free tier works)
 - A [CloudFlare R2](https://www.cloudflare.com/developer-platform/r2/) bucket (free tier: 10 GB)
-- An API key from one of: [OpenAI](https://platform.openai.com/), [DeepSeek](https://platform.deepseek.com/), or [Google AI](https://aistudio.google.com/)
+- An [OpenRouter](https://openrouter.ai/) API key
 
 ### 1. Clone & install
 
@@ -113,14 +114,11 @@ cd lingyin-webapp
 npm install
 ```
 
-### 2. Set up Supabase
+### 2. Set up Supabase (Database only)
 
 1. Create a project at [supabase.com](https://supabase.com)
-2. Go to **SQL Editor** and run the setup script from `scripts/supabase-setup.sql`
-3. Go to **Authentication → Settings**:
-   - Enable **Email provider** with Magic Link
-   - Set **Site URL** to `http://localhost:3000` (for local dev)
-4. Copy your project URL and anon key from **Settings → API**
+2. Go to **Settings → Database** and copy the connection string
+3. Note: Auth is handled by Auth.js, NOT Supabase Auth
 
 ### 3. Set up CloudFlare R2
 
@@ -134,15 +132,14 @@ npm install
 cp .env.example .env.local
 ```
 
-Edit `.env.local` and fill in the values:
+Edit `.env.local` and fill in:
 
 ```env
 DATABASE_URL="postgresql://postgres:...@db.xxx.supabase.co:5432/postgres"
-SUPABASE_URL="https://xxx.supabase.co"
-SUPABASE_ANON_KEY="eyJ..."
-SUPABASE_SERVICE_ROLE_KEY="eyJ..."
-NEXT_PUBLIC_SUPABASE_URL="https://xxx.supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJ..."
+AUTH_SECRET="openssl rand -base64 32"
+API_KEY_ENCRYPTION_KEY="openssl rand -hex 32"
+RESEND_API_KEY="re_..."
+AUTH_RESEND_KEY="re_..."
 R2_ACCESS_KEY_ID="..."
 R2_SECRET_ACCESS_KEY="..."
 R2_ENDPOINT="https://<account-id>.r2.cloudflarestorage.com"
@@ -168,25 +165,21 @@ Or manually:
 2. Import the repo in [Vercel](https://vercel.com/new)
 3. Set **Build Command** to: `npx prisma generate && next build`
 4. Add all environment variables from `.env.example` in Vercel → Settings → Environment Variables
-5. ⚠️ **Important:** Vercel does NOT expand `${VAR}` references. Paste the actual values, not `"${SUPABASE_ANON_KEY}"`.
-6. Deploy
-
-After deploy, update Supabase **Site URL** and **Redirect URLs** to your production domain.
+5. Deploy
 
 ### Env var checklist for Vercel
 
-| Variable | Required |
-|----------|----------|
-| `DATABASE_URL` | ✅ Supabase connection string |
-| `SUPABASE_URL` | ✅ Supabase project URL |
-| `SUPABASE_ANON_KEY` | ✅ Supabase anon key |
-| `SUPABASE_SERVICE_ROLE_KEY` | ✅ For server-side operations |
-| `NEXT_PUBLIC_SUPABASE_URL` | ✅ Same as SUPABASE_URL (literal value) |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ Same as SUPABASE_ANON_KEY (literal value) |
-| `R2_ACCESS_KEY_ID` | ✅ |
-| `R2_SECRET_ACCESS_KEY` | ✅ |
-| `R2_ENDPOINT` | ✅ |
-| `R2_BUCKET` | ✅ |
+| Variable | Required | Notes |
+|----------|----------|-------|
+| `DATABASE_URL` | ✅ | Supabase connection string |
+| `AUTH_SECRET` | ✅ | `openssl rand -base64 32` |
+| `API_KEY_ENCRYPTION_KEY` | ✅ | `openssl rand -hex 32` — back this up! |
+| `RESEND_API_KEY` | ✅ | Resend API key |
+| `AUTH_RESEND_KEY` | ✅ | Resend API key (can be same as above) |
+| `R2_ACCESS_KEY_ID` | ✅ | |
+| `R2_SECRET_ACCESS_KEY` | ✅ | |
+| `R2_ENDPOINT` | ✅ | |
+| `R2_BUCKET` | ✅ | |
 
 ## Project Structure
 
@@ -194,7 +187,7 @@ After deploy, update Supabase **Site URL** and **Redirect URLs** to your product
 src/
 ├── app/                    # Next.js App Router pages
 │   ├── diary/              # Diary editor
-│   ├── login/              # Auth (Magic Link)
+│   ├── login/              # Auth pages
 │   ├── settings/           # API key config
 │   ├── timeline/           # Entry browsing
 │   └── api/                # API routes
@@ -220,28 +213,28 @@ docs/                       # Architecture docs (Chinese)
 
 | Document | Content |
 |----------|---------|
-| [docs/01-PRD.md](docs/01-PRD.md) | Product requirements |
-| [docs/02-技术架构.md](docs/02-技术架构.md) | Technical architecture decisions |
-| [docs/05-数据模型.md](docs/05-数据模型.md) | Data models & Prisma schema |
+| [docs/01-PRD.md](docs/01-PRD.md) | Product requirements (Chinese) |
+| [docs/02-技术架构.md](docs/02-技术架构.md) | Technical architecture (Chinese) |
+| [docs/05-数据模型.md](docs/05-数据模型.md) | Data models & Prisma schema (Chinese) |
 | [AGENTS.md](AGENTS.md) | Agent workflow & conventions |
 | [CHANGELOG.md](CHANGELOG.md) | Change history |
 
 ## Roadmap
 
-玲音日记 is developed in phases. All future work is tracked as [GitHub Issues](https://github.com/jerryisacat/lingyin-webapp/issues):
+All future work is tracked as [GitHub Issues](https://github.com/jerryisacat/lingyin-webapp/issues):
 
-| Phase | Focus | Issues |
+| Phase | Focus | Status |
 |-------|-------|--------|
-| **1 — MVP** ✅ | AI diary, editor, PWA | Done |
-| **2 — UX** 🚧 | Calendar, video, dark mode, password login, export | 8 issues |
-| **3 — Monetization** | Subscriptions, admin dashboard, unified keys | 6 issues |
-| **4 — Platform** | Sharing, stats, native apps, open API | 6 issues |
+| **1 — MVP** | AI diary, editor, PWA, Auth | ✅ Done |
+| **2 — UX** | Calendar, video, multi-tone, dark mode, export | 🚧 In progress |
+| **3 — Monetization** | Subscriptions, admin dashboard | 📋 Planned |
+| **4 — Platform** | Sharing, stats, native apps, public API | 📋 Planned |
 
 ## Privacy & Security
 
-- **Your API key never touches our servers.** It's stored in your browser's `localStorage` and sent per-request via `X-API-Key` header. The server forwards it to the LLM provider and never logs it.
-- **Your diary content is in your R2 bucket.** We store only metadata (date, title, word count) in the database. The actual diary text lives in CloudFlare R2 under your own account.
-- **Pre-signed URLs.** Images are served through short-lived pre-signed URLs, verified against your user session. No public bucket access.
+- **API keys encrypted server-side.** User API keys are AES-256-GCM encrypted in PostgreSQL, decrypted on-the-fly per request. Never logged, never persisted in plaintext.
+- **Diary content in your R2 bucket.** Only metadata (date, word count, etc.) is stored in the database. The actual diary text lives in CloudFlare R2.
+- **Pre-signed URLs.** Images are served through short-lived pre-signed URLs, verified against user session. No public bucket access.
 - **Row Level Security.** Every database query is scoped to the authenticated user.
 
 See [docs/02-技术架构.md](docs/02-技术架构.md) for the full security model.
