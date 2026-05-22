@@ -1,5 +1,5 @@
 {
-  "curationsSinceDream": 4,
+  "curationsSinceDream": 6,
   "lastDreamAt": "2026-05-22T06:05:02.522Z",
   "lastDreamLogId": "drm-1779429861536",
   "pendingMerges": [],
@@ -15,6 +15,14 @@
     {
       "enqueuedAt": 1779451548226,
       "path": "ui/epic_30/full_site_ui_ux_design_upgrade_spec.md"
+    },
+    {
+      "enqueuedAt": 1779451807872,
+      "path": "ui/demo/ui_ux_interactive_demo_v2_0.md"
+    },
+    {
+      "enqueuedAt": 1779452589131,
+      "path": "project/context_curation/rlm_context_curation.md"
     }
   ],
   "totalDreams": 1,

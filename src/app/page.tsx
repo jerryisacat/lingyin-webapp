@@ -10,8 +10,12 @@ import {
   Smartphone,
   Wand2,
   ChevronRight,
+  PenTool,
+  Palette,
+  Heart,
 } from "lucide-react";
 import Link from "next/link";
+import SakuraParticles from "@/components/SakuraParticles";
 
 const FEATURES = [
   {
@@ -39,18 +43,21 @@ const FEATURES = [
 const STEPS = [
   {
     num: "01",
-    title: "记录灵感",
-    desc: "随便说几句话，或上传一张今天的照片。不需要完美措辞。",
+    title: "日常倾诉",
+    desc: "日常随笔、照片、断断续续的心思，都能毫无压力地写下。",
+    icon: PenTool,
   },
   {
     num: "02",
-    title: "AI 润色",
-    desc: "铃英会自动分析你提供的素材，生成一篇自然优美的日记。",
+    title: "温暖润色",
+    desc: "AI 理解故事背后细密的情绪，将碎片加工成优雅的信签。",
+    icon: Palette,
   },
   {
     num: "03",
-    title: "保存回味",
-    desc: "日记保存在时间线上，支持 Markdown 排版。翻看过去的日子，感受时光。",
+    title: "珍藏回味",
+    desc: "日记按时间线保存，支持 Markdown。翻看过去，感受时光。",
+    icon: Heart,
   },
 ];
 
@@ -113,57 +120,70 @@ export default async function Home() {
   return (
     <div className="flex flex-col">
       {/* ── Hero ── */}
-      <section className="relative flex min-h-[85vh] flex-col items-center justify-center px-6 text-center overflow-hidden">
-        {/* 装饰性背景元素 */}
+      <section className="relative flex min-h-[90vh] flex-col items-center justify-center px-6 text-center overflow-hidden">
+        {/* 樱花飘落粒子 */}
+        <SakuraParticles />
+
+        {/* 装饰性渐变光斑 */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-sakura/5 blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-sakura/5 blur-3xl" />
+          <div className="absolute -top-20 right-[10%] h-72 w-72 rounded-full bg-sakura/10 blur-3xl" />
+          <div className="absolute top-1/3 -left-20 h-64 w-64 rounded-full bg-sakura/8 blur-3xl" />
+          <div className="absolute -bottom-20 right-[5%] h-56 w-56 rounded-full bg-sakura/6 blur-3xl" />
+          <div className="absolute bottom-1/3 -right-20 h-48 w-48 rounded-full bg-sakura/10 blur-3xl" />
         </div>
 
-        <div className="relative z-10 flex max-w-2xl flex-col items-center gap-6">
-          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-sakura/10 ring-4 ring-sakura/20">
+        {/* Hero 内容 */}
+        <div className="relative z-20 flex max-w-2xl flex-col items-center gap-6">
+          {/* Logo 徽章 */}
+          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-sakura/15 to-sakura/5 ring-4 ring-sakura/15 backdrop-blur-sm">
             <BookOpen className="h-12 w-12 text-sakura" strokeWidth={1.5} />
           </div>
 
-          <h1 className="text-4xl font-bold tracking-tight text-ink sm:text-5xl">
+          {/* 标题 */}
+          <h1 className="text-4xl font-bold tracking-tight text-ink sm:text-5xl lg:text-6xl">
             玲音日记
           </h1>
-          <p className="text-xl text-ink-light sm:text-2xl">
-            你的 AI 日记助手
+
+          {/* 副标题——渐变色 */}
+          <p className="bg-gradient-to-r from-sakura-dark via-sakura to-sakura-light bg-clip-text text-xl font-medium text-transparent sm:text-2xl">
+            记下此时此刻，温暖治愈的 AI 日记伴侣
           </p>
 
-          <p className="max-w-md text-base text-ink-light/80 leading-relaxed">
+          {/* 描述 */}
+          <p className="max-w-md text-base text-ink-light/80 leading-relaxed sm:text-lg">
             拍张照片，说几句话。AI 自动写成一篇优美的日记。
             <br />
             让记录生活变得无比简单。
           </p>
 
+          {/* CTA 按钮 */}
           <div className="flex flex-col items-center gap-3 sm:flex-row mt-4">
             <Link
               href="/login"
-              className="btn-primary flex items-center gap-2 text-lg px-8 py-3.5"
+              className="btn-primary flex items-center gap-2 text-lg px-8 py-3.5 shadow-soft hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
             >
-              开始使用
+              开启书写之旅
               <ArrowRight className="h-5 w-5" />
             </Link>
-            <Link
-              href="/login"
+            <a
+              href="#features"
               className="btn-secondary flex items-center gap-2 px-8 py-3.5"
             >
               了解更多
-              <ChevronRight className="h-4 w-4" />
-            </Link>
+              <ChevronRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+            </a>
           </div>
         </div>
 
-        {/* 向下箭头指示 */}
-        <div className="absolute bottom-8 animate-bounce text-ink-light/30">
-          <ChevronRight className="h-6 w-6 rotate-90" strokeWidth={1.5} />
+        {/* 向下滚动指示 */}
+        <div className="absolute bottom-8 z-20 flex flex-col items-center gap-2 text-ink-light/25">
+          <span className="text-xs">向下探索</span>
+          <ChevronRight className="h-5 w-5 rotate-90 animate-bounce" strokeWidth={1.5} />
         </div>
       </section>
 
       {/* ── 特性 Features ── */}
-      <section className="bg-surface/50 px-6 py-20 sm:py-28">
+      <section id="features" className="bg-surface/50 px-6 py-20 sm:py-28">
         <div className="mx-auto max-w-5xl">
           <div className="mb-14 text-center">
             <h2 className="text-2xl font-bold text-ink sm:text-3xl">
@@ -178,9 +198,9 @@ export default async function Home() {
             {FEATURES.map((feature) => (
               <div
                 key={feature.title}
-                className="card flex flex-col items-start gap-4 p-6 transition-shadow hover:shadow-md"
+                className="feature-card group"
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-sakura/10">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-sakura/10 transition-transform duration-300 group-hover:scale-110">
                   <feature.icon
                     className="h-6 w-6 text-sakura"
                     strokeWidth={1.5}
@@ -199,7 +219,7 @@ export default async function Home() {
       </section>
 
       {/* ── 使用步骤 How It Works ── */}
-      <section className="px-6 py-20 sm:py-28">
+      <section id="how-it-works" className="px-6 py-20 sm:py-28">
         <div className="mx-auto max-w-4xl">
           <div className="mb-14 text-center">
             <h2 className="text-2xl font-bold text-ink sm:text-3xl">
@@ -210,37 +230,59 @@ export default async function Home() {
             </p>
           </div>
 
-          <div className="grid gap-8 sm:grid-cols-3">
-            {STEPS.map((step) => (
-              <div key={step.num} className="flex flex-col items-center gap-4 text-center">
-                <span className="text-4xl font-bold text-sakura/40">
+          {/* 步骤卡片 */}
+          <div className="relative grid gap-6 sm:grid-cols-3">
+            {/* SVG 贝塞尔连线（桌面端） */}
+            <div className="step-connector absolute inset-x-10 top-[72px] hidden sm:block pointer-events-none">
+              <svg className="w-full h-8" fill="none" preserveAspectRatio="none">
+                <path
+                  d="M 0,10 C 100,30 160,-10 260,10 S 420,30 520,10"
+                  stroke="#f0a8b0"
+                  strokeWidth="2"
+                  strokeDasharray="6,6"
+                  opacity="0.35"
+                />
+              </svg>
+            </div>
+
+            {STEPS.map((step, idx) => (
+              <div key={step.num} className="relative flex flex-col items-center text-center">
+                {/* 序号徽章 */}
+                <div className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full bg-sakura text-white text-sm font-bold shadow-soft mb-5">
                   {step.num}
-                </span>
-                <h3 className="text-lg font-medium text-ink">{step.title}</h3>
-                <p className="text-sm text-ink-light leading-relaxed max-w-xs">
-                  {step.desc}
-                </p>
+                </div>
+
+                {/* 卡片 */}
+                <div className="group w-full rounded-xl border border-surface-border bg-white p-6 shadow-soft transition-all duration-300 hover:-translate-y-1.5 hover:shadow-md">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-sakura/10 mx-auto mb-4 transition-transform duration-300 group-hover:scale-110">
+                    <step.icon className="h-5 w-5 text-sakura" strokeWidth={1.5} />
+                  </div>
+                  <h3 className="font-bold text-lg text-ink mb-2">
+                    {step.title}
+                  </h3>
+                  <p className="text-sm text-ink-light leading-relaxed">
+                    {step.desc}
+                  </p>
+                </div>
+
+                {/* 移动端竖线连接 */}
+                {idx < STEPS.length - 1 && (
+                  <div className="my-2 sm:hidden flex justify-center">
+                    <div className="w-px h-8 bg-sakura/30" />
+                  </div>
+                )}
               </div>
             ))}
-          </div>
-
-          {/* 步骤连线装饰（桌面端显示） */}
-          <div className="relative mt-8 hidden sm:block">
-            <div className="mx-auto flex max-w-md justify-between px-6">
-              {[1, 2].map((i) => (
-                <div
-                  key={i}
-                  className="h-px w-20 bg-sakura/20"
-                />
-              ))}
-            </div>
           </div>
         </div>
       </section>
 
       {/* ── CTA ── */}
-      <section className="bg-sakura/5 px-6 py-20 sm:py-28">
-        <div className="mx-auto flex max-w-2xl flex-col items-center gap-6 text-center">
+      <section className="relative overflow-hidden bg-gradient-to-b from-sakura/5 to-sakura/10 px-6 py-20 sm:py-28">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-64 w-64 rounded-full bg-sakura/10 blur-3xl" />
+        </div>
+        <div className="relative z-10 mx-auto flex max-w-2xl flex-col items-center gap-6 text-center">
           <Wand2 className="h-10 w-10 text-sakura" strokeWidth={1.5} />
           <h2 className="text-2xl font-bold text-ink sm:text-3xl">
             开始记录你的生活
@@ -252,7 +294,7 @@ export default async function Home() {
           </p>
           <Link
             href="/login"
-            className="btn-primary flex items-center gap-2 text-lg px-10 py-3.5 mt-2"
+            className="btn-primary flex items-center gap-2 text-lg px-10 py-3.5 mt-2 shadow-soft hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
           >
             免费开始使用
             <ArrowRight className="h-5 w-5" />

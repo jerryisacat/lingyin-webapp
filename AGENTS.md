@@ -121,6 +121,24 @@ Issue 应包含:
 - 概述（用户想达成什么）
 - 动机（为什么需要）
 - 验收标准（如何判断完成）
+- Labels（便于分类和过滤）
+
+### Labels 规则
+
+| 维度 | 标签 | 说明 |
+|------|------|------|
+| **类型** | `bug` / `enhancement` | 缺陷修复 / 功能增强 |
+| **范围** | `scope:frontend` / `scope:backend` / `scope:fullstack` | 前端 / 后端 / 全栈改动 |
+| **层级** | `layer:ui` / `layer:api` / `layer:db` / `layer:storage` / `layer:ai` | UI 层 / API 层 / 数据库 / 存储 / AI |
+| **优先级** | `priority:p0` / `p1` / `p2` / `p3` | P0 紧急 / P1 高 / P2 中 / P3 低 |
+| **状态** | `blocked` / `needs-decision` / `epic` | 被阻塞 / 待决策 / 大型 Epic |
+| **领域** | `monetization` / `platform` | 商业化 / 平台相关 |
+
+**规则:**
+1. 每个 Issue 至少打上 **类型** + **范围** 两个维度的标签
+2. `epic` 用于包含多个子任务的大型需求，通常跨 scope/layer
+3. `needs-decision` 用于需求尚未明确的探索性 Issue
+4. 有前置依赖的 Issue 打 `blocked` 并在正文标注 `> **前置 Issue:** #N`
 
 ### 开发前：检索已有知识
 使用 `brv search <关键词>` 检索 `.brv/context-tree/` 中已有的项目知识。
@@ -141,5 +159,5 @@ Issue 应包含:
 2. 更新 `CHANGELOG.md`
 3. 整理 ByteRover 知识树
 4. `git add` + `git commit` + `git push origin develop/issue-N`
-5. 使用 `gh issue comment <N> --body "..."` 通知用户
+5. 使用 `gh issue comment <N> --body "..."` 通知用户并 Close Issues
 6. 使用 `gh pr create` 创建 PR (base: main, head: develop/issue-N)

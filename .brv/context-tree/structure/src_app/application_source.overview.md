@@ -1,7 +1,4 @@
-- Key points: RLM single-pass curation of inline context for src/app module
-- Task is to document Next.js application source in src/app
-- Flow consists of context extraction followed by curation
-- Covers application source structure for a Next.js app
-- Highlights include API routes, components, and lib directories
-- Structure / sections summary: Frontmatter metadata, Reason, Raw Concept (Task/Flow), Narrative (Structure/Highlights)
-- Notable entities/patterns: Next.js app, src/app module, API routes, components, lib; single-pass curation decision
+- Key points: Next.js src/app handles auth flows, diary CRUD operations, timeline views, and settings; API keys restricted to OpenRouter provider with extensible design; local storage for keys, Prisma DB integration, and UI/UX upgrades; AI client refactored around ProviderConfig for easy provider additions; supports image description via vision models with error fallbacks.
+- Structure / sections summary: Document sections include Reason (curation task), Raw Concept (task/files/flow), Narrative (Structure and Highlights), and Facts (detailed bullet list on APIs, configs, and functions).
+- Notable entities: ApiProvider union type ('openrouter'), ProviderConfig interface (baseURL, defaultModel, defaultVisionModel, optional headers), createOpenAIClient, generateStream, describeImage/describeImages, OpenRouter baseURL (https://openrouter.ai/api/v1) with default model openai/gpt-4o-mini and headers (HTTP-Referer, X-Title).
+- Notable patterns/decisions: Test route reuses createOpenAIClient and validates against ['openrouter'] with 15s timeout; Settings UI displays only OpenRouter; Tone union type (warm, genki, minimal, literary); parallel image processing via Promise.allSettled; design prioritizes extensibility by updating PROVIDER_CONFIGS and ApiProvider union.
