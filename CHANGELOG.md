@@ -1,40 +1,60 @@
 # CHANGELOG
 
-## 2026-05-22 — Phase C: 账户系统登录/注册/验证/重置流程 (Issue #29)
+## 2026-05-22 — Issue #29: Remove Supabase Auth, Build Independent Account System
 
-**触发原因**: Issue #29 — 移除 Supabase Auth，独立开发账户系统。Phase B 已完成 Auth.js v5 基础设施（Credentials provider、JWT session、middleware 重写），Phase C 补齐用户可用的完整 auth 流程页面。
+**触发原因**: 降低对 Supabase Auth 的耦合，掌控完整认证逻辑。使用 Auth.js v5 (Credentials + JWT) + Resend email + AES-256-GCM API Key 加密存储搭建自建账户系统。
 
-### 变更内容
+### Phase A: 数据库 + 基础设施
+- `prisma/schema.prisma`: 新增 `passwordHash`, `emailVerified`, `image` 字段到 `User` 模型；新建 `VerificationToken`, `PasswordResetToken`, `ApiKey` 模型
+- `src/lib/crypto.ts`: AES-256-GCM 加密/解密 (`encryptApiKey`, `decryptApiKey`)
+- `src/lib/email.ts`: Resend 邮件发送 (`sendVerificationEmail`, `sendPasswordResetEmail`)
+- `.env.example`: 新增 `AUTH_SECRET`, `API_KEY_ENCRYPTION_KEY`, `RESEND_API_KEY`, `EMAIL_FROM`
 
-- `src/middleware.ts`: 新增 `/register`、`/verify-email`、`/forgot-password`、`/reset-password` 为公开路由（同时列入 `public` 和 `auth` 路由列表，已登录用户访问时重定向到 `/`）
-- `src/lib/auth-actions.ts` **(新文件)**: Server Actions 集中管理 auth 操作
-  - `registerAction` — 邮箱注册 (校验 → bcrypt 哈希 → Prisma 创建用户 + VerificationToken → 发送验证邮件)
-  - `verifyEmailAction` — 邮箱验证 (token 校验 → 过期检查 → 设置 `emailVerified` → 删除 token)
-  - `forgotPasswordAction` — 忘记密码 (查找用户 → 生成 PasswordResetToken → 发送重置邮件)
-  - `resetPasswordAction` — 重置密码 (token 校验 → 过期检查 → bcrypt 新密码 → 删除 token)
-- `src/app/login/page.tsx`: 重写为完整的 Email + Password 登录表单
-  - 使用 `signIn("credentials", { redirect: false })` 进行客户端认证
-  - 错误消息：邮箱或密码错误 / 邮箱未验证
-  - 底部链接：注册账号、忘记密码
-  - 密码显示/隐藏切换
-- `src/app/register/page.tsx` **(新文件)**: 注册页面
-  - Email + Password + Confirm Password 表单
-  - 客户端校验后提交 Server Action
-  - 成功后显示"已发送验证邮件"状态，引导用户查收邮件
-- `src/app/verify-email/page.tsx` **(新文件)**: 邮箱验证页面 (Server Component)
-  - 通过 `searchParams.token` 接收验证令牌
-  - 调用 `verifyEmailAction` 服务端验证
-  - 成功/失败两种视觉状态（绿色/红色图标 + 对应文案）
-- `src/app/forgot-password/page.tsx` **(新文件)**: 忘记密码页面
-  - 邮箱输入 → Server Action 发送重置邮件
-  - 成功后显示确认提示
-- `src/app/reset-password/page.tsx` **(新文件)**: 重置密码页面 (Client Component)
-  - 通过 `searchParams.token` 接收重置令牌
-  - 新密码 + 确认密码 → Server Action 完成重置
-  - 成功后引导用户前往登录
+### Phase B: Auth 核心
+- `src/lib/auth.ts`: Auth.js v5 配置 — Credentials provider (bcrypt 验证), JWT strategy, session callback
+- `src/lib/auth-helpers.ts`: `getSessionUserId()`, `jsonOk()`, `jsonError()`
+- `src/app/api/auth/[...nextauth]/route.ts`: Auth.js v5 API route
+- `src/middleware.ts`: 重写 — `auth()` wrapper 拦截页面路由，API Routes 透传
+
+### Phase C: 注册 + 验证 + 密码重置
+- `src/lib/auth-service.ts`: 共享业务逻辑 — `registerUser()`, `verifyEmail()`, `resendVerification()`, `forgotPassword()`, `resetPassword()` (无 `"use server"`)
+- 5 个 API Routes: `POST /api/auth/register`, `GET /api/auth/verify-email`, `POST /api/auth/resend-verification`, `POST /api/auth/forgot-password`, `POST /api/auth/reset-password`
+- `src/components/auth/PasswordInput.tsx`: 密码输入组件 (show/hide toggle)
+- 3 个 Client Component 页面重写: `register`, `forgot-password`, `reset-password` (使用 `fetch()`)
+- 1 个 Server Component 保持: `verify-email` (直接调用 `auth-service.ts`)
+- 删除 `src/lib/auth-actions.ts` (Server Actions 方案)
+
+### Phase D: 登录页
+- `src/app/login/page.tsx`: 重写 — `useTransition` + `PasswordInput` + `form action` 模式
+- `src/components/auth/VerifyEmailBanner.tsx`: 验证邮件重发组件 (loading/success/error 状态机)
+
+### Phase E: API Key 服务端迁移
+- `src/app/api/user/api-keys/route.ts`: GET (列出) / POST (upsert 加密) / DELETE (软删除)
+- `src/hooks/useApiKeys.ts`: React hook — `keys`, `loading`, `saveKey`, `deleteKey`, `hasKey`
+- `src/lib/api-key-guard.ts`: 新增 `getUserDecryptedApiKey(userId, provider)` 从 DB 解密取钥
+- `src/app/settings/page.tsx`: 重写 — 使用 `useApiKeys`, 双写 DB + localStorage (向后兼容), "已配置" 标签
+
+### Phase F: 全线 Auth 集成
+- `src/app/api/ai/generate/route.ts`: `checkApiKey` → `getUserDecryptedApiKey`, 移除 `X-API-Key` 依赖
+- `src/app/api/ai/rewrite/route.ts`: 同上
+- `src/app/api/ai/test/route.ts`: 支持 body `apiKey` (测试未保存) 或 DB 读取 (测试已保存)
+- `src/hooks/useStreamGenerate.ts`: 移除 `apiKey` 参数和 `X-API-Key` header
+- `src/app/diary/page.tsx`: `useLocalApiKey` → `useApiKeys`, 移除 `apiKey` prop
+- `src/components/DiaryEditor.tsx`: 移除 `apiKey` prop
+
+### Phase G: 清理
+- 删除 `src/lib/supabase/`, `src/app/auth/callback/route.ts`, `src/hooks/useLocalApiKey.ts`, `prisma/sql/`, `scripts/supabase-setup.sql`
+- 移除依赖: `@supabase/ssr`, `@supabase/supabase-js`, `cookie`, `@types/cookie`
+
+### Phase H: 文档
+- `docs/deploy.md`: 新建 — Vercel 部署指南完整流程
+- `docs/02-技术架构.md`: 更新 — 架构图、Auth 流程、API 表、环境变量、目录结构
+- `docs/05-数据模型.md`: 更新 — 完整 Prisma Schema、类型定义
+- `AGENTS.md`: 更新 — Auth、API Key、设计决策、项目结构
 
 ### 决策记录
-- **Server Actions vs API Routes**: 选用 Server Actions (`useActionState`)，因为 auth 操作是表单提交，不需要单独 API endpoint，且 middleware 对 API 路由不做 auth 拦截
-- **Token 生成**: 使用 `crypto.randomUUID()`，不引入额外依赖
-- **Token 过期**: 验证令牌 24 小时，密码重置令牌 1 小时
-- **注册后未登录**: 注册成功不自动登录，用户需先验证邮箱后再登录（auth.ts 中 `authorize` 要求 `emailVerified` 不为 null）
+- **Auth.js v5 over Supabase Auth**: Credentials + JWT + Resend 替代 Magic Link，完全自建
+- **API Routes over Server Actions**: 注册/验证/重置改用 API Routes，便于独立测试和中间件透传
+- **API Key 服务端加密**: localStorage → PostgreSQL AES-256-GCM，鉴权走 Auth.js session，降低泄露风险
+- **bcrypt 12 rounds**: 平衡安全性和登录延迟 (~300ms)
+- **Token 生成**: `crypto.randomUUID()`，验证 24h 过期，重置 1h 过期

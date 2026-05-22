@@ -1,4 +1,5 @@
 import { getUser, jsonError, jsonOk } from "@/lib/api-helpers";
+import { getUserDecryptedApiKey } from "@/lib/api-key-guard";
 import type { ApiProvider } from "@/types";
 import { NextRequest } from "next/server";
 
@@ -25,14 +26,16 @@ export async function POST(request: NextRequest) {
     return jsonError("Invalid JSON body");
   }
 
-  const { provider = "openai", apiKey } = body;
-  if (!apiKey) {
-    return jsonError("API Key is required to test connection", 400);
-  }
+  const { provider = "openai", apiKey: bodyApiKey } = body;
 
   const validProviders: ApiProvider[] = ["openai", "deepseek", "gemini"];
   if (!validProviders.includes(provider)) {
     return jsonError(`Unknown provider: ${provider}`, 400);
+  }
+
+  const apiKey = bodyApiKey || (await getUserDecryptedApiKey(user.id, provider));
+  if (!apiKey) {
+    return jsonError("API Key is required to test connection", 400);
   }
 
   const baseURL = BASE_URLS[provider];

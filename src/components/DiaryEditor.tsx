@@ -13,7 +13,6 @@ type EditorState = "input" | "generating" | "editing";
 interface DiaryEditorProps {
   date: string;
   provider: ApiProvider;
-  apiKey: string;
 }
 
 function formatDate(dateStr: string): string {
@@ -26,7 +25,7 @@ function formatDate(dateStr: string): string {
   return `${year}年${month}月${day}日 星期${weekday}`;
 }
 
-export default function DiaryEditor({ date, provider, apiKey }: DiaryEditorProps) {
+export default function DiaryEditor({ date, provider }: DiaryEditorProps) {
   const router = useRouter();
   const [editorState, setEditorState] = useState<EditorState>("input");
   const [inputText, setInputText] = useState("");
@@ -42,7 +41,6 @@ export default function DiaryEditor({ date, provider, apiKey }: DiaryEditorProps
       images,
       date,
       provider,
-      apiKey,
     });
 
   useEffect(() => {

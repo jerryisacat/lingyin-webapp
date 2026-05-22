@@ -19,19 +19,27 @@
       "type": "summary"
     },
     {
+      "abstractPath": "structure/src_app/application_source.abstract.md",
+      "abstractTokens": 46,
+      "importance": 50,
+      "path": "structure/src_app/application_source.md",
+      "tokens": 46,
+      "type": "context"
+    },
+    {
       "importance": 50,
       "path": "ui/landing/landing_page_and_auth_routing.md",
       "tokens": 847,
       "type": "context"
     }
   ],
-  "generated_at": "2026-05-22T06:05:02.520Z",
+  "generated_at": "2026-05-22T09:17:18.168Z",
   "lane_tokens": {
-    "contexts": 847,
+    "contexts": 893,
     "stubs": 0,
     "summaries": 787
   },
-  "source_fingerprint": "3059e5b39102eb8a116e82353e711a9da66d861664ca2ef8bf292c742ccf4c65",
-  "total_tokens": 1634,
+  "source_fingerprint": "2586e857a3b16ad08f8c1d5a7a6fc3ac2ec8e38a8f10f18d7adbcb46d8982bb0",
+  "total_tokens": 1680,
   "version": 1
 }
