@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 2026-05-22 — 切换默认模型为 DeepSeek V4 Flash + Qwen3.6+ 视觉
+
+**触发原因**: OpenRouter 默认模型从 `openai/gpt-4o-mini` 切换为更高性价比的 DeepSeek 系列。
+
+### 修改
+- `src/lib/ai/client.ts`: `defaultModel` 改为 `deepseek/deepseek-v4-flash`，`defaultVisionModel` 改为 `qwen/qwen3.6-plus`
+
 ## 2026-05-22 — 排查修复: OpenRouter API 连接错误（根因：X-Title 非 ASCII 字符）
 
 **根因**: `X-Title: 玲音日记` 包含中文字符，Node.js `fetch`（undici）在 Vercel 运行时拒绝非 ASCII HTTP 头值，导致 `APIConnectionError`。preflight GET 可通过因为未设置该头。curl 也不过是因为 curl 不校验头值合法性。

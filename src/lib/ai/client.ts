@@ -11,8 +11,8 @@ export interface ProviderConfig {
 export const PROVIDER_CONFIGS: Record<ApiProvider, ProviderConfig> = {
   openrouter: {
     baseURL: "https://openrouter.ai/api/v1",
-    defaultModel: "openai/gpt-4o-mini",
-    defaultVisionModel: "openai/gpt-4o-mini",
+    defaultModel: "deepseek/deepseek-v4-flash",
+    defaultVisionModel: "qwen/qwen3.6-plus",
     defaultHeaders: {
       "HTTP-Referer":
         process.env.NEXT_PUBLIC_APP_URL ||
