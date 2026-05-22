@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -13,13 +13,22 @@ import {
   Pencil,
   Save,
   X,
+  ImagePlus,
 } from "lucide-react";
 import MarkdownViewer from "@/components/MarkdownViewer";
-import type { DiarySummary, ApiResponse } from "@/types";
+import PhotoUploader from "@/components/PhotoUploader";
+import type { DiarySummary, ApiResponse, MediaFile } from "@/types";
 
 interface EntryDetail {
   markdown: string;
   metadata: DiarySummary;
+}
+
+interface ImageRef {
+  fullMatch: string;
+  alt: string;
+  url: string;
+  r2Key: string | null;
 }
 
 const WEEKDAYS = ["日", "一", "二", "三", "四", "五", "六"];
@@ -31,6 +40,47 @@ function formatFullDate(dateStr: string): string {
   const day = d.getDate();
   const weekday = WEEKDAYS[d.getDay()];
   return `${year}年${month}月${day}日 星期${weekday}`;
+}
+
+function extractImageRefs(markdown: string): ImageRef[] {
+  const regex = /!\[([^\]]*)\]\(([^)]+)\)/g;
+  const refs: ImageRef[] = [];
+  let match: RegExpExecArray | null;
+  while ((match = regex.exec(markdown)) !== null) {
+    const url = match[2];
+    const r2Key = extractR2Key(url);
+    refs.push({
+      fullMatch: match[0],
+      alt: match[1],
+      url,
+      r2Key,
+    });
+  }
+  return refs;
+}
+
+function extractR2Key(url: string): string | null {
+  const match = url.match(/\/users\/[^/]+\/entries\/\d{4}\/\d{2}\/assets\/[^?\s)]+/);
+  return match ? match[0] : null;
+}
+
+function removeImageFromMarkdown(markdown: string, fullMatch: string): string {
+  return markdown
+    .split(fullMatch)
+    .join("")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+function insertTextAtCursor(
+  textarea: HTMLTextAreaElement,
+  insertText: string
+): string {
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const value = textarea.value;
+  const newValue = value.slice(0, start) + insertText + value.slice(end);
+  return newValue;
 }
 
 export default function DiaryDetailPage() {
@@ -46,6 +96,13 @@ export default function DiaryDetailPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState("");
   const [editSaveStatus, setEditSaveStatus] = useState<"idle" | "saving" | "error">("idle");
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [editImages, setEditImages] = useState<MediaFile[]>([]);
+  const [existingImagePreviews, setExistingImagePreviews] = useState<
+    { ref: ImageRef; previewUrl: string }[]
+  >([]);
+  const [imagePreviewsLoading, setImagePreviewsLoading] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -107,10 +164,74 @@ export default function DiaryDetailPage() {
   }, [entryId, router]);
 
   const handleStartEdit = useCallback(() => {
-    setEditContent(entry?.markdown ?? "");
+    const content = entry?.markdown ?? "";
+    setEditContent(content);
+    setEditImages([]);
     setIsEditing(true);
     setEditSaveStatus("idle");
+
+    const refs = extractImageRefs(content);
+    if (refs.length === 0) {
+      setExistingImagePreviews([]);
+      return;
+    }
+
+    setImagePreviewsLoading(true);
+    setExistingImagePreviews([]);
+
+    const previewPromises = refs.map(async (ref) => {
+      if (!ref.r2Key) {
+        return { ref, previewUrl: ref.url };
+      }
+      try {
+        const res = await fetch(
+          `/api/image?key=${encodeURIComponent(ref.r2Key)}`
+        );
+        if (!res.ok) return { ref, previewUrl: ref.url };
+        const data = await res.json();
+        return { ref, previewUrl: data.url ?? ref.url };
+      } catch {
+        return { ref, previewUrl: ref.url };
+      }
+    });
+
+    Promise.all(previewPromises).then((previews) => {
+      setExistingImagePreviews(previews);
+      setImagePreviewsLoading(false);
+    });
   }, [entry]);
+
+  const handleNewImages = useCallback(
+    (images: MediaFile[]) => {
+      const ta = textareaRef.current;
+      if (!ta) {
+        setEditImages(images);
+        return;
+      }
+
+      const prevLen = editImages.length;
+      const newOnes = images.slice(prevLen);
+
+      for (const img of newOnes) {
+        const mdImg = `![图片](${img.url})`;
+        const newContent = insertTextAtCursor(ta, mdImg + "\n");
+        setEditContent(newContent);
+      }
+
+      setEditImages(images);
+    },
+    [editImages.length]
+  );
+
+  const handleRemoveExistingImage = useCallback(
+    (ref: ImageRef) => {
+      setEditContent((prev) => removeImageFromMarkdown(prev, ref.fullMatch));
+      setExistingImagePreviews((prev) =>
+        prev.filter((p) => p.ref.fullMatch !== ref.fullMatch)
+      );
+    },
+    []
+  );
 
   const handleEditSave = useCallback(async () => {
     if (!editContent.trim() || !entry) return;
@@ -136,6 +257,8 @@ export default function DiaryDetailPage() {
       );
       setIsEditing(false);
       setEditSaveStatus("idle");
+      setEditImages([]);
+      setExistingImagePreviews([]);
     } catch {
       setEditSaveStatus("error");
     }
@@ -145,6 +268,8 @@ export default function DiaryDetailPage() {
     setIsEditing(false);
     setEditContent("");
     setEditSaveStatus("idle");
+    setEditImages([]);
+    setExistingImagePreviews([]);
   }, []);
 
   if (isLoading) {
@@ -251,13 +376,56 @@ export default function DiaryDetailPage() {
       {/* Content */}
       <div className="card min-h-[50vh]">
         {isEditing ? (
-          <div className="space-y-3">
+          <div className="space-y-4">
             <textarea
+              ref={textareaRef}
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
-              rows={20}
-              className="input-field resize-none font-mono text-sm w-full"
+              rows={16}
+              className="input-field resize-y font-mono text-sm w-full"
+              placeholder="编辑日记内容..."
             />
+
+            <PhotoUploader images={editImages} onImagesChange={handleNewImages} />
+
+            {imagePreviewsLoading && (
+              <div className="flex items-center gap-2 text-sm text-ink-light">
+                <Loader2 className="w-4 h-4 text-sakura animate-spin" />
+                加载已有图片...
+              </div>
+            )}
+
+            {existingImagePreviews.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-ink-light">
+                  <ImageIcon className="w-4 h-4" />
+                  <span>已有图片（{existingImagePreviews.length}）</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {existingImagePreviews.map(({ ref, previewUrl }) => (
+                    <div
+                      key={ref.fullMatch}
+                      className="relative aspect-square rounded-lg overflow-hidden border border-surface-border bg-surface group"
+                    >
+                      <img
+                        src={previewUrl}
+                        alt={ref.alt}
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveExistingImage(ref)}
+                        className="absolute top-1 right-1 w-6 h-6 bg-black/50 rounded-full flex items-center justify-center text-white hover:bg-red-500/80 transition-colors"
+                        title="移除图片"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {editSaveStatus === "error" && (
               <p className="text-sm text-red-400 text-center">保存失败，请重试</p>
             )}
@@ -313,7 +481,6 @@ export default function DiaryDetailPage() {
       {/* Delete confirmation modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Backdrop */}
           <button
             type="button"
             className="absolute inset-0 bg-ink/20 backdrop-blur-sm"
@@ -323,7 +490,6 @@ export default function DiaryDetailPage() {
             aria-label="取消"
           />
 
-          {/* Dialog */}
           <div className="relative bg-warm-white rounded-2xl border border-surface-border shadow-lg p-6 max-w-sm w-full mx-4 animate-in fade-in zoom-in">
             <h3 className="text-lg font-medium text-ink mb-2">确认删除</h3>
             <p className="text-sm text-ink-light mb-6 leading-relaxed">
