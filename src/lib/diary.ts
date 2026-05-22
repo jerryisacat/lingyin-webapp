@@ -35,6 +35,12 @@ export async function* generateDiary(params: {
         })
       : [];
 
+  // Pair URLs with descriptions for the prompt
+  const imageData = images.map((img, i) => ({
+    url: img.url,
+    description: imageDescriptions[i] ?? "",
+  }));
+
   const systemPrompt =
     tone === "warm"
       ? WARM_SYSTEM_PROMPT
@@ -45,7 +51,7 @@ export async function* generateDiary(params: {
           : LITERARY_SYSTEM_PROMPT;
   const userPrompt = buildDiaryPrompt({
     userText: text,
-    imageDescriptions,
+    imageDescriptions: imageData,
     date,
   });
 
