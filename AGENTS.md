@@ -123,7 +123,7 @@ See `docs/deploy.md` for full deployment guide. Key points:
 
 - 每个 Issue 使用独立分支：`develop/issue-N`
 - Vercel 只部署 `main` 分支
-- Agent 不合并代码 — 用户手动创建 PR
+- Agent 不合并代码 — Agent 创建 PR，用户审核后手动合并
 
 ### 开发完成后
 1. `npx tsc --noEmit` 确保 TypeScript 零错误
@@ -131,3 +131,4 @@ See `docs/deploy.md` for full deployment guide. Key points:
 3. 整理 ByteRover 知识树
 4. `git add` + `git commit` + `git push origin develop/issue-N`
 5. 使用 `gh issue comment <N> --body "..."` 通知用户
+6. 使用 `gh pr create` 创建 PR (base: main, head: develop/issue-N)
