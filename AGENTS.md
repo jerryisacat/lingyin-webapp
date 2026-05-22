@@ -186,13 +186,4 @@ Phase 1 is complete (MVP: AI diary generation, Markdown editor, image upload, ti
 | `blocked` | 被其他 Issue 阻塞 |
 | `needs-decision` | 有架构选择待定 |
 
-### Milestones
-
-| Milestone | Issues | 说明 |
-|-----------|--------|------|
-| Phase 2 — 体验升级 | 8 个 | 日历、视频、编辑、多语气、备份、导出、灯箱、夜间 |
-| Phase 3 — 商业化 | 6 个 | 支付、额度、统一 Key、后台、迁移、导出 |
-| Phase 4 — 平台化 | 6 个 | 分享、话题、统计、自定义、原生、开放 API |
-| 基础设施 | 1 个 | 测试 + CI |
-
 查看所有 Issue：`gh issue list --state open`
