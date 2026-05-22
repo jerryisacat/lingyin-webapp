@@ -7,7 +7,12 @@ export function generateToken(): string {
 }
 
 export function getBaseUrl(): string {
-  return process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+  return (
+    process.env.AUTH_URL ||
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    "http://localhost:3000"
+  )
 }
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -68,7 +73,12 @@ export async function registerUser(input: RegisterInput): Promise<ServiceResult<
 
     return { ok: true, data: { email: user.email } }
   } catch (err) {
-    console.error("registerUser error:", err)
+    const message = err instanceof Error ? err.message : String(err)
+    console.error("registerUser error:", message)
+    // Include error details in non-production for debugging
+    if (process.env.NODE_ENV !== "production") {
+      return { ok: false, error: `注册失败: ${message}` }
+    }
     return { ok: false, error: "注册失败，请稍后再试" }
   }
 }
