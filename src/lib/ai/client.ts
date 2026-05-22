@@ -18,7 +18,7 @@ export const PROVIDER_CONFIGS: Record<ApiProvider, ProviderConfig> = {
         process.env.NEXT_PUBLIC_APP_URL ||
         process.env.NEXT_PUBLIC_SITE_URL ||
         "http://localhost:3000",
-      "X-Title": "玲音日记",
+      "X-Title": "LingYin Diary",
     },
   },
 };

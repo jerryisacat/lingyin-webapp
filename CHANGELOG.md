@@ -1,21 +1,18 @@
 # CHANGELOG
 
-## 2026-05-22 — 排查修复: OpenRouter API 连接错误诊断增强
+## 2026-05-22 — 排查修复: OpenRouter API 连接错误（根因：X-Title 非 ASCII 字符）
 
-**触发原因**: Vercel 部署后，Settings 页面测试 OpenRouter 连接提示 "Connection Error"，且日记生成也报 "Connection error"。API Key 确认无误，需排查根因。
+**根因**: `X-Title: 玲音日记` 包含中文字符，Node.js `fetch`（undici）在 Vercel 运行时拒绝非 ASCII HTTP 头值，导致 `APIConnectionError`。preflight GET 可通过因为未设置该头。curl 也不过是因为 curl 不校验头值合法性。
 
 ### 修改
+- `src/lib/ai/client.ts`: `X-Title` 改为 ASCII-safe 值 `"LingYin Diary"`
 - `src/app/api/ai/test/route.ts`: 
-  - 新增 `logConnectionError()` 诊断函数，捕获 `APIConnectionError` 的底层 `cause`（`ENOTFOUND` / `ECONNREFUSED` / TLS 错误及错误码）
+  - 新增 `logConnectionError()` 诊断函数，捕获 `APIConnectionError` 的底层 `cause`（可精确定位非 ASCII 头值等错误）
   - 新增 preflight 网络连通性检查（GET `https://openrouter.ai/api/v1/models`，10 秒超时），区分「网络不可达」与「API Key 无效」
-  - 返回数据新增 `detail` 字段，根据错误类型给出可操作的诊断建议（网络不通 / API Key 无效 / 额度不足）
-  - 正确识别 `OpenAI.AuthenticationError` 和 `OpenAI.RateLimitError` 以给出精准错误提示
+  - 返回数据新增 `detail` 字段，根据错误类型给出可操作的诊断建议
+  - 正确识别 `OpenAI.AuthenticationError` 和 `OpenAI.RateLimitError`
 - `src/app/settings/page.tsx`: 新增 `testDetail` 状态，测试失败时在 UI 展示详细诊断文本
-- `src/lib/ai/client.ts`: `HTTP-Referer` 环境变量兼容 `NEXT_PUBLIC_APP_URL` 和 `NEXT_PUBLIC_SITE_URL` 两个变体（`.env` 定义了后者但代码只用前者）
-
-### 设计决策
-- **preflight 先于 API 调用**: 用无需认证的请求先判断网络层是否可达，将网络层错误与业务层错误解耦
-- **server 端日志 + client 端诊断**: `console.error` 记录完整技术细节（含 cause code）供 Vercel Logs 查看；UI `detail` 字段给出用户友好的中文诊断
+- `src/lib/ai/client.ts`: `HTTP-Referer` 环境变量兼容 `NEXT_PUBLIC_APP_URL` 和 `NEXT_PUBLIC_SITE_URL` 两个变体
 
 ## 2026-05-22 — Issue #28: Landing Page 设计优化
 
