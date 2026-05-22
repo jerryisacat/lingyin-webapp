@@ -22,35 +22,28 @@
 
 玲音日记 (LINGYIN Diary) is an open-source AI diary app. You describe your day in your own words — upload photos, jot down thoughts — and a large language model transforms it into a polished, publishable diary entry.
 
-- 🧠 **AI-generated prose** — natural, warm, markdown-formatted diary writing
-- 📷 **Photo to prose** — upload images, AI describes what it sees and weaves it into the story
-- 📱 **Install as PWA** — works offline, lives on your home screen, caches recent entries
-- 🔐 **Your keys, your data** — bring your own LLM API key; diary content stored in your own CloudFlare R2 bucket
-- 🪄 **Markdown editor** — fine-tune the AI output before saving
-- 🕰️ **Timeline** — browse your diary history with preview snippets
+- 🧠 **AI 智能生成** — 用自然语言描述今天，AI 自动生成温暖、格式化的 Markdown 日记
+- 📷 **照片入文** — 上传照片，AI 分析场景和氛围，自然融入日记
+- ✏️ **Markdown 编辑** — 编辑 AI 生成的内容；编辑模式下支持预览、插入和删除图片
+- 📱 **PWA 离线可用** — 安装到桌面，离线也能阅读日记
+- 🔐 **邮箱 + 密码登录** — Auth.js v5 Credentials，邮件验证 + JWT 会话
+- 🗝️ **自管 API Key** — 用户绑定 OpenRouter Key，服务端 AES-256-GCM 加密存储
+- 🕰️ **时间线浏览** — 按日期浏览所有日记，带预览摘要
 
 ## Features
 
-| Feature | Status |
-|---------|--------|
-| AI diary generation (text + image) | ✅ Phase 1 |
-| Markdown editor with preview | ✅ Phase 1 |
-| Image upload + AI vision description | ✅ Phase 1 |
-| PWA install (offline-capable) | ✅ Phase 1 |
-| Magic Link email login | ✅ Phase 1 |
-| Multiple LLM providers (OpenAI / DeepSeek / Gemini) | ✅ Phase 1 |
-| Calendar view | 🗓️ Phase 2 |
-| Video upload in diary | 📹 Phase 2 |
-| Edit saved diaries | ✏️ Phase 2 |
-| Dark mode | 🌙 Phase 2 |
-| Password login | 🔐 Phase 2 |
-| Export (MD / PDF / ZIP) | 📤 Phase 2 |
-| Subscription billing | 💳 Phase 3 |
-| Admin dashboard | 🛠️ Phase 3 |
-| Public diary sharing | 🌐 Phase 4 |
-| Native mobile app | 📱 Phase 4 |
+| Feature | Description |
+|---------|-------------|
+| AI 日记生成 | 描述今天 + 上传照片 → AI 生成温暖感性的 Markdown 日记 |
+| Markdown 编辑器 | 实时预览、编辑 AI 输出，编辑模式支持图片预览/插入/删除 |
+| 图片上传管理 | 上传最多 9 张，拖拽排序，编辑时可增删 |
+| PWA 安装 | 桌面/手机安装，Service Worker 离线缓存 |
+| 时间线浏览 | 按日期查看所有日记，预览摘要，游标分页 |
+| 邮箱密码注册 | Auth.js v5 Credentials + JWT，Resend 邮件验证 |
+| API Key 管理 | 用户绑定 OpenRouter Key，AES-256-GCM 服务端加密 |
+| 日记编辑保存 | 编辑已保存日记内容（含图片），保存后自动更新 R2 |
 
-Full roadmap: [GitHub Issues](https://github.com/jerryisacat/lingyin-webapp/issues)
+[查看完整路线图 →](https://github.com/jerryisacat/lingyin-webapp/issues)
 
 ## Tech Stack
 
