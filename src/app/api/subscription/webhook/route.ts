@@ -62,14 +62,21 @@ async function handleCheckoutCompleted(obj: Record<string, unknown>): Promise<vo
     const amountUsd = parseFloat(amountUsdStr);
     const amountCny = parseInt(amountCnyStr ?? "0", 10);
 
-    await creditTopUpBalance(userId, amountUsd);
-    await recordTopUpPurchase({
+    // Record purchase first — the unique constraint on stripePaymentIntentId
+    // acts as an idempotency gate. If the record already exists, the function
+    // returns false and we skip the balance credit (no double-credit on retry).
+    const created = await recordTopUpPurchase({
       userId,
       amountUsd,
       priceCny: amountCny,
       stripePaymentIntentId: paymentIntentId,
       status: "paid",
     });
+    if (!created) {
+      console.log(`Webhook topup: duplicate ${paymentIntentId}, credit skipped`);
+      return;
+    }
+    await creditTopUpBalance(userId, amountUsd);
 
     console.log(`Webhook topup: credited $${amountUsd} to user ${userId}`);
     return;

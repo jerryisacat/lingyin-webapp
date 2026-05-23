@@ -1,3 +1,41 @@
+## 2026-05-23 — Stream C 完善：Webhook 幂等修复 + Token 结转 + 账单记录 + 数据导出 + 管理面板
+
+### Webhook 幂等修复 (P0)
+- `subscription/webhook/route.ts`: 调整 top-up 处理顺序 — `recordTopUpPurchase` 先于 `creditTopUpBalance`，利用 `TokenTopUp.stripePaymentIntentId` 唯一约束作为幂等门
+- `quota-service.ts`: `recordTopUpPurchase` 捕获 P2002 唯一约束冲突并返回 `false`（幂等跳过），Webhook 仅在创建成功时调用 credit
+- `recordTopUpPurchase` 返回类型改为 `Promise<boolean>`
+
+### Token 余额结转 (Rollover)
+- `prisma/schema.prisma`: 新增 `User.tokenRolloverUsd` + `User.rolloverCalculated` 字段
+- `quota-service.ts`: 新增 `ensureRolloverCalculated` — 月初自动计算上月未用预算 × 套餐结转比例（Free 0%, Basic 25%, Advanced 50%）
+- `checkTokenBudget` / `getQuotaStatus`: 有效预算 = 套餐预算 + topUpBalance + rollover
+- `QuotaStatus` / `QuotaStatusData` 类型: 新增 `tokenBudget.rollover?` 字段
+- `QuotaUsage` 组件: 显示上月结转额度（绿色文字 + RefreshCw 图标）
+
+### 账单/发票记录
+- `GET /api/invoices`: 返回当前用户所有发票（按时间倒序）
+- `subscription/page.tsx`: 新增账单记录卡片（金额、日期、支付状态）
+- `InvoiceRecord` 类型: 定义 id/amount/currency/status/paidAt/createdAt
+
+### 加购体验优化
+- `GET /api/topup/bundles`: 读取 `config/billing-pricing.json` 中的加购套餐配置并返回
+- `QuotaUsage` 组件: 从 API 动态获取加购套餐，移除硬编码
+- `subscription/page.tsx`: 处理 `?topup=success` 和 `?topup=canceled` URL 参数，显示对应提示
+
+### 数据导出
+- `GET /api/export`: 读取所有日记 markdown 文件，导出为 JSON（含日期、语气、标签、内容），带 `Content-Disposition` 附件下载
+- `settings/page.tsx`: 新增"数据导出"卡片，一键下载所有日记为 JSON
+
+### 管理面板
+- `GET /api/admin/stats`: 聚合统计（用户数、日记数、活跃订阅、Token 总消耗、加购总收入），仅 `ADMIN_EMAIL` 用户可访问
+- `src/app/admin/page.tsx`: 管理面板页面 — 5 个统计卡片 + Token 用量/加购汇总详情
+- 仪表盘组件: Users, FileText, CreditCard, Coins, BarChart3 图标
+
+### 验证结果
+- `npx tsc --noEmit` — 零错误
+- `npx next build` — 构建成功（新增路由: /admin, /api/admin/stats, /api/invoices, /api/export, /api/topup/bundles）
+- `npx prisma db push` — Schema 已同步（新增 User.tokenRolloverUsd, User.rolloverCalculated）
+
 ## 2026-05-23 — Token 加购包 + 统一 API Key (Stream C Phase 3a)
 
 ### Token 加购包

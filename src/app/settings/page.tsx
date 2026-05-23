@@ -22,6 +22,7 @@ import {
   Crown,
   TrendingUp,
   ArrowRight,
+  Download,
 } from "lucide-react"
 
 const PROVIDERS: { value: ApiProvider; label: string; description: string }[] = [
@@ -54,6 +55,24 @@ export default function SettingsPage() {
 
   const [showEncryptionModal, setShowEncryptionModal] = useState(false)
   const [encryptionModalMode, setEncryptionModalMode] = useState<"set" | "change">("set")
+
+  const handleExport = async () => {
+    try {
+      const res = await fetch("/api/export")
+      if (!res.ok) return
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      const disposition = res.headers.get("Content-Disposition") ?? ""
+      const match = disposition.match(/filename="(.+)"/)
+      a.href = url
+      a.download = match?.[1] ?? "lingyin-export.json"
+      a.click()
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+    } catch {
+      // silently fail
+    }
+  }
 
   useEffect(() => {
     fetch("/api/subscription/status")
@@ -418,12 +437,30 @@ export default function SettingsPage() {
       </div>
 
       <div className="card space-y-3">
+        <div className="flex items-center gap-2">
+          <Download className="h-5 w-5 text-dusty-blue" strokeWidth={1.5} />
+          <h2 className="text-lg font-medium text-ink">数据导出</h2>
+        </div>
+        <p className="text-sm text-ink-light leading-relaxed">
+          导出你所有的日记内容为 JSON 文件，方便备份或迁移到其他平台。
+        </p>
+        <button
+          type="button"
+          onClick={handleExport}
+          className="btn-secondary flex items-center gap-2 text-sm"
+        >
+          <Download className="h-4 w-4" />
+          导出所有日记
+        </button>
+      </div>
+
+      <div className="card space-y-3">
         <h2 className="text-lg font-medium text-ink">关于</h2>
         <p className="text-sm text-ink-light leading-relaxed">
           玲音日记是一个 AI 驱动的日记 PWA。你的日记内容和图片存储在云端，
           API Key 使用 AES-256-GCM 加密存储在服务器端。
         </p>
-        <p className="text-xs text-ink-light">Version 0.1.0 — Phase 1 MVP</p>
+        <p className="text-xs text-ink-light">Version 0.3.0 — Stream C Complete</p>
       </div>
 
       {/* 退出登录 */}

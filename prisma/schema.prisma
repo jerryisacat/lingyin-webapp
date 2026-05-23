@@ -22,7 +22,9 @@ model User {
   subscribedAt     DateTime?
   subscriptionEnds DateTime?
 
-  topUpBalanceUsd Float @default(0)
+  topUpBalanceUsd    Float  @default(0)
+  tokenRolloverUsd   Float  @default(0)
+  rolloverCalculated String?
 
   encryptionPasswordHash String?
   encryptionSalt         String?

@@ -87,6 +87,7 @@ export interface QuotaStatusData {
     limit: number;
     remaining: number;
     usedInCents: number;
+    rollover?: number;
   };
   storage: {
     used: number;

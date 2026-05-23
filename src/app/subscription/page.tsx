@@ -2,34 +2,49 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { Loader2, ArrowLeft, TrendingUp, Sparkles, Crown, ExternalLink } from "lucide-react"
+import { Loader2, ArrowLeft, TrendingUp, Sparkles, Crown, ExternalLink, Receipt } from "lucide-react"
 import { SubscriptionPlans } from "@/components/SubscriptionPlans"
 import type { PricingData, SubscriptionData } from "@/types"
+
+interface InvoiceRecord {
+  id: string
+  amount: number
+  currency: string
+  status: string
+  paidAt: string | null
+  createdAt: string
+}
 
 export default function SubscriptionPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [pricing, setPricing] = useState<PricingData | null>(null)
   const [subscription, setSubscription] = useState<SubscriptionData | null>(null)
+  const [invoices, setInvoices] = useState<InvoiceRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [portalLoading, setPortalLoading] = useState(false)
   const [error, setError] = useState("")
 
   const success = searchParams.get("success")
   const canceled = searchParams.get("canceled")
+  const topUpSuccess = searchParams.get("topup") === "success"
+  const topUpCanceled = searchParams.get("topup") === "canceled"
 
   const fetchData = useCallback(async () => {
     try {
-      const [pricingRes, statusRes] = await Promise.all([
+      const [pricingRes, statusRes, invoicesRes] = await Promise.all([
         fetch("/api/pricing"),
         fetch("/api/subscription/status"),
+        fetch("/api/invoices"),
       ])
 
       const pricingJson = await pricingRes.json()
       const statusJson = await statusRes.json()
+      const invoicesJson = await invoicesRes.json()
 
       if (pricingJson.ok) setPricing(pricingJson.data)
       if (statusJson.ok) setSubscription(statusJson.data.subscription)
+      if (invoicesJson.ok) setInvoices(invoicesJson.data)
     } catch {
       setError("加载失败，请刷新页面试试")
     } finally {
@@ -100,6 +115,18 @@ export default function SubscriptionPage() {
         </div>
       )}
 
+      {topUpSuccess && (
+        <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
+          加购成功！你的加购额度已到账，可前往用量页面查看。
+        </div>
+      )}
+
+      {topUpCanceled && (
+        <div className="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-700">
+          加购已取消。你可以随时再试。
+        </div>
+      )}
+
       {error && (
         <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
           {error}
@@ -147,6 +174,37 @@ export default function SubscriptionPage() {
       )}
 
       {pricing && <SubscriptionPlans data={pricing} />}
+
+      {invoices.length > 0 && (
+        <div className="card space-y-3">
+          <div className="flex items-center gap-2">
+            <Receipt className="h-5 w-5 text-ink-light/40" />
+            <h2 className="text-lg font-medium text-ink">账单记录</h2>
+          </div>
+          <div className="divide-y divide-sakura/5">
+            {invoices.map((inv) => (
+              <div key={inv.id} className="flex items-center justify-between py-2.5">
+                <div>
+                  <p className="text-sm text-ink">
+                    {(inv.amount / 100).toFixed(2)} {inv.currency.toUpperCase()}
+                  </p>
+                  <p className="text-xs text-ink-light/50">
+                    {new Date(inv.createdAt).toLocaleDateString("zh-CN")}
+                    {inv.paidAt && ` · 已支付`}
+                  </p>
+                </div>
+                <span className={`text-xs px-2 py-0.5 rounded-full ${
+                  inv.status === "paid"
+                    ? "bg-green-50 text-green-600"
+                    : "bg-amber-50 text-amber-600"
+                }`}>
+                  {inv.status === "paid" ? "已付" : inv.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="text-center">
         <p className="text-xs text-ink-light/60 leading-relaxed max-w-md mx-auto">

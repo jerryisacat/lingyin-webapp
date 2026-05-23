@@ -7,6 +7,7 @@ interface TierConfig {
   priceMonth: number;
   tokenBudgetUsd: number;
   storageBytes: number;
+  rolloverFraction: number;
   allowedModels: string[] | "*";
 }
 
@@ -79,6 +80,58 @@ export async function getTopUpBalance(userId: string): Promise<number> {
   return user?.topUpBalanceUsd ?? 0;
 }
 
+function getMonthKey(date: Date = new Date()): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+export async function ensureRolloverCalculated(userId: string): Promise<number> {
+  const monthKey = getMonthKey();
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { rolloverCalculated: true, tokenRolloverUsd: true, subscription: true },
+  });
+
+  if (user?.rolloverCalculated === monthKey) {
+    return user.tokenRolloverUsd;
+  }
+
+  const plan = user?.subscription ?? "free";
+  const tier = getTierConfig(plan);
+  const rolloverFraction = (billingPricing.tiers as Record<string, TierConfig>)[plan]?.rolloverFraction ?? 0;
+
+  if (rolloverFraction <= 0) {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { rolloverCalculated: monthKey, tokenRolloverUsd: 0 },
+    });
+    return 0;
+  }
+
+  // Calculate previous month's unused budget
+  const now = new Date();
+  const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const result = await prisma.tokenUsage.aggregate({
+    where: {
+      userId,
+      createdAt: { gte: prevMonthStart, lt: thisMonthStart },
+    },
+    _sum: { costUsd: true },
+  });
+
+  const prevMonthCost = result._sum.costUsd ?? 0;
+  const unused = Math.max(0, tier.tokenBudgetUsd - prevMonthCost);
+  const rollover = Math.round(unused * rolloverFraction * 100) / 100;
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { rolloverCalculated: monthKey, tokenRolloverUsd: rollover },
+  });
+
+  return rollover;
+}
+
 export async function getMonthlyTokenUsage(
   userId: string
 ): Promise<{ inputTokens: number; outputTokens: number; costUsd: number }> {
@@ -127,12 +180,13 @@ export async function checkTokenBudget(
   const tier = getTierConfig(plan);
   const used = await getMonthlyTokenCost(userId);
   const topUpBalance = await getTopUpBalance(userId);
-  const effectiveLimit = tier.tokenBudgetUsd + topUpBalance;
+  const rollover = await ensureRolloverCalculated(userId);
+  const effectiveLimit = tier.tokenBudgetUsd + topUpBalance + rollover;
 
   return {
     allowed: used < effectiveLimit,
     used: Math.round(used * 100) / 100,
-    limit: effectiveLimit,
+    limit: Math.round(effectiveLimit * 100) / 100,
     remaining: Math.round((effectiveLimit - used) * 100) / 100,
     plan,
   };
@@ -224,6 +278,7 @@ export interface QuotaStatus {
     limit: number;
     remaining: number;
     usedInCents: number;
+    rollover?: number;
   };
   storage: {
     used: number;
@@ -242,20 +297,22 @@ export interface QuotaStatus {
 export async function getQuotaStatus(userId: string): Promise<QuotaStatus> {
   const plan = await getUserPlan(userId);
   const tier = getTierConfig(plan);
-  const [tokenCost, storageUsed, topUpBalance] = await Promise.all([
+  const [tokenCost, storageUsed, topUpBalance, rollover] = await Promise.all([
     getMonthlyTokenCost(userId),
     getStorageUsed(userId),
     getTopUpBalance(userId),
+    ensureRolloverCalculated(userId),
   ]);
 
-  const effectiveLimit = tier.tokenBudgetUsd + topUpBalance;
+  const effectiveLimit = tier.tokenBudgetUsd + topUpBalance + rollover;
 
   return {
     tokenBudget: {
       used: Math.round(tokenCost * 100) / 100,
-      limit: effectiveLimit,
+      limit: Math.round(effectiveLimit * 100) / 100,
       remaining: Math.round((effectiveLimit - tokenCost) * 100) / 100,
       usedInCents: Math.round(tokenCost * 100),
+      rollover: rollover > 0 ? rollover : undefined,
     },
     storage: {
       used: storageUsed,
@@ -301,14 +358,28 @@ export async function recordTopUpPurchase(params: {
   priceCny: number;
   stripePaymentIntentId?: string;
   status?: string;
-}): Promise<void> {
-  await prisma.tokenTopUp.create({
-    data: {
-      userId: params.userId,
-      amountUsd: params.amountUsd,
-      priceCny: params.priceCny,
-      stripePaymentIntentId: params.stripePaymentIntentId,
-      status: params.status ?? "pending",
-    },
-  });
+}): Promise<boolean> {
+  try {
+    await prisma.tokenTopUp.create({
+      data: {
+        userId: params.userId,
+        amountUsd: params.amountUsd,
+        priceCny: params.priceCny,
+        stripePaymentIntentId: params.stripePaymentIntentId,
+        status: params.status ?? "pending",
+      },
+    });
+    return true;
+  } catch (error) {
+    // P2002 = unique constraint violation — record already exists (idempotency gate)
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      (error as { code: string }).code === "P2002"
+    ) {
+      return false;
+    }
+    throw error;
+  }
 }

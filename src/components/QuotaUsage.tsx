@@ -3,8 +3,13 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Zap, HardDrive, AlertTriangle, Plus, CheckCircle2 } from "lucide-react";
+import { Zap, HardDrive, AlertTriangle, Plus, CheckCircle2, RefreshCw } from "lucide-react";
 import type { QuotaStatusData } from "@/types";
+
+interface TopUpBundle {
+  usd: number;
+  price: number;
+}
 
 function formatBytes(bytes: number): string {
   if (bytes === 0) return "0 B";
@@ -64,6 +69,7 @@ export default function QuotaUsage() {
   const { data: session } = useSession();
   const router = useRouter();
   const [data, setData] = useState<QuotaStatusData | null>(null);
+  const [bundles, setBundles] = useState<TopUpBundle[]>([]);
   const [loading, setLoading] = useState(true);
   const [toppingUp, setToppingUp] = useState(false);
 
@@ -73,11 +79,16 @@ export default function QuotaUsage() {
       return;
     }
 
-    fetch("/api/quota/status")
-      .then((res) => res.json())
-      .then((json) => {
-        if (json.ok) {
-          setData(json.data);
+    Promise.all([
+      fetch("/api/quota/status").then((res) => res.json()),
+      fetch("/api/topup/bundles").then((res) => res.json()),
+    ])
+      .then(([quotaJson, bundlesJson]) => {
+        if (quotaJson.ok) {
+          setData(quotaJson.data);
+        }
+        if (bundlesJson.ok && bundlesJson.data?.bundles) {
+          setBundles(bundlesJson.data.bundles);
         }
       })
       .catch(() => {})
@@ -155,6 +166,14 @@ export default function QuotaUsage() {
                 {formatUsd(data.tokenBudget.limit)}
               </span>
             </div>
+            {data.tokenBudget.rollover && data.tokenBudget.rollover > 0 && (
+              <div className="flex items-center gap-1 mt-1">
+                <RefreshCw className="h-3 w-3 text-green-500" strokeWidth={1.5} />
+                <span className="text-xs text-green-600">
+                  上月结转 +{formatUsd(data.tokenBudget.rollover)}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Storage */}
@@ -185,11 +204,7 @@ export default function QuotaUsage() {
               </span>
             </div>
             <div className="grid grid-cols-3 gap-2">
-              {[
-                { price: 5, usd: 0.5, label: "¥5" },
-                { price: 20, usd: 2.5, label: "¥20" },
-                { price: 38, usd: 5.0, label: "¥38" },
-              ].map((bundle) => (
+              {bundles.map((bundle) => (
                 <button
                   key={bundle.price}
                   type="button"
@@ -198,7 +213,7 @@ export default function QuotaUsage() {
                   className="flex flex-col items-center gap-1 rounded-lg border border-sakura/20 bg-sakura/5 px-3 py-2.5 text-center transition-all hover:bg-sakura/10 hover:border-sakura/40 disabled:opacity-50"
                 >
                   <span className="text-sm font-semibold text-sakura-dark">
-                    {bundle.label}
+                    ¥{bundle.price}
                   </span>
                   <span className="text-xs text-ink-light/60">
                     +${bundle.usd}
