@@ -3,7 +3,7 @@
 import { defaultCache } from "@serwist/next/worker";
 import type { PrecacheEntry } from "serwist";
 import { Serwist } from "serwist";
-import { CacheFirst, NetworkFirst, NetworkOnly, StaleWhileRevalidate } from "@serwist/strategies";
+import { CacheFirst, NetworkOnly, StaleWhileRevalidate } from "@serwist/strategies";
 import { ExpirationPlugin } from "serwist";
 
 declare const self: ServiceWorkerGlobalScope & {
@@ -25,17 +25,6 @@ const serwist = new Serwist({
         plugins: [
           new ExpirationPlugin({ maxAgeSeconds: 60 * 60 * 24 * 7 }),
         ],
-      }),
-    },
-    // Diary entries API — NetworkFirst
-    {
-      matcher: /\/api\/entries.*/,
-      handler: new NetworkFirst({
-        cacheName: "diary-api",
-        plugins: [
-          new ExpirationPlugin({ maxAgeSeconds: 60 * 60, maxEntries: 50 }),
-        ],
-        networkTimeoutSeconds: 5,
       }),
     },
     // Images (R2) — NetworkOnly (presigned URLs are time-sensitive)

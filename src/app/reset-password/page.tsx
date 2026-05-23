@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useEffect, useState, useTransition } from "react"
 import Link from "next/link"
 import { BookOpen, Loader2, CheckCircle } from "lucide-react"
 import PasswordInput from "@/components/auth/PasswordInput"
@@ -16,6 +16,13 @@ export default function ResetPasswordPage({
   searchParams: { token?: string }
 }) {
   const token = searchParams.token
+
+  useEffect(() => {
+    if (token) {
+      window.history.replaceState(null, "", "/reset-password")
+    }
+  }, [token])
+
   const [isPending, startTransition] = useTransition()
   const [state, setState] = useState<FormState | null>(null)
 

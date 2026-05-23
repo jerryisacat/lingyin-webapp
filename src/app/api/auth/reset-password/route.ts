@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server"
 import { resetPassword } from "@/lib/auth-service"
 import { getClientIP, checkRateLimit, rateLimiters, rateLimitError } from "@/lib/rate-limit"
+import { jsonError } from "@/lib/auth-helpers"
+import { formatZodError, resetPasswordSchema } from "@/lib/validations"
 
 export async function POST(request: Request) {
   const ip = getClientIP(request)
@@ -9,7 +11,11 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json()
-    const result = await resetPassword(body)
+    const parseResult = resetPasswordSchema.safeParse(body)
+    if (!parseResult.success) {
+      return jsonError(formatZodError(parseResult.error), 400)
+    }
+    const result = await resetPassword(parseResult.data)
 
     if (result.ok) {
       return NextResponse.json(result)

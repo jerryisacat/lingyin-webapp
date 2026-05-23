@@ -2,9 +2,9 @@ import { getUser, jsonError } from "@/lib/api-helpers";
 import { getUserDecryptedApiKey } from "@/lib/api-key-guard";
 import { generateStream } from "@/lib/ai/client";
 import { WARM_SYSTEM_PROMPT } from "@/lib/ai/prompts";
-import type { ApiProvider } from "@/types";
 import { NextRequest } from "next/server";
 import { checkRateLimit, rateLimiters, rateLimitError } from "@/lib/rate-limit";
+import { formatZodError, aiRewriteSchema } from "@/lib/validations";
 
 export async function POST(request: NextRequest) {
   const user = await getUser();
@@ -13,22 +13,24 @@ export async function POST(request: NextRequest) {
   const { success, reset } = await checkRateLimit(rateLimiters.aiRewrite, user.id);
   if (!success) return rateLimitError(reset);
 
-  let body: { content?: string; instruction?: string; provider?: ApiProvider };
+  let rawBody: unknown;
   try {
-    body = await request.json();
+    rawBody = await request.json();
   } catch {
     return jsonError("Invalid JSON body");
   }
 
-  const {
-    content = "",
-    instruction = "请润色这篇日记，让语言更优美流畅",
-    provider = "openrouter",
-  } = body;
-
-  if (!content.trim()) {
-    return jsonError("Content is required");
+  const parseResult = aiRewriteSchema.safeParse(rawBody);
+  if (!parseResult.success) {
+    return jsonError(formatZodError(parseResult.error), 400);
   }
+
+  const {
+    content,
+    instruction: inputInstruction,
+    provider,
+  } = parseResult.data;
+  const instruction = inputInstruction ?? "请润色这篇日记，让语言更优美流畅";
 
   const apiKey = await getUserDecryptedApiKey(user.id, provider);
   if (!apiKey) {

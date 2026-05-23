@@ -2,9 +2,9 @@ import OpenAI from "openai";
 import { getUser, jsonError, jsonOk } from "@/lib/api-helpers";
 import { getUserDecryptedApiKey } from "@/lib/api-key-guard";
 import { createOpenAIClient, PROVIDER_CONFIGS } from "@/lib/ai/client";
-import type { ApiProvider } from "@/types";
 import { NextRequest } from "next/server";
 import { checkRateLimit, rateLimiters, rateLimitError } from "@/lib/rate-limit";
+import { formatZodError, aiTestSchema } from "@/lib/validations";
 
 /** Log detailed error diagnostics for Vercel debugging */
 function logConnectionError(error: unknown, context: Record<string, unknown> = {}) {
@@ -30,19 +30,19 @@ export async function POST(request: NextRequest) {
   const { success, reset } = await checkRateLimit(rateLimiters.aiTest, user.id);
   if (!success) return rateLimitError(reset);
 
-  let body: { provider?: ApiProvider; apiKey?: string };
+  let rawBody: unknown;
   try {
-    body = await request.json();
+    rawBody = await request.json();
   } catch {
     return jsonError("Invalid JSON body");
   }
 
-  const { provider = "openrouter", apiKey: bodyApiKey } = body;
-
-  const validProviders: ApiProvider[] = ["openrouter"];
-  if (!validProviders.includes(provider)) {
-    return jsonError(`Unknown provider: ${provider}`, 400);
+  const parseResult = aiTestSchema.safeParse(rawBody);
+  if (!parseResult.success) {
+    return jsonError(formatZodError(parseResult.error), 400);
   }
+
+  const { provider, apiKey: bodyApiKey } = parseResult.data;
 
   const apiKey = bodyApiKey || (await getUserDecryptedApiKey(user.id, provider));
   if (!apiKey) {

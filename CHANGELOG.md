@@ -1,3 +1,29 @@
+## 2026-05-23 — Phase 1 安全加固 + Bug 修复（7 Issues）(#59, #61, #65, #71, #73, #84, #93)
+
+### #59 修复: API Key localStorage 明文泄露
+- `src/app/settings/page.tsx`: 移除 `localStorage.setItem` 和 `localStorage.removeItem` 调用，API Key 仅服务端加密存储，不再写入浏览器 localStorage
+
+### #61 修复: health 端点信息泄露
+- `src/app/api/health/route.ts`: 移除 checks.env 块，错误详情不再外泄，响应精简为 `{ ok: true/false }`，新增可选 `HEALTH_SECRET` token 鉴权
+
+### #84 验证: Security Headers
+- `next.config.mjs`: 已配置 `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`（无需改动）
+
+### #65 新增: Zod 输入校验
+- `src/lib/validations.ts`: 新建 12 个 Zod Schema（register, forgot/reset-password, entries CRUD, AI generate/rewrite/test, api-keys, user config）
+- 11 个 API Route 文件统一接入 Zod 校验，错误消息中文化
+
+### #71 修复: 密码重置 Token URL 暴露
+- `src/app/reset-password/page.tsx`: 页面加载后 `history.replaceState` 清除 URL 中的 token
+- `src/lib/email.ts`: 添加注释说明 token 传递的多层防护（1h 过期 + 单次使用 + replaceState 清除）
+
+### #73 修复: Service Worker 跨用户缓存
+- `src/sw.ts`: `/api/entries` 策略从 `NetworkFirst` 改为 `NetworkOnly`
+- `src/components/Header.tsx`, `src/app/settings/page.tsx`, `src/components/MobileTabBar.tsx`: 登出前清除所有 SW 缓存
+
+### #93 修复: AI 打字机动画闪烁
+- `src/components/TypewriterText.tsx`: 流式动画 effect 不再依赖 `text`，使用 `displayedIndexRef` 跨渲染保持进度
+
 ## 2026-05-23 — 设计: Landing Page 和风编辑感重构 (#91)
 
 ### 修改

@@ -48,6 +48,14 @@ export default function Header() {
     });
   }, [status]);
 
+  const handleSignOut = async () => {
+    if (typeof caches !== 'undefined') {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(key => caches.delete(key)));
+    }
+    await signOut({ callbackUrl: '/' });
+  };
+
   const renderNavLinks = (isMobile: boolean = false) => {
     return navLinks.map(item => {
       const Icon = iconMap[item.icon];
@@ -87,7 +95,7 @@ export default function Header() {
           {renderNavLinks()}
           {status === 'authenticated' && (
             <button
-              onClick={() => signOut({ callbackUrl: '/' })}
+              onClick={handleSignOut}
               className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-ink-light transition-colors hover:bg-zinc-200/50 hover:text-ink"
             >
               登出
@@ -110,7 +118,7 @@ export default function Header() {
             {renderNavLinks(true)}
             {status === 'authenticated' && (
               <button
-                onClick={() => signOut({ callbackUrl: '/' })}
+                onClick={handleSignOut}
                 className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-zinc-200/50"
               >
                 登出

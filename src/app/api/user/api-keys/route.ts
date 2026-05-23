@@ -3,6 +3,7 @@ import { encryptApiKey } from "@/lib/crypto"
 import { prisma } from "@/lib/db"
 import type { ApiProvider } from "@/types"
 import { NextRequest } from "next/server"
+import { formatZodError, saveApiKeySchema } from "@/lib/validations"
 
 const VALID_PROVIDERS: ApiProvider[] = ["openrouter"]
 
@@ -22,22 +23,19 @@ export async function POST(request: NextRequest) {
   const user = await getSessionUserId()
   if (!user) return jsonError("Unauthorized", 401)
 
-  let body: { provider?: string; apiKey?: string; label?: string }
+  let rawBody: unknown
   try {
-    body = await request.json()
+    rawBody = await request.json()
   } catch {
     return jsonError("Invalid JSON body")
   }
 
-  const { provider, apiKey, label } = body
-
-  if (!provider || !apiKey) {
-    return jsonError("Provider and API key are required")
+  const parseResult = saveApiKeySchema.safeParse(rawBody)
+  if (!parseResult.success) {
+    return jsonError(formatZodError(parseResult.error), 400)
   }
 
-  if (!VALID_PROVIDERS.includes(provider as ApiProvider)) {
-    return jsonError(`Invalid provider: ${provider}`)
-  }
+  const { provider, apiKey, label } = parseResult.data
 
   const encryptedKey = encryptApiKey(apiKey)
 

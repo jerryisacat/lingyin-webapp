@@ -1,29 +1,27 @@
 import { getUser, jsonError, jsonOk } from "@/lib/api-helpers";
 import { getEntries, getCalendarEntries, saveDiary } from "@/lib/diary";
-import type { Tone } from "@/types";
 import { NextRequest } from "next/server";
+import { formatZodError, entriesListSchema, createEntrySchema } from "@/lib/validations";
 
 export async function GET(request: NextRequest) {
   const user = await getUser();
   if (!user) return jsonError("Unauthorized", 401);
 
-  const { searchParams } = request.nextUrl;
-  const view = searchParams.get("view");
+  const queryParams = Object.fromEntries(request.nextUrl.searchParams.entries());
+  const parseResult = entriesListSchema.safeParse(queryParams);
+  if (!parseResult.success) {
+    return jsonError(formatZodError(parseResult.error), 400);
+  }
+
+  const { view, year, month, cursor, limit } = parseResult.data;
 
   if (view === "calendar") {
-    const year = parseInt(searchParams.get("year") ?? "", 10);
-    const month = parseInt(searchParams.get("month") ?? "", 10);
-
-    if (isNaN(year) || isNaN(month) || month < 1 || month > 12) {
-      return jsonError("Invalid year or month");
+    if (year === undefined || month === undefined) {
+      return jsonError("year and month are required for calendar view");
     }
-
     const entries = await getCalendarEntries(user.id, year, month);
     return jsonOk({ entries });
   }
-
-  const cursor = searchParams.get("cursor") ?? undefined;
-  const limit = Math.min(parseInt(searchParams.get("limit") ?? "20", 10), 50);
 
   const entries = await getEntries(user.id, cursor, limit);
 
@@ -37,23 +35,20 @@ export async function POST(request: NextRequest) {
   const user = await getUser();
   if (!user) return jsonError("Unauthorized", 401);
 
-  let body: {
-    date?: string;
-    markdown?: string;
-    tone?: Tone;
-    imagePaths?: string[];
-  };
+  let rawBody: unknown;
   try {
-    body = await request.json();
+    rawBody = await request.json();
   } catch {
     return jsonError("Invalid JSON body");
   }
 
-  const { date = new Date().toISOString().slice(0, 10), markdown = "", tone = "warm", imagePaths = [] } = body;
-
-  if (!markdown.trim()) {
-    return jsonError("Markdown content is required");
+  const parseResult = createEntrySchema.safeParse(rawBody);
+  if (!parseResult.success) {
+    return jsonError(formatZodError(parseResult.error), 400);
   }
+
+  const { date: inputDate, markdown, tone, imagePaths } = parseResult.data;
+  const date = inputDate ?? new Date().toISOString().slice(0, 10);
 
   const entry = await saveDiary({
     userId: user.id,

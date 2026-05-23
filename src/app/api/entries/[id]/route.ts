@@ -1,7 +1,7 @@
 import { getUser, jsonError, jsonOk } from "@/lib/api-helpers";
 import { getEntry, deleteDiary, saveDiary } from "@/lib/diary";
-import type { Tone } from "@/types";
 import { NextRequest } from "next/server";
+import { formatZodError, updateEntrySchema } from "@/lib/validations";
 
 export async function GET(
   _request: NextRequest,
@@ -26,22 +26,19 @@ export async function PUT(
   const existing = await getEntry(user.id, params.id);
   if (!existing) return jsonError("Entry not found", 404);
 
-  let body: {
-    markdown?: string;
-    tone?: Tone;
-    imagePaths?: string[];
-  };
+  let rawBody: unknown;
   try {
-    body = await request.json();
+    rawBody = await request.json();
   } catch {
     return jsonError("Invalid JSON body");
   }
 
-  const { markdown, tone = "warm", imagePaths = [] } = body;
-
-  if (!markdown?.trim()) {
-    return jsonError("Markdown content is required");
+  const parseResult = updateEntrySchema.safeParse(rawBody);
+  if (!parseResult.success) {
+    return jsonError(formatZodError(parseResult.error), 400);
   }
+
+  const { markdown, tone, imagePaths } = parseResult.data;
 
   const updated = await saveDiary({
     userId: user.id,

@@ -1,9 +1,9 @@
 import { getUser, jsonError } from "@/lib/api-helpers";
 import { getUserDecryptedApiKey } from "@/lib/api-key-guard";
 import { generateDiary } from "@/lib/diary";
-import type { ApiProvider, Tone } from "@/types";
 import { NextRequest } from "next/server";
 import { checkRateLimit, rateLimiters, rateLimitError } from "@/lib/rate-limit";
+import { formatZodError, aiGenerateSchema } from "@/lib/validations";
 
 export async function POST(request: NextRequest) {
   const user = await getUser();
@@ -12,26 +12,26 @@ export async function POST(request: NextRequest) {
   const { success, reset } = await checkRateLimit(rateLimiters.aiGenerate, user.id);
   if (!success) return rateLimitError(reset);
 
-  let body: {
-    text?: string;
-    images?: { url: string; path: string; type: string; mime: string; size: number }[];
-    tone?: Tone;
-    date?: string;
-    provider?: ApiProvider;
-  };
+  let rawBody: unknown;
   try {
-    body = await request.json();
+    rawBody = await request.json();
   } catch {
     return jsonError("Invalid JSON body");
   }
 
+  const parseResult = aiGenerateSchema.safeParse(rawBody);
+  if (!parseResult.success) {
+    return jsonError(formatZodError(parseResult.error), 400);
+  }
+
   const {
-    text = "",
-    images = [],
-    tone = "warm",
-    date = new Date().toISOString().slice(0, 10),
-    provider = "openrouter",
-  } = body;
+    text,
+    images,
+    tone,
+    date: inputDate,
+    provider,
+  } = parseResult.data;
+  const date = inputDate ?? new Date().toISOString().slice(0, 10);
 
   const apiKey = await getUserDecryptedApiKey(user.id, provider);
   if (!apiKey) {
