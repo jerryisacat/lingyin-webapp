@@ -1,4 +1,13 @@
-## 2026-05-24 — Issue #104: V1 移除 BYOK（用户自带 API Key）功能
+## 2026-05-24 — Issue #102 & #105: 订阅方案文案修正 + 用量模块百分比显示
+
+### Issue #102 — 订阅方案文案及定价调整
+- `config/billing-pricing.json` — 基础版 Token 预算 $4.00 → $2.30，高级版 $19.87 → $12.00；加购包降低至 $0.30/$1.70/$3.30（预留 35% 毛利）
+- `src/app/api/pricing/route.ts` — FEATURES_MAP 移除 Token 金额表达，改为倍数对照（免费版 "AI 写作"，基础版 "AI 用量是免费版的 2.3 倍"，高级版 "AI 用量是免费版的 12 倍"）；"Telegram 通知" → "使用 Telegram 管理（Coming Soon）"
+
+### Issue #105 — QuotaUsage 组件 Token 预算改为百分比显示
+- `src/components/QuotaUsage.tsx` — 删除 `formatUsd` 函数；Token 已用/剩余/上月结转全部改为百分比显示；加购按钮移除美元标签；`TopUpBundle` 接口移除 `usd` 字段
+
+
 
 ### 删除 BYOK 全链路
 - 删除 `src/hooks/useApiKeys.ts` — 前端不再获取/保存/删除用户 API Key

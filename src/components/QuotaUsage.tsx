@@ -7,7 +7,6 @@ import { Zap, HardDrive, AlertTriangle, Plus, CheckCircle2, RefreshCw } from "lu
 import type { QuotaStatusData } from "@/types";
 
 interface TopUpBundle {
-  usd: number;
   price: number;
 }
 
@@ -17,11 +16,6 @@ function formatBytes(bytes: number): string {
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
   const size = bytes / Math.pow(1024, i);
   return `${size.toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
-}
-
-function formatUsd(usd: number): string {
-  if (usd < 0.01) return "$0.00";
-  return `$${usd.toFixed(2)}`;
 }
 
 function ProgressBar({
@@ -130,6 +124,14 @@ export function QuotaUsage() {
     data.storage.limit > 0
       ? (data.storage.used / data.storage.limit) * 100
       : 0;
+  const remainingPct =
+    data.tokenBudget.limit > 0
+      ? (data.tokenBudget.remaining / data.tokenBudget.limit) * 100
+      : 0;
+  const rolloverPct =
+    data.tokenBudget.limit > 0 && data.tokenBudget.rollover
+      ? (data.tokenBudget.rollover / data.tokenBudget.limit) * 100
+      : 0;
 
   return (
     <div className="w-full max-w-2xl mx-auto mt-8">
@@ -159,18 +161,17 @@ export function QuotaUsage() {
             />
             <div className="flex items-center justify-between mt-1.5">
               <span className="text-xs text-ink-light/50">
-                本月已用 {formatUsd(data.tokenBudget.used)}
+                本月已用 {tokenPct.toFixed(0)}%
               </span>
               <span className="text-xs text-ink-light/50">
-                剩余 {formatUsd(data.tokenBudget.remaining)} /{" "}
-                {formatUsd(data.tokenBudget.limit)}
+                剩余 {remainingPct.toFixed(0)}%
               </span>
             </div>
             {data.tokenBudget.rollover && data.tokenBudget.rollover > 0 && (
               <div className="flex items-center gap-1 mt-1">
                 <RefreshCw className="h-3 w-3 text-green-500" strokeWidth={1.5} />
                 <span className="text-xs text-green-600">
-                  上月结转 +{formatUsd(data.tokenBudget.rollover)}
+                  上月结转 +{rolloverPct.toFixed(0)}%
                 </span>
               </div>
             )}
@@ -214,9 +215,6 @@ export function QuotaUsage() {
                 >
                   <span className="text-sm font-semibold text-sakura-dark">
                     ¥{bundle.price}
-                  </span>
-                  <span className="text-xs text-ink-light/60">
-                    +${bundle.usd}
                   </span>
                   <Plus className="h-3 w-3 text-sakura/50" strokeWidth={2} />
                 </button>

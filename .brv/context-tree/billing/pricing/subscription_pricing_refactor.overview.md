@@ -1,0 +1,4 @@
+- Key points: Updated token budgets (basic: 4.0→2.3 USD, advanced: 20.0→12.0 USD with 35% margin); switched FEATURES_MAP to relative multipliers (2.3x, 12x); changed QuotaUsage display from USD to percentages (used/remaining/rollover); introduced top-up bundles at 0.3/1.7/3.3 USD; updated Telegram label from "通知" to "管理（Coming Soon）"
+- Key points: Refactor driven by issues #102 and #105; all models allowed on paid tiers; rollover rates preserved at 25%/50%
+- Structure / sections summary: Document contains frontmatter metadata, Reason section, Raw Concept (task/changes/files/flow/timestamp/author), and Narrative (Structure/Highlights/Rules subsections)
+- Notable entities/patterns/decisions: Core files are config/billing-pricing.json, src/app/api/pricing/route.ts, src/components/QuotaUsage.tsx; data flow is pricing config → api/pricing endpoint → QuotaUsage display; decision to replace absolute USD values with multipliers in FEATURES_MAP
