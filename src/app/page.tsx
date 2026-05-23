@@ -1,4 +1,5 @@
-import { auth } from "@/lib/auth";
+"use client";
+
 import {
   BookOpen,
   PenLine,
@@ -15,6 +16,8 @@ import {
   Heart,
 } from "lucide-react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { motion } from "framer-motion";
 import SakuraParticles from "@/components/SakuraParticles";
 import DashboardStats from "@/components/DashboardStats";
 
@@ -62,8 +65,13 @@ const STEPS = [
   },
 ];
 
-export default async function Home() {
-  const session = await auth();
+const FADE_IN_UP_VARIANTS = {
+  hidden: { opacity: 0, y: 10 },
+  visible: { opacity: 1, y: 0 },
+};
+
+export default function Home() {
+  const { data: session } = useSession();
   const user = session?.user;
 
   // ─── 已登录：仪表盘 ─────────────────────────────
@@ -125,7 +133,7 @@ export default async function Home() {
   return (
     <div className="flex flex-col">
       {/* ── Hero ── */}
-      <section className="relative flex min-h-[90vh] flex-col items-center justify-center px-6 text-center overflow-hidden">
+      <section className="relative flex min-h-[85vh] flex-col items-center justify-center px-6 text-center overflow-hidden">
         {/* 樱花飘落粒子 */}
         <SakuraParticles />
 
@@ -138,24 +146,47 @@ export default async function Home() {
         </div>
 
         {/* Hero 内容 */}
-        <div className="relative z-20 flex max-w-2xl flex-col items-center gap-6">
+        <motion.div
+          className="relative z-20 flex max-w-2xl flex-col items-center gap-6"
+          initial="hidden"
+          animate="visible"
+          variants={{
+            visible: {
+              transition: {
+                staggerChildren: 0.1,
+              },
+            },
+          }}
+        >
           {/* Logo 徽章 */}
-          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-sakura/15 to-sakura/5 ring-4 ring-sakura/15 backdrop-blur-sm">
+          <motion.div
+            className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-sakura/15 to-sakura/5 ring-4 ring-sakura/15 backdrop-blur-sm"
+            variants={FADE_IN_UP_VARIANTS}
+          >
             <BookOpen className="h-12 w-12 text-sakura" strokeWidth={1.5} />
-          </div>
+          </motion.div>
 
           {/* 标题 */}
-          <h1 className="text-4xl font-bold tracking-tight text-ink sm:text-5xl lg:text-6xl">
+          <motion.h1
+            className="text-4xl font-bold tracking-tight text-ink sm:text-5xl lg:text-6xl"
+            variants={FADE_IN_UP_VARIANTS}
+          >
             玲音日记
-          </h1>
+          </motion.h1>
 
           {/* 副标题——渐变色 */}
-          <p className="bg-gradient-to-r from-sakura-dark via-sakura to-sakura-light bg-clip-text text-xl font-medium text-transparent sm:text-2xl">
+          <motion.p
+            className="bg-gradient-to-r from-sakura-dark via-sakura to-sakura-light bg-clip-text text-xl font-medium text-transparent sm:text-2xl"
+            variants={FADE_IN_UP_VARIANTS}
+          >
             记下此时此刻，温暖治愈的 AI 日记伴侣
-          </p>
+          </motion.p>
 
           {/* 开源信息 */}
-          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-ink-light/70 mt-2">
+          <motion.div
+            className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-ink-light/70 mt-2"
+            variants={FADE_IN_UP_VARIANTS}
+          >
             <span>
               由 <a href="https://hi.jerryiscat.one/" target="_blank" className="font-semibold text-ink-light hover:text-sakura transition-colors">Jerryiscat</a> 使用 <a href="https://vibe-coding.x-dev.club/" target="_blank" className="font-semibold text-ink-light hover:text-sakura transition-colors">Vibe Coding</a> 构建
             </span>
@@ -167,17 +198,23 @@ export default async function Home() {
             <a href="https://github.com/jerryisacat/lingyin-webapp" target="_blank" className="flex items-center gap-1 font-semibold text-ink-light hover:text-sakura transition-colors">
               开源
             </a>
-          </div>
+          </motion.div>
 
           {/* 描述 */}
-          <p className="max-w-md text-base text-ink-light/80 leading-relaxed sm:text-lg">
+          <motion.p
+            className="max-w-md text-base text-ink-light/80 leading-relaxed sm:text-lg"
+            variants={FADE_IN_UP_VARIANTS}
+          >
             拍张照片，说几句话。AI 自动写成一篇优美的日记。
             <br />
             让记录生活变得无比简单。
-          </p>
+          </motion.p>
 
           {/* CTA 按钮 */}
-          <div className="flex flex-col items-center gap-3 sm:flex-row mt-4">
+          <motion.div
+            className="flex flex-col items-center gap-3 sm:flex-row mt-4"
+            variants={FADE_IN_UP_VARIANTS}
+          >
             <Link
               href="/login"
               className="btn-primary flex items-center gap-2 text-lg px-8 py-3.5 shadow-soft hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
@@ -192,8 +229,8 @@ export default async function Home() {
               了解更多
               <ChevronRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
             </a>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* 向下滚动指示 */}
         <div className="absolute bottom-8 z-20 flex flex-col items-center gap-2 text-ink-light/25">

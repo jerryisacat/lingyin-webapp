@@ -158,7 +158,8 @@ Issue 应包含:
 ### 开发完成后
 1. `npx tsc --noEmit` 确保 TypeScript 零错误
 2. 更新 `CHANGELOG.md`
-3. 整理 ByteRover 知识树
+3. `brv curate "..."` 整理知识树
 4. `git add` + `git commit` + `git push origin develop/issue-N`
 5. 使用 `gh issue comment <N> --body "..."` 通知用户并 Close Issues
 6. 使用 `gh pr create` 创建 PR (base: main, head: develop/issue-N)
+7. 直接 commit to main
