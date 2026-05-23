@@ -69,3 +69,17 @@ export function isStripeConfigured(): boolean {
     process.env.STRIPE_PRICE_ADVANCED_MONTHLY
   );
 }
+
+export interface TopUpLineItem {
+  price: number;
+  usd: number;
+}
+
+export function getTopUpLineItem(amountCny: number): TopUpLineItem | null {
+  const bundles = [
+    { price: 5, usd: 0.5 },
+    { price: 20, usd: 2.5 },
+    { price: 38, usd: 5.0 },
+  ];
+  return bundles.find((b) => b.price === amountCny) ?? null;
+}

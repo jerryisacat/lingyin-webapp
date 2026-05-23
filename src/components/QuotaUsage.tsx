@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { Zap, HardDrive, AlertTriangle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Zap, HardDrive, AlertTriangle, Plus, CheckCircle2 } from "lucide-react";
 import type { QuotaStatusData } from "@/types";
 
 function formatBytes(bytes: number): string {
@@ -61,8 +62,10 @@ function ProgressBar({
 
 export default function QuotaUsage() {
   const { data: session } = useSession();
+  const router = useRouter();
   const [data, setData] = useState<QuotaStatusData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [toppingUp, setToppingUp] = useState(false);
 
   useEffect(() => {
     if (!session?.user) {
@@ -80,6 +83,23 @@ export default function QuotaUsage() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [session]);
+
+  const handleTopUp = async (amountCny: number) => {
+    setToppingUp(true);
+    try {
+      const res = await fetch("/api/topup/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amountCny }),
+      });
+      const json = await res.json();
+      if (json.ok && json.data?.url) {
+        window.location.href = json.data.url;
+      }
+    } catch {
+      setToppingUp(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -156,6 +176,47 @@ export default function QuotaUsage() {
           </div>
         </div>
 
+        {tokenPct >= 100 && (
+          <div className="mt-4 pt-3 border-t border-red-100">
+            <div className="flex items-center gap-2 mb-3">
+              <AlertTriangle className="h-3.5 w-3.5 text-red-400" />
+              <span className="text-xs font-medium text-red-500">
+                Token 预算已用尽，请加购或升级
+              </span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { price: 5, usd: 0.5, label: "¥5" },
+                { price: 20, usd: 2.5, label: "¥20" },
+                { price: 38, usd: 5.0, label: "¥38" },
+              ].map((bundle) => (
+                <button
+                  key={bundle.price}
+                  type="button"
+                  onClick={() => handleTopUp(bundle.price)}
+                  disabled={toppingUp}
+                  className="flex flex-col items-center gap-1 rounded-lg border border-sakura/20 bg-sakura/5 px-3 py-2.5 text-center transition-all hover:bg-sakura/10 hover:border-sakura/40 disabled:opacity-50"
+                >
+                  <span className="text-sm font-semibold text-sakura-dark">
+                    {bundle.label}
+                  </span>
+                  <span className="text-xs text-ink-light/60">
+                    +${bundle.usd}
+                  </span>
+                  <Plus className="h-3 w-3 text-sakura/50" strokeWidth={2} />
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => router.push("/subscription")}
+              className="mt-2 w-full rounded-lg bg-sakura/10 border border-sakura/20 px-3 py-2 text-xs font-medium text-sakura-dark transition-all hover:bg-sakura/15"
+            >
+              或升级套餐获得更多额度
+            </button>
+          </div>
+        )}
+
         {!Array.isArray(data.modelRestriction.allowedModels) && (
           <div className="flex items-center gap-1.5 mt-4 pt-3 border-t border-sakura/10">
             <HardDrive className="h-3 w-3 text-sakura/40" strokeWidth={1.5} />
@@ -176,6 +237,15 @@ export default function QuotaUsage() {
               </span>
             </div>
           )}
+
+        {data.systemKeyAvailable && (
+          <div className="flex items-center gap-1.5 mt-4 pt-3 border-t border-green-100">
+            <CheckCircle2 className="h-3 w-3 text-green-500" strokeWidth={1.5} />
+            <span className="text-xs text-green-600">
+              系统 API Key 已配置，无需自带 Key 即可使用
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

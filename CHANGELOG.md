@@ -1,3 +1,26 @@
+## 2026-05-23 — Token 加购包 + 统一 API Key (Stream C Phase 3a)
+
+### Token 加购包
+- `prisma/schema.prisma`: 新增 `TokenTopUp` 模型（userId, amountUsd, priceCny, stripePaymentIntentId, status）+ `User.topUpBalanceUsd` 字段
+- `POST /api/topup/checkout`: Stripe 一次性支付 checkout（¥5/+$0.5, ¥20/+$2.5, ¥38/+$5.0），使用 `price_data` 动态创建无需预设 Price ID
+- Webhook 更新：`checkout.session.completed` 新增 top-up 模式检测，成功后自动调用 `creditTopUpBalance` + `recordTopUpPurchase`
+- `quota-service.ts`: `checkTokenBudget` 有效预算 = 套餐预算 + topUpBalance；新增 `getTopUpBalance`, `creditTopUpBalance`, `recordTopUpPurchase`, `getTopUpBundles`
+- `stripe.ts`: 新增 `getTopUpLineItem` 辅助函数
+- `QuotaUsage` 组件：Token 用尽时显示加购按钮（3 个 ¥5/¥20/¥38 选项）+ 升级套餐入口
+
+### 统一 API Key（服务器代付）
+- `api-key-guard.ts`: 新增 `getEffectiveApiKey(userId, provider)` — 优先用户自带 Key，fallback 到 `OPENROUTER_API_KEY` 系统 Key
+- 新增 `getSystemApiKey(provider)`, `isSystemApiKeyAvailable(provider)` 公开函数
+- `generate/rewrite/test` 三个 AI 端点全部迁移至 `getEffectiveApiKey`
+- `quota-service.ts`: `getQuotaStatus` 新增 `systemKeyAvailable` 字段
+- `QuotaUsage` 组件：系统 Key 可用时显示绿色提示 "系统 API Key 已配置，无需自带 Key"
+- `.env.example`: 新增 `OPENROUTER_API_KEY` 配置项
+
+### 验证结果
+- `npx tsc --noEmit` — 零错误
+- `npx next build` — 构建成功
+- `npx prisma db push` — Schema 已同步到远程 Supabase DB
+
 ## 2026-05-23 — #11 免费版配额系统 (Stream C Phase 2)
 
 ### 数据库变更

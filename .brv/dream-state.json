@@ -1,5 +1,5 @@
 {
-  "curationsSinceDream": 6,
+  "curationsSinceDream": 7,
   "lastDreamAt": "2026-05-23T05:46:43.447Z",
   "lastDreamLogId": "drm-1779515102271",
   "pendingMerges": [],
@@ -27,6 +27,10 @@
     {
       "enqueuedAt": 1779549779503,
       "path": "billing/quota/free_tier_quota_system.md"
+    },
+    {
+      "enqueuedAt": 1779550585098,
+      "path": "billing/quota/token_topup_and_unified_api_key.md"
     }
   ],
   "totalDreams": 2,

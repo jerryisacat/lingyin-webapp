@@ -7,6 +7,7 @@ import {
   createInvoice,
   cancelUserSubscription,
 } from "@/lib/subscription-service";
+import { creditTopUpBalance, recordTopUpPurchase } from "@/lib/quota-service";
 import type { SubscriptionPlan } from "@/types";
 import Stripe from "stripe";
 
@@ -31,6 +32,36 @@ function extractPlan(obj: Record<string, unknown>): SubscriptionPlan {
 }
 
 async function handleCheckoutCompleted(obj: Record<string, unknown>): Promise<void> {
+  const metadata = obj.metadata as Record<string, string> | null | undefined;
+  const type = metadata?.type;
+
+  // Handle top-up payment
+  if (type === "topup") {
+    const userId = metadata?.userId ?? null;
+    const amountUsdStr = metadata?.amountUsd ?? null;
+    const amountCnyStr = metadata?.amountCny ?? null;
+
+    if (!userId || !amountUsdStr) {
+      console.error("Webhook topup: missing userId or amountUsd in metadata");
+      return;
+    }
+
+    const amountUsd = parseFloat(amountUsdStr);
+    const amountCny = parseInt(amountCnyStr ?? "0", 10);
+
+    await creditTopUpBalance(userId, amountUsd);
+    await recordTopUpPurchase({
+      userId,
+      amountUsd,
+      priceCny: amountCny,
+      stripePaymentIntentId: obj.payment_intent as string | undefined,
+      status: "paid",
+    });
+
+    console.log(`Webhook topup: credited $${amountUsd} to user ${userId}`);
+    return;
+  }
+
   const userId = extractUserId(obj);
   if (!userId) {
     console.error("Webhook: missing userId in session metadata");

@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { getSessionUserId as getUser, jsonError, jsonOk } from "@/lib/auth-helpers";
-import { getUserDecryptedApiKey } from "@/lib/api-key-guard";
+import { getEffectiveApiKey } from "@/lib/api-key-guard";
 import { createOpenAIClient, PROVIDER_CONFIGS } from "@/lib/ai/client";
 import { NextRequest } from "next/server";
 import { checkRateLimit, rateLimiters, rateLimitError } from "@/lib/rate-limit";
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
 
   const { provider, apiKey: bodyApiKey } = parseResult.data;
 
-  const apiKey = bodyApiKey || (await getUserDecryptedApiKey(user.id, provider));
+  const apiKey = bodyApiKey || (await getEffectiveApiKey(user.id, provider));
   if (!apiKey) {
     return jsonError("API Key is required to test connection", 400);
   }

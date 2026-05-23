@@ -1,5 +1,5 @@
 import { getSessionUserId as getUser, jsonError } from "@/lib/auth-helpers";
-import { getUserDecryptedApiKey } from "@/lib/api-key-guard";
+import { getEffectiveApiKey } from "@/lib/api-key-guard";
 import { generateDiary } from "@/lib/diary";
 import { NextRequest } from "next/server";
 import { checkRateLimit, rateLimiters, rateLimitError } from "@/lib/rate-limit";
@@ -56,9 +56,9 @@ export async function POST(request: NextRequest) {
     return jsonError("本月 Token 预算已用完，请升级套餐或等待下月重置", 403);
   }
 
-  const apiKey = await getUserDecryptedApiKey(user.id, provider);
+  const apiKey = await getEffectiveApiKey(user.id, provider);
   if (!apiKey) {
-    return jsonError("API Key not configured for this provider — configure it in Settings", 400);
+    return jsonError("API Key not configured — configure it in Settings", 400);
   }
 
   const generator = generateDiary({

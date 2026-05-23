@@ -22,6 +22,8 @@ model User {
   subscribedAt     DateTime?
   subscriptionEnds DateTime?
 
+  topUpBalanceUsd Float @default(0)
+
   encryptionPasswordHash String?
   encryptionSalt         String?
 
@@ -37,6 +39,7 @@ model User {
   entries             Entry[]
   apiKeys             ApiKey[]
   tokenUsages         TokenUsage[]
+  tokenTopUps         TokenTopUp[]
   verificationTokens  VerificationToken[]
   passwordResetTokens PasswordResetToken[]
 }
@@ -141,6 +144,20 @@ model TokenUsage {
   outputTokens Int      @default(0)
   costUsd      Float    @default(0)
   createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model TokenTopUp {
+  id                    String   @id @default(cuid())
+  userId                String
+  amountUsd             Float
+  priceCny              Int
+  stripePaymentIntentId String?
+  status                String   @default("pending")
+  createdAt             DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

@@ -99,4 +99,5 @@ export interface QuotaStatusData {
   };
   plan: string;
   planLabel: string;
+  systemKeyAvailable: boolean;
 }
