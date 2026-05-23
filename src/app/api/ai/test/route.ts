@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { getSessionUserId as getUser, jsonError, jsonOk } from "@/lib/auth-helpers";
-import { getEffectiveApiKey } from "@/lib/api-key-guard";
+import { getSystemApiKey } from "@/lib/api-key-guard";
 import { createOpenAIClient, PROVIDER_CONFIGS } from "@/lib/ai/client";
 import { NextRequest } from "next/server";
 import { checkRateLimit, rateLimiters, rateLimitError } from "@/lib/rate-limit";
@@ -43,11 +43,11 @@ export async function POST(request: NextRequest) {
     return jsonError(formatZodError(parseResult.error), 400);
   }
 
-  const { provider, apiKey: bodyApiKey } = parseResult.data;
+  const { provider } = parseResult.data;
 
-  const apiKey = bodyApiKey || (await getEffectiveApiKey(user.id, provider));
+  const apiKey = getSystemApiKey(provider);
   if (!apiKey) {
-    return jsonError("API Key is required to test connection", 400);
+    return jsonError("LLM API Key not configured on server", 500);
   }
 
   const config = PROVIDER_CONFIGS[provider];
