@@ -1,9 +1,13 @@
 import { getUser, jsonError, jsonOk } from "@/lib/api-helpers";
 import { getStats } from "@/lib/stats";
+import { checkRateLimit, rateLimiters, rateLimitError } from "@/lib/rate-limit";
 
 export async function GET() {
   const user = await getUser();
   if (!user) return jsonError("Unauthorized", 401);
+
+  const { success, reset } = await checkRateLimit(rateLimiters.stats, user.id);
+  if (!success) return rateLimitError(reset);
 
   try {
     const stats = await getStats(user.id);

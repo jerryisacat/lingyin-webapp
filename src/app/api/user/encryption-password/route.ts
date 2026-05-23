@@ -4,6 +4,7 @@ import { NextRequest } from "next/server"
 import bcrypt from "bcryptjs"
 import crypto from "crypto"
 import { formatZodError, encryptionPasswordSchema } from "@/lib/validations"
+import { checkRateLimit, rateLimiters, rateLimitError } from "@/lib/rate-limit"
 
 const SALT_ROUNDS = 12
 const SALT_BYTES = 32
@@ -15,6 +16,9 @@ function generateEncryptionSalt(): string {
 export async function POST(request: NextRequest) {
   const user = await getSessionUserId()
   if (!user) return jsonError("Unauthorized", 401)
+
+  const { success, reset } = await checkRateLimit(rateLimiters.encryptionPassword, user.id)
+  if (!success) return rateLimitError(reset)
 
   let rawBody: unknown
   try {
@@ -56,6 +60,9 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   const user = await getSessionUserId()
   if (!user) return jsonError("Unauthorized", 401)
+
+  const { success, reset } = await checkRateLimit(rateLimiters.encryptionPassword, user.id)
+  if (!success) return rateLimitError(reset)
 
   let rawBody: unknown
   try {

@@ -1,10 +1,24 @@
 import { getUser, jsonError } from "@/lib/api-helpers";
 import { getUserDecryptedApiKey } from "@/lib/api-key-guard";
 import { generateStream } from "@/lib/ai/client";
-import { WARM_SYSTEM_PROMPT } from "@/lib/ai/prompts";
+import {
+  WARM_SYSTEM_PROMPT,
+  GENKI_SYSTEM_PROMPT,
+  MINIMAL_SYSTEM_PROMPT,
+  LITERARY_SYSTEM_PROMPT,
+} from "@/lib/ai/prompts";
+import type { Tone } from "@/types";
+import { prisma } from "@/lib/db";
 import { NextRequest } from "next/server";
 import { checkRateLimit, rateLimiters, rateLimitError } from "@/lib/rate-limit";
 import { formatZodError, aiRewriteSchema } from "@/lib/validations";
+
+const TONE_PROMPTS: Record<Tone, string> = {
+  warm: WARM_SYSTEM_PROMPT,
+  genki: GENKI_SYSTEM_PROMPT,
+  minimal: MINIMAL_SYSTEM_PROMPT,
+  literary: LITERARY_SYSTEM_PROMPT,
+}
 
 export async function POST(request: NextRequest) {
   const user = await getUser();
@@ -37,7 +51,12 @@ export async function POST(request: NextRequest) {
     return jsonError("API Key not configured for this provider — configure it in Settings", 400);
   }
 
-  const systemPrompt = WARM_SYSTEM_PROMPT;
+  const dbUser = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { tone: true },
+  })
+  const tone = (dbUser?.tone ?? "warm") as Tone
+  const systemPrompt = TONE_PROMPTS[tone]
   const userPrompt = `原始日记如下：
 
 ${content}
@@ -50,6 +69,22 @@ ${content}
 
   const stream = new ReadableStream({
     async start(controller) {
+      let aborted = false
+
+      request.signal?.addEventListener("abort", () => {
+        aborted = true
+        controller.close()
+      })
+
+      const timeout = setTimeout(() => {
+        if (!aborted) {
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ error: "改写超时，请稍后重试" })}\n\n`)
+          )
+          controller.close()
+        }
+      }, 8_000)
+
       try {
         for await (const chunk of generateStream({
           apiKey,
@@ -57,17 +92,23 @@ ${content}
           systemPrompt,
           userPrompt,
         })) {
+          if (aborted) break
           controller.enqueue(
             encoder.encode(`data: ${JSON.stringify({ content: chunk })}\n\n`)
           );
         }
-        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+        if (!aborted) {
+          controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+        }
       } catch (error) {
         console.error("[AI Rewrite] stream error:", error instanceof Error ? error.message : error);
-        controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify({ error: "改写失败，请稍后再试" })}\n\n`)
-        );
+        if (!aborted) {
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ error: "改写失败，请稍后再试" })}\n\n`)
+          );
+        }
       } finally {
+        clearTimeout(timeout)
         controller.close();
       }
     },

@@ -2,10 +2,15 @@ import { getUser, jsonError, jsonOk } from "@/lib/api-helpers";
 import { getEntries, getCalendarEntries, saveDiary } from "@/lib/diary";
 import { NextRequest } from "next/server";
 import { formatZodError, entriesListSchema, createEntrySchema } from "@/lib/validations";
+import { getClientIP, checkRateLimit, rateLimiters, rateLimitError } from "@/lib/rate-limit";
 
 export async function GET(request: NextRequest) {
   const user = await getUser();
   if (!user) return jsonError("Unauthorized", 401);
+
+  const ip = getClientIP(request);
+  const { success, reset } = await checkRateLimit(rateLimiters.entriesRead, ip);
+  if (!success) return rateLimitError(reset);
 
   const queryParams = Object.fromEntries(request.nextUrl.searchParams.entries());
   const parseResult = entriesListSchema.safeParse(queryParams);
@@ -34,6 +39,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const user = await getUser();
   if (!user) return jsonError("Unauthorized", 401);
+
+  const { success, reset } = await checkRateLimit(rateLimiters.entriesWrite, user.id);
+  if (!success) return rateLimitError(reset);
 
   let rawBody: unknown;
   try {

@@ -22,7 +22,7 @@ export const resendVerificationSchema = z.object({
   email: z.string().email("邮箱格式不正确"),
 });
 
-const VALID_TONES = ["warm"] as const;
+const VALID_TONES = ["warm", "genki", "minimal", "literary"] as const;
 
 export const entriesListSchema = z.object({
   view: z.enum(["calendar"]).optional(),

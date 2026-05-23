@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import type { Tone } from "@/types";
 import { NextRequest } from "next/server";
 import { formatZodError, userConfigSchema } from "@/lib/validations";
+import { checkRateLimit, rateLimiters, rateLimitError } from "@/lib/rate-limit";
 
 export async function GET() {
   const user = await getUser();
@@ -21,6 +22,9 @@ export async function GET() {
 export async function PUT(request: NextRequest) {
   const user = await getUser();
   if (!user) return jsonError("Unauthorized", 401);
+
+  const { success, reset } = await checkRateLimit(rateLimiters.userConfig, user.id);
+  if (!success) return rateLimitError(reset);
 
   let rawBody: unknown;
   try {

@@ -1,6 +1,7 @@
 import { getUser, jsonError } from "@/lib/api-helpers";
 import { getPresignedUrl } from "@/lib/storage";
 import { NextRequest, NextResponse } from "next/server";
+import { getClientIP, checkRateLimit, rateLimiters, rateLimitError } from "@/lib/rate-limit";
 
 function extractUserIdFromKey(key: string): string | null {
   const match = key.match(/^users\/([^/]+)\//);
@@ -10,6 +11,10 @@ function extractUserIdFromKey(key: string): string | null {
 export async function GET(request: NextRequest) {
   const user = await getUser();
   if (!user) return jsonError("Unauthorized", 401);
+
+  const ip = getClientIP(request);
+  const { success, reset } = await checkRateLimit(rateLimiters.imageProxy, ip);
+  if (!success) return rateLimitError(reset);
 
   const { searchParams } = new URL(request.url);
   const key = searchParams.get("key");
@@ -25,7 +30,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const signedUrl = await getPresignedUrl(key, 3600);
+    const signedUrl = await getPresignedUrl(key);
 
     if (redirect === "true") {
       return NextResponse.redirect(signedUrl);

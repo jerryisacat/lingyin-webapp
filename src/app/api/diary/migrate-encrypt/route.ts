@@ -9,6 +9,7 @@ import {
 import { NextRequest } from "next/server"
 import { z } from "zod"
 import { formatZodError } from "@/lib/validations"
+import { checkRateLimit, rateLimiters, rateLimitError } from "@/lib/rate-limit"
 
 const migrateEntrySchema = z.object({
   entryId: z.string(),
@@ -19,6 +20,9 @@ const migrateEntrySchema = z.object({
 export async function GET(request: NextRequest) {
   const user = await getSessionUserId()
   if (!user) return jsonError("Unauthorized", 401)
+
+  const { success, reset } = await checkRateLimit(rateLimiters.migrate, user.id)
+  if (!success) return rateLimitError(reset)
 
   const dryRun = request.nextUrl.searchParams.get("dryRun") === "true"
 
@@ -52,6 +56,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const user = await getSessionUserId()
   if (!user) return jsonError("Unauthorized", 401)
+
+  const { success, reset } = await checkRateLimit(rateLimiters.migrate, user.id)
+  if (!success) return rateLimitError(reset)
 
   let rawBody: unknown
   try {

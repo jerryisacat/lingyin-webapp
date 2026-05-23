@@ -1,3 +1,42 @@
+## 2026-05-23 — P1 安全加固: API 限流全覆盖 + CSP + Magic Bytes + SSE 超时
+
+### P1-1: API 限流全覆盖
+- `src/lib/rate-limit.ts`: 新增 9 个 limiter（entriesRead/Write, userConfig, encryptionPassword, apiKeyWrite, uploadImage, imageProxy, stats, migrate, verifyEmail）
+- 9 个 API Route 添加速率限制校验：
+  - `src/app/api/entries/route.ts` — GET (IP, 30/min) / POST (userId, 20/min)
+  - `src/app/api/user/config/route.ts` — PUT (userId, 10/min)
+  - `src/app/api/user/encryption-password/route.ts` — POST/PUT (userId, 5/5min)
+  - `src/app/api/user/api-keys/route.ts` — POST/DELETE (userId, 5/5min)
+  - `src/app/api/upload/route.ts` — POST (IP, 10/min)
+  - `src/app/api/image/route.ts` — GET (IP, 30/min)
+  - `src/app/api/stats/route.ts` — GET (userId, 10/min)
+  - `src/app/api/diary/migrate-encrypt/route.ts` — GET/POST (userId, 10/min)
+  - `src/app/api/diary/migrate-status/route.ts` — GET (userId, 10/min)
+  - `src/app/api/auth/verify-email/route.ts` — GET (IP, 10/min)
+
+### P1-2: CSP Header
+- `next.config.mjs`: 新增 `Content-Security-Policy` 响应头，限制 script/style/img/connect/font 来源
+
+### P1-3: 图片 Magic Bytes 校验
+- `src/app/api/upload/route.ts`: 新增 `MAGIC_BYTES` 常量表（JPG/Png/WebP）和 `validateMagicBytes()` 函数，上传完成后校验文件头字节
+
+### P1-4: Tone Schema 修复
+- `src/lib/validations.ts`: `VALID_TONES` 从 `["warm"]` 扩展为 `["warm", "genki", "minimal", "literary"]`，修复 3 种风格 API 不可用问题
+
+### P1-5: AI Rewrite Tone 修复
+- `src/app/api/ai/rewrite/route.ts`: 不再硬编码 `WARM_SYSTEM_PROMPT`，改为从 DB 读取用户 `tone` 设置 → 选择对应 system prompt（Map 查找）
+
+### P1-6: SSE 流超时与客户端断开处理
+- `src/app/api/ai/generate/route.ts`: ReadableStream 添加 `AbortSignal` 监听（客户端断开时停止）和 8s 超时（Vercel Hobby 10s limit - 2s buffer）
+- `src/app/api/ai/rewrite/route.ts`: 同上
+
+### P1-7: verify-email 速率限制
+- `src/app/api/auth/verify-email/route.ts`: 添加 IP 级限流（10/min），防止暴力枚举验证 Token
+
+### P1-8: Presigned URL 有效期缩短
+- `src/lib/storage.ts`: `getPresignedUrl` 默认有效期 3600s → 300s（5 分钟）
+- `src/app/api/image/route.ts`: 调用不再显式传递过期时间，使用新默认值
+
 ## 2026-05-23 — P0 安全加固: 代码审计关键修复
 
 ### P0-1: Next.js 升级修复 CVE

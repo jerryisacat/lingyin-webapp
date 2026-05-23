@@ -57,19 +57,41 @@ export async function POST(request: NextRequest) {
 
   const stream = new ReadableStream({
     async start(controller) {
+      let aborted = false
+
+      request.signal?.addEventListener("abort", () => {
+        aborted = true
+        controller.close()
+      })
+
+      const timeout = setTimeout(() => {
+        if (!aborted) {
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ error: "生成超时，请稍后重试" })}\n\n`)
+          )
+          controller.close()
+        }
+      }, 8_000)
+
       try {
         for await (const chunk of generator) {
+          if (aborted) break
           controller.enqueue(
             encoder.encode(`data: ${JSON.stringify({ content: chunk })}\n\n`)
           );
         }
-        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+        if (!aborted) {
+          controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+        }
       } catch (error) {
         console.error("[AI Generate] stream error:", error instanceof Error ? error.message : error);
-        controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify({ error: "生成失败，请稍后再试" })}\n\n`)
-        );
+        if (!aborted) {
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ error: "生成失败，请稍后再试" })}\n\n`)
+          );
+        }
       } finally {
+        clearTimeout(timeout)
         controller.close();
       }
     },

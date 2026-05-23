@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db"
 import type { ApiProvider } from "@/types"
 import { NextRequest } from "next/server"
 import { formatZodError, saveApiKeySchema } from "@/lib/validations"
+import { checkRateLimit, rateLimiters, rateLimitError } from "@/lib/rate-limit"
 
 const VALID_PROVIDERS: ApiProvider[] = ["openrouter"]
 
@@ -22,6 +23,9 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const user = await getSessionUserId()
   if (!user) return jsonError("Unauthorized", 401)
+
+  const { success, reset } = await checkRateLimit(rateLimiters.apiKeyWrite, user.id)
+  if (!success) return rateLimitError(reset)
 
   let rawBody: unknown
   try {
@@ -60,6 +64,9 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const user = await getSessionUserId()
   if (!user) return jsonError("Unauthorized", 401)
+
+  const { success, reset } = await checkRateLimit(rateLimiters.apiKeyWrite, user.id)
+  if (!success) return rateLimitError(reset)
 
   const provider = request.nextUrl.searchParams.get("provider")
 
