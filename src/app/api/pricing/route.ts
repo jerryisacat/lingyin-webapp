@@ -14,25 +14,25 @@ const TIER_LABELS: Record<string, string> = {
 const FEATURES_MAP: Record<string, string[]> = {
   free: [
     "深色/浅色主题",
-    "AI 写作（$1 Token 预算）",
+    "AI 写作",
     "50MB 存储空间",
     "PWA 离线使用",
   ],
   basic: [
     "深色/浅色主题",
-    "全模型 AI 写作（$4 Token 预算）",
+    "AI 用量是免费版的 2.3 倍",
     "500MB 存储空间",
     "PWA 离线使用",
     "额度 25% 上月结转",
-    "Telegram 通知",
+    "使用 Telegram 管理（Coming Soon）",
   ],
   advanced: [
     "深色/浅色主题",
-    "全模型 AI 写作（$20 Token 预算）",
+    "AI 用量是免费版的 12 倍",
     "5GB 存储空间",
     "PWA 离线使用",
     "额度 50% 上月结转",
-    "Telegram 通知",
+    "使用 Telegram 管理（Coming Soon）",
     "优先支持",
   ],
 };

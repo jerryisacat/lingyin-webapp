@@ -70,7 +70,7 @@
     "basic": {
       "label": "基础版",
       "priceMonth": 29.9,
-      "tokenBudgetUsd": 4.0,
+      "tokenBudgetUsd": 2.3,
       "storageBytes": 524288000,
       "rolloverFraction": 0.25,
       "allowedModels": "*",
@@ -81,7 +81,7 @@
     "advanced": {
       "label": "高级版",
       "priceMonth": 149,
-      "tokenBudgetUsd": 20.0,
+      "tokenBudgetUsd": 12.0,
       "storageBytes": 5368709120,
       "rolloverFraction": 0.50,
       "allowedModels": "*",
@@ -93,11 +93,11 @@
 
   "topUp": {
     "pricePerUsd": 7.5,
-    "minimumUsd": 0.5,
+    "minimumUsd": 0.3,
     "bundles": [
-      { "usd": 0.5, "price": 5 },
-      { "usd": 2.5, "price": 20 },
-      { "usd": 5.0, "price": 38 }
+      { "usd": 0.3, "price": 5 },
+      { "usd": 1.7, "price": 20 },
+      { "usd": 3.3, "price": 38 }
     ]
   }
 }
