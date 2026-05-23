@@ -1,4 +1,3 @@
-export type Tone = "warm" | "genki" | "minimal" | "literary";
 export type Perspective = "first_person" | "second_person";
 export type Persona =
   | "yuanshao"

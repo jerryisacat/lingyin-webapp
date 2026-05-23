@@ -8,7 +8,6 @@ interface UseStreamGenerateOptions {
   images: MediaFile[];
   date: string;
   provider: ApiProvider;
-  tone?: string;
   writingStyle?: WritingStyle;
 }
 
@@ -24,7 +23,7 @@ interface UseStreamGenerateReturn {
 export function useStreamGenerate(
   options: UseStreamGenerateOptions
 ): UseStreamGenerateReturn {
-  const { text, images, date, provider, tone, writingStyle } = options;
+  const { text, images, date, provider, writingStyle } = options;
 
   const [output, setOutput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -57,7 +56,7 @@ export function useStreamGenerate(
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ text, images, date, tone, writingStyle, provider }),
+        body: JSON.stringify({ text, images, date, writingStyle, provider }),
         signal: controller.signal,
       });
 
@@ -118,7 +117,7 @@ export function useStreamGenerate(
       setIsStreaming(false);
       abortRef.current = null;
     }
-  }, [text, images, date, provider, tone, writingStyle]);
+  }, [text, images, date, provider, writingStyle]);
 
   return { text: output, isStreaming, error, generate, stop, reset };
 }

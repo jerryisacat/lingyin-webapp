@@ -1,6 +1,7 @@
 import { getSessionUserId as getUser, jsonError, jsonOk } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/db";
-import type { Tone } from "@/types";
+import type { WritingStyle } from "@/types";
+import { DEFAULT_WRITING_STYLE } from "@/config/personas";
 import { NextRequest } from "next/server";
 import { formatZodError, userConfigSchema } from "@/lib/validations";
 import { checkRateLimit, rateLimiters, rateLimitError } from "@/lib/rate-limit";
@@ -11,12 +12,12 @@ export async function GET() {
 
   const dbUser = await prisma.user.findUnique({
     where: { id: user.id },
-    select: { tone: true },
+    select: { writingStyle: true },
   });
 
-  return jsonOk({
-    tone: (dbUser?.tone ?? "warm") as Tone,
-  });
+  const writingStyle: WritingStyle = (dbUser?.writingStyle as WritingStyle | null) ?? DEFAULT_WRITING_STYLE;
+
+  return jsonOk({ writingStyle });
 }
 
 export async function PUT(request: NextRequest) {
@@ -38,12 +39,12 @@ export async function PUT(request: NextRequest) {
     return jsonError(formatZodError(parseResult.error), 400);
   }
 
-  const { tone } = parseResult.data;
+  const { writingStyle } = parseResult.data;
 
   await prisma.user.update({
     where: { id: user.id },
-    data: { tone },
+    data: { writingStyle: writingStyle as never },
   });
 
-  return jsonOk({ tone });
+  return jsonOk({ writingStyle });
 }

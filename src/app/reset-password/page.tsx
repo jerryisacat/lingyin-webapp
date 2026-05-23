@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition } from "react"
 import Link from "next/link"
 import { BookOpen, Loader2, CheckCircle } from "lucide-react"
-import PasswordInput from "@/components/auth/PasswordInput"
+import { PasswordInput } from "@/components/auth/PasswordInput"
 
 interface FormState {
   ok: boolean

@@ -1,7 +1,6 @@
-import { NextResponse } from "next/server"
 import { resendVerification } from "@/lib/auth-service"
 import { getClientIP, checkRateLimit, rateLimiters, rateLimitError } from "@/lib/rate-limit"
-import { jsonError } from "@/lib/auth-helpers"
+import { jsonOk, jsonError } from "@/lib/auth-helpers"
 import { formatZodError, resendVerificationSchema } from "@/lib/validations"
 
 export async function POST(request: Request) {
@@ -19,14 +18,11 @@ export async function POST(request: Request) {
     const result = await resendVerification(email)
 
     if (result.ok) {
-      return NextResponse.json(result)
+      return jsonOk(result.data)
     }
 
-    return NextResponse.json(result, { status: 400 })
+    return jsonError(result.error, 400)
   } catch {
-    return NextResponse.json(
-      { ok: false, error: "发送失败，请稍后再试" },
-      { status: 500 }
-    )
+    return jsonError("发送失败，请稍后再试", 500)
   }
 }

@@ -1,4 +1,4 @@
-import { getSessionUserId as getUser, jsonError } from "@/lib/auth-helpers";
+import { getSessionUserId as getUser, jsonOk, jsonError } from "@/lib/auth-helpers";
 import { getPresignedUrl } from "@/lib/storage";
 import { NextRequest, NextResponse } from "next/server";
 import { getClientIP, checkRateLimit, rateLimiters, rateLimitError } from "@/lib/rate-limit";
@@ -21,12 +21,12 @@ export async function GET(request: NextRequest) {
   const redirect = searchParams.get("redirect");
 
   if (!key) {
-    return NextResponse.json({ error: "Missing 'key' parameter" }, { status: 400 });
+    return jsonError("Missing 'key' parameter", 400);
   }
 
   const ownerId = extractUserIdFromKey(key);
   if (!ownerId || ownerId !== user.id) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return jsonError("Not found", 404);
   }
 
   try {
@@ -36,8 +36,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(signedUrl);
     }
 
-    return NextResponse.json({ url: signedUrl });
+    return jsonOk({ url: signedUrl });
   } catch {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return jsonError("Not found", 404);
   }
 }

@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo } from "react";
 import { Loader2, PackageOpen } from "lucide-react";
-import DiaryCard from "@/components/DiaryCard";
+import { DiaryCard } from "@/components/DiaryCard";
 import type { DiarySummary } from "@/types";
 
 const MONTHS = [
@@ -87,7 +87,7 @@ function LoadingSkeleton() {
   );
 }
 
-export default function TimelineList({
+export function TimelineList({
   entries,
   isLoading,
   isLoadingMore,

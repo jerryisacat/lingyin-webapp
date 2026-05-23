@@ -21,7 +21,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Settings,
 };
 
-export default function MobileTabBar() {
+export function MobileTabBar() {
   const pathname = usePathname();
   const { status } = useSession();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);

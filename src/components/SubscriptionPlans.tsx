@@ -5,7 +5,11 @@ import { useRouter } from "next/navigation"
 import { Check, Loader2, Sparkles } from "lucide-react"
 import type { PricingData, PriceInfo } from "@/types"
 
-export function SubscriptionPlans({ data }: { data: PricingData }) {
+interface SubscriptionPlansProps {
+  data: PricingData;
+}
+
+export function SubscriptionPlans({ data }: SubscriptionPlansProps) {
   const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState("")

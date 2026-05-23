@@ -37,7 +37,6 @@ export async function POST(request: NextRequest) {
   const {
     text,
     images,
-    tone,
     writingStyle,
     date: inputDate,
     provider,
@@ -71,7 +70,6 @@ export async function POST(request: NextRequest) {
       mime: img.mime,
       size: img.size,
     })),
-    tone,
     writingStyle,
     date,
     apiKey,

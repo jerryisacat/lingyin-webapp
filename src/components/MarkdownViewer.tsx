@@ -14,7 +14,7 @@ interface MarkdownViewerProps {
   markdown: string;
 }
 
-export default function MarkdownViewer({ markdown }: MarkdownViewerProps) {
+export function MarkdownViewer({ markdown }: MarkdownViewerProps) {
   return (
     <article className="prose prose-sm max-w-none prose-headings:text-ink prose-headings:font-medium prose-p:text-ink prose-p:leading-relaxed prose-li:text-ink prose-strong:text-ink prose-a:text-sakura prose-a:underline prose-blockquote:border-l-sakura prose-blockquote:text-ink-light prose-code:text-ink prose-code:bg-surface prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-pre:bg-surface prose-pre:border prose-pre:border-surface-border prose-img:rounded-lg">
       <ReactMarkdown

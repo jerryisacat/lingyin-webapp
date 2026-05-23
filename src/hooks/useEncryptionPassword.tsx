@@ -17,7 +17,11 @@ interface EncryptionContextValue {
 
 const EncryptionContext = createContext<EncryptionContextValue | null>(null)
 
-export function EncryptionProvider({ children }: { children: ReactNode }) {
+interface EncryptionProviderProps {
+  children: ReactNode
+}
+
+export function EncryptionProvider({ children }: EncryptionProviderProps) {
   const [session, setSession] = useState<EncryptionSession>({
     password: null,
     salt: null,

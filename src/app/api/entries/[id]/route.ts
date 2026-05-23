@@ -38,13 +38,12 @@ export async function PUT(
     return jsonError(formatZodError(parseResult.error), 400);
   }
 
-  const { markdown, tone, imagePaths, encrypted } = parseResult.data;
+  const { markdown, imagePaths, encrypted } = parseResult.data;
 
   const updated = await saveDiary({
     userId: user.id,
     date: existing.metadata.date,
     markdown,
-    tone,
     imagePaths,
     encrypted,
   });

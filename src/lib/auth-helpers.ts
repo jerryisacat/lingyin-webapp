@@ -2,6 +2,9 @@ import { auth } from "@/lib/auth"
 import { NextResponse, NextRequest } from "next/server"
 import { z } from "zod"
 import { formatZodError } from "@/lib/validations"
+import { jsonOk, jsonError } from "@/lib/api-response"
+
+export { jsonOk, jsonError }
 
 export type AuthUser = { id: string; email: string }
 
@@ -31,12 +34,4 @@ export async function validateBody<T>(
   }
 
   return { data: parseResult.data }
-}
-
-export function jsonOk<T>(data: T, status = 200) {
-  return NextResponse.json({ ok: true, data }, { status })
-}
-
-export function jsonError(error: string, status = 400) {
-  return NextResponse.json<{ ok: false; error: string }>({ ok: false, error }, { status })
 }

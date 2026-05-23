@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { List, CalendarDays } from "lucide-react";
-import TimelineList from "@/components/TimelineList";
-import CalendarView from "@/components/CalendarView";
+import { TimelineList } from "@/components/TimelineList";
+import { CalendarView } from "@/components/CalendarView";
 import type { DiarySummary, CalendarEntry, ApiResponse } from "@/types";
 
 interface EntriesData {

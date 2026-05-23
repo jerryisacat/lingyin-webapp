@@ -8,7 +8,7 @@ import { useEncryption } from "@/hooks/useEncryptionPassword"
 import { EncryptionSettings } from "@/components/EncryptionSettings"
 import { SetEncryptionPasswordModal } from "@/components/SetEncryptionPasswordModal"
 import type { ApiProvider, SubscriptionData } from "@/types"
-import WritingStyleConfig from "@/components/WritingStyleConfig"
+import { WritingStyleConfig } from "@/components/WritingStyleConfig"
 import {
   Key,
   Eye,

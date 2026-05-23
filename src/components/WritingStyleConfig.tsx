@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
 import { CheckCircle, Sparkles, Eye, UserRound } from "lucide-react"
+import { useUserConfig } from "@/contexts/UserConfigContext"
 import { PERSONAS, PERSPECTIVE_LABELS, DEFAULT_WRITING_STYLE } from "@/config/personas"
 import type { WritingStyle, Persona, Perspective } from "@/types"
-import type { ApiResponse } from "@/types"
 
 interface WritingStyleConfigProps {
   step?: number
@@ -12,41 +12,29 @@ interface WritingStyleConfigProps {
   embedded?: boolean
 }
 
-export default function WritingStyleConfig({
+export function WritingStyleConfig({
   step: initialStep = 1,
   onComplete,
   embedded = false,
 }: WritingStyleConfigProps) {
+  const { writingStyle: savedStyle, setWritingStyle: saveStyle, isLoading } = useUserConfig()
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState("")
   const [saved, setSaved] = useState(false)
   const [step, setStep] = useState(initialStep)
-  const [perspective, setPerspective] = useState<Perspective>(DEFAULT_WRITING_STYLE.perspective)
-  const [persona, setPersona] = useState<Persona>(DEFAULT_WRITING_STYLE.persona)
-  const [loaded, setLoaded] = useState(false)
-
-  const fetchStyle = useCallback(async () => {
-    try {
-      const res = await fetch("/api/user/style")
-      const json: ApiResponse<{ writingStyle: WritingStyle }> = await res.json()
-      if (json.ok && json.data) {
-        setPerspective(json.data.writingStyle.perspective)
-        setPersona(json.data.writingStyle.persona)
-      }
-    } catch {
-      // use defaults
-    } finally {
-      setLoaded(true)
-    }
-  }, [])
+  const [perspective, setPerspective] = useState<Perspective>(
+    embedded ? savedStyle.perspective : DEFAULT_WRITING_STYLE.perspective
+  )
+  const [persona, setPersona] = useState<Persona>(
+    embedded ? savedStyle.persona : DEFAULT_WRITING_STYLE.persona
+  )
 
   useEffect(() => {
     if (embedded) {
-      fetchStyle()
-    } else {
-      setLoaded(true)
+      setPerspective(savedStyle.perspective)
+      setPersona(savedStyle.persona)
     }
-  }, [embedded, fetchStyle])
+  }, [embedded, savedStyle])
 
   const handleSave = async (style: WritingStyle) => {
     setSaving(true)
@@ -54,14 +42,7 @@ export default function WritingStyleConfig({
     setSaved(false)
 
     try {
-      const res = await fetch("/api/user/style", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(style),
-      })
-      const json = await res.json()
-      if (!json.ok) throw new Error(json.error ?? "保存失败")
-
+      await saveStyle(style)
       setSaved(true)
       onComplete?.(style)
     } catch (e: unknown) {
@@ -79,7 +60,7 @@ export default function WritingStyleConfig({
     handleSave(DEFAULT_WRITING_STYLE)
   }
 
-  if (embedded && !loaded) {
+  if (embedded && isLoading) {
     return (
       <div className="card space-y-3">
         <div className="flex items-center gap-2">

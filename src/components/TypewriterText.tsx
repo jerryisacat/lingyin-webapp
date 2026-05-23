@@ -7,7 +7,7 @@ interface TypewriterTextProps {
   isStreaming: boolean;
 }
 
-export default function TypewriterText({ text, isStreaming }: TypewriterTextProps) {
+export function TypewriterText({ text, isStreaming }: TypewriterTextProps) {
   const [displayed, setDisplayed] = useState("");
   const fullRef = useRef(text);
   const displayedIndexRef = useRef(0);

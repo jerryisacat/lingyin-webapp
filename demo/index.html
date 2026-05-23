@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>玲音日记 · LingYin Diary</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* =============================================
+   Design Tokens — 温暖治愈风 (Warm & Cozy)
+   ============================================= */
+:root {
+  /* Brand */
+  --brand-primary: #f0a8b0;
+  --brand-light: #f7c8cd;
+  --brand-dark: #d98a93;
+  --brand-glow: rgba(240, 168, 176, 0.18);
+
+  /* Backgrounds */
+  --bg-root: #faf3e8;
+  --bg-surface: #fffbf5;
+  --bg-sidebar: #faf3e8;
+  --bg-card: #ffffff;
+  --bg-card-hover: #fff5f5;
+  --bg-input: #fdf8f0;
+
+  /* Text */
+  --text-primary: #2c2c2c;
+  --text-secondary: #5e5e5e;
+  --text-muted: #a0a0a0;
+  --text-on-brand: #ffffff;
+
+  /* Borders & Dividers */
+  --border-default: #eae3d9;
+  --border-soft: #f0ebe2;
+
+  /* Shadows */
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02);
+  --shadow-card-hover: 0 4px 16px rgba(0,0,0,0.06), 0 2px 4px rgba(0,0,0,0.03);
+  --shadow-glow: 0 0 0 3px var(--brand-glow);
+
+  /* Radius */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+
+  /* Spacing */
+  --space-sidebar: 240px;
+  --space-content-max: 900px;
+
+  /* Transitions */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 280ms;
+  --duration-slow: 400ms;
+}
+
+/* =============================================
+   Reset & Base
+   ============================================= */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+body {
+  font-family: 'Noto Sans SC', 'Inter', system-ui, sans-serif;
+  background: var(--bg-root);
+  color: var(--text-primary);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+button { font-family: inherit; cursor: pointer; border: none; background: none; font-size: inherit; }
+a { color: inherit; text-decoration: none; }
+input, textarea { font-family: inherit; font-size: inherit; color: inherit; outline: none; }
+
+/* =============================================
+   Layout — Sidebar + Content
+   ============================================= */
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  position: sticky;
+  top: 0;
+  width: var(--space-sidebar);
+  min-width: var(--space-sidebar);
+  height: 100vh;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-default);
+  display: flex;
+  flex-direction: column;
+  padding: 28px 20px;
+  gap: 12px;
+  z-index: 50;
+}
+.sidebar-logo {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 8px; margin-bottom: 12px;
+}
+.sidebar-logo .icon {
+  width: 38px; height: 38px;
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-light));
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 18px;
+}
+.sidebar-logo .title {
+  font-size: 1.2rem; font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.02em;
+}
+
+.sidebar-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.sidebar-nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 0.92rem; font-weight: 500;
+  transition: all var(--duration-fast) var(--ease-out-expo);
+  position: relative;
+}
+.sidebar-nav-item:hover {
+  background: var(--brand-glow);
+  color: var(--brand-dark);
+}
+.sidebar-nav-item.active {
+  background: var(--brand-primary);
+  color: var(--text-on-brand);
+  box-shadow: 0 2px 8px rgba(240, 168, 176, 0.3);
+}
+.sidebar-nav-item .nav-icon { font-size: 1.15rem; width: 22px; text-align: center; }
+
+.sidebar-footer {
+  border-top: 1px solid var(--border-soft);
+  padding-top: 12px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+
+.sidebar-user {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+}
+.sidebar-user .avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-light));
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 14px; font-weight: 600;
+}
+
+/* ── Main Content ── */
+.main-content {
+  flex: 1;
+  padding: 40px 48px;
+  min-width: 0;
+}
+
+/* ── Mobile Bottom Tab ── */
+.mobile-tab-bar {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border-default);
+  padding: 6px 0 env(safe-area-inset-bottom, 8px);
+  z-index: 50;
+}
+.mobile-tab-bar-inner {
+  display: flex;
+  justify-content: space-around;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.mobile-tab {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 6px 16px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 0.68rem; font-weight: 500;
+  transition: all var(--duration-fast) var(--ease-out-expo);
+}
+.mobile-tab.active { color: var(--brand-dark); }
+.mobile-tab .tab-icon { font-size: 1.35rem; }
+
+.mobile-header {
+  display: none;
+  padding: 16px 20px 12px;
+  background: var(--bg-root);
+  position: sticky; top: 0; z-index: 20;
+}
+.mobile-header-inner {
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+/* =============================================
+   Shared Components
+   ============================================= */
+.page-view { display: none; }
+.page-view.active { display: block; }
+
+.page-title {
+  font-size: 1.5rem; font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+.page-subtitle {
+  font-size: 0.88rem; color: var(--text-muted);
+  margin-bottom: 28px;
+}
+
+/* ── Button Styles ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem; font-weight: 600;
+  transition: all var(--duration-fast) var(--ease-out-expo);
+}
+.btn-primary {
+  background: var(--brand-primary);
+  color: white;
+  box-shadow: 0 2px 8px rgba(240, 168, 176, 0.25);
+}
+.btn-primary:hover {
+  background: var(--brand-dark);
+  box-shadow: 0 4px 16px rgba(240, 168, 176, 0.35);
+  transform: translateY(-1px);
+}
+.btn-primary:active { transform: translateY(0); }
+.btn-secondary {
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-default);
+}
+.btn-secondary:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--brand-light);
+}
+.btn-ghost {
+  color: var(--text-muted);
+  padding: 8px 14px;
+}
+.btn-ghost:hover { color: var(--text-primary); background: var(--bg-card-hover); }
+
+/* ── Cards ── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  box-shadow: var(--shadow-card);
+  transition: box-shadow var(--duration-normal) var(--ease-out-expo),
+              border-color var(--duration-normal) var(--ease-out-expo);
+}
+.card:hover {
+  box-shadow: var(--shadow-card-hover);
+  border-color: var(--brand-light);
+}
+
+/* ── Input Fields ── */
+.input {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  font-size: 0.92rem;
+  transition: all var(--duration-fast) var(--ease-out-expo);
+}
+.input:focus {
+  border-color: var(--brand-primary);
+  box-shadow: var(--shadow-glow);
+  background: var(--bg-card);
+}
+.input::placeholder { color: var(--text-muted); }
+
+textarea.input {
+  resize: none;
+  min-height: 160px;
+  line-height: 1.8;
+}
+
+/* =============================================
+   Page: Home (日记编辑器)
+   ============================================= */
+.editor-layout { display: flex; flex-direction: column; gap: 20px; }
+
+.editor-toolbar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+}
+.editor-date {
+  font-size: 0.95rem; font-weight: 600;
+  color: var(--text-primary);
+}
+.editor-spacer { flex: 1; }
+.editor-style-badge {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px;
+  background: var(--brand-glow);
+  color: var(--brand-dark);
+  border-radius: var(--radius-xs);
+  font-size: 0.82rem; font-weight: 600;
+}
+
+.editor-main {
+  display: flex; flex-direction: column;
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  gap: 20px;
+  box-shadow: var(--shadow-card);
+}
+.editor-main:focus-within {
+  border-color: var(--brand-primary);
+  box-shadow: var(--shadow-glow);
+}
+
+.editor-actions {
+  display: flex; align-items: center; gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-soft);
+}
+.editor-actions .btn-primary { margin-left: auto; }
+
+/* ── Persona Selector ── */
+.persona-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+.persona-card {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 16px 12px;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--border-default);
+  background: var(--bg-card);
+  transition: all var(--duration-normal) var(--ease-out-expo);
+}
+.persona-card:hover { border-color: var(--brand-light); transform: translateY(-2px); }
+.persona-card.selected {
+  border-color: var(--brand-primary);
+  background: var(--brand-glow);
+}
+.persona-card .persona-emoji { font-size: 2rem; }
+.persona-card .persona-name { font-size: 0.82rem; font-weight: 600; color: var(--text-primary); }
+.persona-card .persona-desc { font-size: 0.7rem; color: var(--text-muted); text-align: center; }
+
+/* ── Perspective Toggle ── */
+.perspective-toggle {
+  display: flex; gap: 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-default);
+  overflow: hidden;
+}
+.perspective-toggle button {
+  padding: 8px 18px;
+  font-size: 0.82rem; font-weight: 600;
+  color: var(--text-muted);
+  border-right: 1px solid var(--border-default);
+  transition: all var(--duration-fast) var(--ease-out-expo);
+}
+.perspective-toggle button:last-child { border-right: none; }
+.perspective-toggle button.active {
+  background: var(--brand-primary);
+  color: white;
+}
+.perspective-toggle button:hover:not(.active) {
+  background: var(--brand-glow);
+  color: var(--brand-dark);
+}
+
+/* ── Photo Preview ── */
+.photo-preview-row {
+  display: flex; gap: 10px; flex-wrap: wrap;
+}
+.photo-preview-item {
+  width: 80px; height: 80px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--brand-light), var(--brand-primary));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem;
+  color: white;
+}
+
+/* ── AI Output Preview ── */
+.ai-output {
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  min-height: 180px;
+  line-height: 1.9;
+}
+.ai-output h2 {
+  font-size: 1.15rem; font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--brand-light);
+}
+.ai-output p { margin-bottom: 12px; color: var(--text-secondary); }
+.ai-output .typing-cursor {
+  display: inline-block;
+  width: 2px; height: 1.1em;
+  background: var(--brand-primary);
+  margin-left: 2px;
+  animation: blink 0.8s infinite;
+}
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+/* =============================================
+   Page: Timeline
+   ============================================= */
+.timeline-header {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.timeline-feed { display: flex; flex-direction: column; gap: 16px; }
+
+.timeline-entry {
+  display: flex; gap: 20px;
+  position: relative;
+}
+.timeline-entry::before {
+  content: '';
+  position: absolute;
+  left: 10px; top: 44px; bottom: -16px;
+  width: 2px;
+  background: var(--border-default);
+}
+.timeline-entry:last-child::before { display: none; }
+
+.timeline-dot {
+  width: 22px; height: 22px;
+  min-width: 22px;
+  border-radius: 50%;
+  background: var(--brand-primary);
+  border: 3px solid var(--bg-root);
+  box-shadow: 0 0 0 3px var(--brand-glow);
+}
+.timeline-entry-body {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 20px 24px;
+  box-shadow: var(--shadow-card);
+  transition: all var(--duration-normal) var(--ease-out-expo);
+}
+.timeline-entry-body:hover {
+  box-shadow: var(--shadow-card-hover);
+  border-color: var(--brand-light);
+}
+.timeline-entry-date {
+  font-size: 0.78rem; font-weight: 600;
+  color: var(--brand-dark);
+  margin-bottom: 6px;
+}
+.timeline-entry-title {
+  font-size: 1.05rem; font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+.timeline-entry-preview {
+  font-size: 0.9rem; color: var(--text-secondary);
+  line-height: 1.7;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.timeline-entry-meta {
+  display: flex; gap: 14px; margin-top: 12px;
+  font-size: 0.78rem; color: var(--text-muted);
+}
+.timeline-entry-meta span { display: flex; align-items: center; gap: 4px; }
+
+/* ── Calendar Mini ── */
+.calendar-mini {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  box-shadow: var(--shadow-card);
+}
+.calendar-mini .cal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.calendar-mini .cal-month {
+  font-size: 0.95rem; font-weight: 700;
+  color: var(--text-primary);
+}
+.calendar-mini .cal-nav { font-size: 1.1rem; padding: 4px 8px; color: var(--text-muted); }
+.calendar-mini .cal-nav:hover { color: var(--brand-dark); }
+
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+.cal-day-label { font-size: 0.68rem; color: var(--text-muted); font-weight: 500; padding: 4px; }
+.cal-day {
+  font-size: 0.8rem; font-weight: 500;
+  padding: 8px 4px;
+  border-radius: var(--radius-xs);
+  color: var(--text-secondary);
+  transition: all var(--duration-fast) var(--ease-out-expo);
+}
+.cal-day:hover { background: var(--brand-glow); }
+.cal-day.other-month { color: var(--text-muted); opacity: 0.4; }
+.cal-day.today {
+  background: var(--brand-primary);
+  color: white;
+  font-weight: 700;
+}
+.cal-day.has-entry {
+  position: relative;
+}
+.cal-day.has-entry::after {
+  content: '';
+  position: absolute;
+  bottom: 2px; left: 50%; transform: translateX(-50%);
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--brand-primary);
+}
+.cal-day.today.has-entry::after { background: white; }
+
+/* =============================================
+   Page: Settings
+   ============================================= */
+.settings-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  box-shadow: var(--shadow-card);
+  margin-bottom: 16px;
+}
+.settings-section-title {
+  font-size: 0.82rem; font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 16px;
+}
+.settings-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+.settings-row:last-child { border-bottom: none; }
+.settings-row-label { font-size: 0.92rem; font-weight: 500; color: var(--text-primary); }
+.settings-row-desc { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
+
+/* Toggle Switch */
+.toggle-switch {
+  position: relative;
+  width: 44px; height: 26px;
+  background: var(--border-default);
+  border-radius: 13px;
+  transition: background var(--duration-fast) var(--ease-out-expo);
+}
+.toggle-switch.on { background: var(--brand-primary); }
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 20px; height: 20px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  transition: transform var(--duration-fast) var(--ease-out-expo);
+}
+.toggle-switch.on::after { transform: translateX(18px); }
+
+/* APi Key Row */
+.api-key-display {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.85rem; color: var(--text-muted);
+  font-family: 'SF Mono', 'Menlo', monospace;
+}
+
+/* Danger Zone */
+.danger-zone {
+  border-color: #fdd;
+}
+.danger-zone .settings-section-title { color: #d66; }
+.btn-danger {
+  background: #fff;
+  color: #d66;
+  border: 1px solid #fcc;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem; font-weight: 600;
+  transition: all var(--duration-fast) var(--ease-out-expo);
+}
+.btn-danger:hover { background: #fff5f5; border-color: #d66; }
+
+/* =============================================
+   Page: Login
+   ============================================= */
+.login-container {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+.login-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+  padding: 44px 36px;
+  width: 100%; max-width: 400px;
+  box-shadow: var(--shadow-card-hover);
+}
+.login-logo {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  margin-bottom: 32px;
+}
+.login-logo .icon {
+  width: 56px; height: 56px;
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-light));
+  border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 24px;
+}
+.login-logo h1 { font-size: 1.4rem; font-weight: 700; color: var(--text-primary); }
+.login-logo p { font-size: 0.82rem; color: var(--text-muted); }
+.login-form { display: flex; flex-direction: column; gap: 14px; }
+.login-form label { font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); }
+.login-form .btn-primary { width: 100%; justify-content: center; padding: 14px; font-size: 0.95rem; }
+.login-footer {
+  text-align: center; margin-top: 20px;
+  font-size: 0.82rem; color: var(--text-muted);
+}
+.login-footer a { color: var(--brand-dark); font-weight: 600; }
+.login-footer a:hover { text-decoration: underline; }
+
+/* =============================================
+   Responsive — Mobile
+   ============================================= */
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .mobile-tab-bar { display: block; }
+  .mobile-header { display: block; }
+  .main-content {
+    padding: 16px 16px 100px;
+  }
+  .app-layout { max-width: 100%; }
+  .page-title { font-size: 1.25rem; }
+  .editor-toolbar { flex-wrap: wrap; }
+  .persona-grid { grid-template-columns: repeat(3, 1fr); }
+  .timeline-entry::before { left: 8px; }
+  .login-container { align-items: flex-start; padding-top: 60px; }
+}
+
+/* =============================================
+   Sakura Particles (Landing accent)
+   ============================================= */
+@keyframes sakura-fall {
+  0% { transform: translateY(-10px) translateX(0) rotate(0deg); opacity: 0; }
+  10% { opacity: 0.7; }
+  90% { opacity: 0.5; }
+  100% { transform: translateY(105vh) translateX(var(--sway, 40px)) rotate(360deg); opacity: 0; }
+}
+.sakura-particle {
+  position: fixed; top: -10px;
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-light));
+  border-radius: 50% 0 50% 50%;
+  pointer-events: none; z-index: 100;
+  animation: sakura-fall linear infinite;
+}
+</style>
+</head>
+<body>
+
+<!-- ========== Sakura Particles ========== -->
+<div id="particles"></div>
+
+<!-- ========== Sidebar (Desktop) ========== -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="icon">🌸</div>
+    <div class="title">玲音日记</div>
+  </div>
+  <nav class="sidebar-nav">
+    <a class="sidebar-nav-item active" data-view="write" onclick="navigate('write')">
+      <span class="nav-icon">✍️</span> 写日记
+    </a>
+    <a class="sidebar-nav-item" data-view="timeline" onclick="navigate('timeline')">
+      <span class="nav-icon">📅</span> 时间轴
+    </a>
+    <a class="sidebar-nav-item" data-view="settings" onclick="navigate('settings')">
+      <span class="nav-icon">⚙️</span> 设置
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <a class="sidebar-nav-item" data-view="login" onclick="navigate('login')">
+      <span class="nav-icon">🚪</span> 退出登录
+    </a>
+  </div>
+  <div class="sidebar-user">
+    <div class="avatar">S</div>
+    <div>
+      <div style="font-weight:600;color:var(--text-primary);font-size:0.88rem;">Sunny</div>
+      <div style="font-size:0.72rem;color:var(--text-muted);">免费版</div>
+    </div>
+  </div>
+</aside>
+
+<!-- ========== Mobile Header ========== -->
+<div class="mobile-header">
+  <div class="mobile-header-inner">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="width:32px;height:32px;background:linear-gradient(135deg,var(--brand-primary),var(--brand-light));border-radius:var(--radius-xs);display:flex;align-items:center;justify-content:center;color:white;font-size:15px;">🌸</div>
+      <span style="font-weight:700;font-size:1.05rem;">玲音日记</span>
+    </div>
+    <div class="avatar" style="width:30px;height:30px;font-size:13px;">S</div>
+  </div>
+</div>
+
+<!-- ========== Main Content Area ========== -->
+<main class="main-content" id="mainContent">
+
+  <!-- ====== Page: Write (Diary Editor) ====== -->
+  <div class="page-view active" id="page-write">
+    <h1 class="page-title">✍️ 写日记</h1>
+    <p class="page-subtitle">今天发生了什么？让玲音帮你梳理成一篇温暖的日记。</p>
+
+    <div class="editor-layout">
+      <!-- Toolbar -->
+      <div class="editor-toolbar">
+        <span class="editor-date">📆 2026年5月24日 星期日</span>
+        <span class="editor-spacer"></span>
+        <span class="editor-style-badge">🌸 元气少女</span>
+        <span class="editor-style-badge" style="background:rgba(240,168,176,0.08);color:var(--text-muted);">第一人称</span>
+      </div>
+
+      <!-- Input Area -->
+      <div class="editor-main">
+        <textarea class="input" placeholder="今天发生了什么？或者有什么想说的？&#10;&#10;比如：今天下班路上看到了一片很美的晚霞，突然想起来小时候放学在操场上跑步的感觉……"></textarea>
+
+        <!-- Photo Upload -->
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button class="btn btn-secondary" style="gap:6px;">
+            <span>📷</span> 添加图片
+          </button>
+          <div class="photo-preview-row">
+            <div class="photo-preview-item">🌸</div>
+            <div class="photo-preview-item">☁️</div>
+          </div>
+        </div>
+
+        <!-- Persona & Perspective -->
+        <details style="cursor:pointer;">
+          <summary style="font-size:0.88rem;font-weight:600;color:var(--text-secondary);padding:4px 0;">🎭 写作风格 · 元气少女 · 第一人称</summary>
+          <div style="margin-top:12px;display:flex;flex-direction:column;gap:16px;">
+            <div>
+              <div style="font-size:0.78rem;font-weight:600;color:var(--text-muted);margin-bottom:8px;">叙事视角</div>
+              <div class="perspective-toggle">
+                <button class="active">第一人称（我）</button>
+                <button>第二人称（你）</button>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:0.78rem;font-weight:600;color:var(--text-muted);margin-bottom:8px;">玲音人格</div>
+              <div class="persona-grid">
+                <div class="persona-card selected">
+                  <div class="persona-emoji">🌸</div>
+                  <div class="persona-name">元气少女</div>
+                  <div class="persona-desc">活泼可爱·感染</div>
+                </div>
+                <div class="persona-card">
+                  <div class="persona-emoji">🧘</div>
+                  <div class="persona-name">成熟稳重</div>
+                  <div class="persona-desc">冷静理性·克制</div>
+                </div>
+                <div class="persona-card">
+                  <div class="persona-emoji">🐱</div>
+                  <div class="persona-name">慵懒猫系</div>
+                  <div class="persona-desc">傲娇毒舌·松弛</div>
+                </div>
+                <div class="persona-card">
+                  <div class="persona-emoji">🐕</div>
+                  <div class="persona-name">阳光犬系</div>
+                  <div class="persona-desc">热情直率·阳光</div>
+                </div>
+                <div class="persona-card">
+                  <div class="persona-emoji">🧊</div>
+                  <div class="persona-name">简约直男</div>
+                  <div class="persona-desc">直接简洁·干净</div>
+                </div>
+                <div class="persona-card">
+                  <div class="persona-emoji">📖</div>
+                  <div class="persona-name">文艺青年</div>
+                  <div class="persona-desc">细腻感性·诗意</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <!-- Actions -->
+        <div class="editor-actions">
+          <button class="btn btn-ghost">预览</button>
+          <button class="btn btn-primary">✨ 生成日记</button>
+        </div>
+      </div>
+
+      <!-- AI Output -->
+      <div class="ai-output">
+        <h2>📝 2026年5月24日 星期日</h2>
+        <p>今天又是一天的coding马拉松呢～🖥️</p>
+        <p>傍晚下楼拿快递的时候，一抬头看到天空被染成了粉橘色，那种温柔的颜色让我一下子愣住了。突然就想起了小时候放学在操场上跑步的感觉，风呼呼地从耳边吹过，不用想任何复杂的事情。</p>
+        <p>有时候觉得，生活里总需要这样的小小停顿呢。明天也要继续加油呀！🌟<span class="typing-cursor"></span></p>
+      </div>
+
+      <!-- Save -->
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn btn-ghost">重新生成</button>
+        <button class="btn btn-secondary">草稿</button>
+        <button class="btn btn-primary">💾 保存日记</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== Page: Timeline ====== -->
+  <div class="page-view" id="page-timeline">
+    <h1 class="page-title">📅 时间轴</h1>
+    <p class="page-subtitle">回顾你与玲音一起走过的每一天。</p>
+
+    <div class="timeline-header">
+      <button class="btn btn-secondary">📋 列表</button>
+      <button class="btn btn-secondary" style="background:var(--brand-glow);border-color:var(--brand-primary);color:var(--brand-dark);">📅 日历</button>
+      <span class="editor-spacer"></span>
+      <button class="btn btn-primary">✍️ 今天写日记</button>
+    </div>
+
+    <!-- Calendar Grid -->
+    <div class="calendar-mini" style="margin-bottom:28px;">
+      <div class="cal-header">
+        <button class="cal-nav">◂</button>
+        <span class="cal-month">2026年5月</span>
+        <button class="cal-nav">▸</button>
+      </div>
+      <div class="cal-grid">
+        <div class="cal-day-label">日</div><div class="cal-day-label">一</div><div class="cal-day-label">二</div><div class="cal-day-label">三</div><div class="cal-day-label">四</div><div class="cal-day-label">五</div><div class="cal-day-label">六</div>
+        <div class="cal-day other-month">27</div><div class="cal-day other-month">28</div><div class="cal-day other-month">29</div><div class="cal-day other-month">30</div><div class="cal-day">1</div><div class="cal-day has-entry">2</div><div class="cal-day">3</div>
+        <div class="cal-day has-entry">4</div><div class="cal-day has-entry">5</div><div class="cal-day">6</div><div class="cal-day has-entry">7</div><div class="cal-day has-entry">8</div><div class="cal-day">9</div><div class="cal-day has-entry">10</div>
+        <div class="cal-day">11</div><div class="cal-day has-entry">12</div><div class="cal-day">13</div><div class="cal-day has-entry">14</div><div class="cal-day">15</div><div class="cal-day has-entry">16</div><div class="cal-day">17</div>
+        <div class="cal-day has-entry">18</div><div class="cal-day has-entry">19</div><div class="cal-day">20</div><div class="cal-day has-entry">21</div><div class="cal-day has-entry">22</div><div class="cal-day has-entry">23</div>
+        <div class="cal-day today">24</div><div class="cal-day">25</div><div class="cal-day">26</div><div class="cal-day">27</div><div class="cal-day">28</div><div class="cal-day">29</div><div class="cal-day">30</div>
+        <div class="cal-day">31</div><div class="cal-day other-month">1</div><div class="cal-day other-month">2</div><div class="cal-day other-month">3</div><div class="cal-day other-month">4</div><div class="cal-day other-month">5</div><div class="cal-day other-month">6</div>
+      </div>
+    </div>
+
+    <div class="timeline-feed">
+      <div class="timeline-entry">
+        <div class="timeline-dot"></div>
+        <div class="timeline-entry-body">
+          <div class="timeline-entry-date">5月22日 · 星期五</div>
+          <div class="timeline-entry-title">雨天窝在家里的下午</div>
+          <div class="timeline-entry-preview">下雨天最适合窝在家里什么都不做了。泡了一杯热可可，窝在沙发上看了一整天的老电影。窗外雨声滴滴答答，屋里安安静静……</div>
+          <div class="timeline-entry-meta">
+            <span>📝 320 字</span>
+            <span>🖼️ 2 张图片</span>
+            <span>🏷️ 日常 · 雨天</span>
+          </div>
+        </div>
+      </div>
+      <div class="timeline-entry">
+        <div class="timeline-dot"></div>
+        <div class="timeline-entry-body">
+          <div class="timeline-entry-date">5月21日 · 星期四</div>
+          <div class="timeline-entry-title">学会了新的烘焙配方！</div>
+          <div class="timeline-entry-preview">今天尝试了抹茶千层蛋糕！虽然摊饼皮摊到手酸，但看到成品的那一刻觉得一切都值了～切开的时候千层的纹路也太好看了吧……</div>
+          <div class="timeline-entry-meta">
+            <span>📝 450 字</span>
+            <span>🖼️ 4 张图片</span>
+            <span>🏷️ 烘焙 · 美食</span>
+          </div>
+        </div>
+      </div>
+      <div class="timeline-entry">
+        <div class="timeline-dot"></div>
+        <div class="timeline-entry-body">
+          <div class="timeline-entry-date">5月19日 · 星期二</div>
+          <div class="timeline-entry-title">深夜加班后的感慨</div>
+          <div class="timeline-entry-preview">又是一个加班到深夜的日子。走出公司大楼的时候，街上已经没什么人了。抬头看了一眼天空，居然能看到几颗星星……</div>
+          <div class="timeline-entry-meta">
+            <span>📝 280 字</span>
+            <span>🖼️ 1 张图片</span>
+            <span>🏷️ 工作 · 深夜</span>
+          </div>
+        </div>
+      </div>
+      <div class="timeline-entry">
+        <div class="timeline-dot"></div>
+        <div class="timeline-entry-body">
+          <div class="timeline-entry-date">5月17日 · 星期日</div>
+          <div class="timeline-entry-title">和朋友去了海边</div>
+          <div class="timeline-entry-preview">久违的周末出游！和大学室友一起开车去了海边。虽然路上堵了两个小时，但看到海的那一刻所有烦躁都消失了……</div>
+          <div class="timeline-entry-meta">
+            <span>📝 560 字</span>
+            <span>🖼️ 6 张图片</span>
+            <span>🏷️ 旅行 · 友情</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== Page: Settings ====== -->
+  <div class="page-view" id="page-settings">
+    <h1 class="page-title">⚙️ 设置</h1>
+    <p class="page-subtitle">管理你的 API Key、写作风格与账户安全。</p>
+
+    <!-- API Key -->
+    <div class="settings-section">
+      <div class="settings-section-title">🔑 API 密钥</div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">OpenRouter API Key</div>
+          <div class="settings-row-desc">AI 日记生成所需，密钥加密存储在服务器</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="api-key-display">sk-or-v1-••••••••••••••••••</span>
+          <button class="btn btn-secondary" style="padding:6px 12px;font-size:0.8rem;">更换</button>
+          <button class="btn btn-ghost" style="padding:6px 10px;font-size:0.8rem;color:#d66;">删除</button>
+        </div>
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">测试 API 连接</div>
+          <div class="settings-row-desc">验证你的 API Key 是否可用</div>
+        </div>
+        <button class="btn btn-secondary" style="padding:8px 16px;font-size:0.85rem;">🔍 测试</button>
+      </div>
+    </div>
+
+    <!-- Writing Style -->
+    <div class="settings-section">
+      <div class="settings-section-title">✍️ 写作偏好</div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">默认写作风格</div>
+          <div class="settings-row-desc">生成日记时使用的人格和视角</div>
+        </div>
+        <span class="editor-style-badge">🌸 元气少女 · 第一人称</span>
+      </div>
+      <div style="margin-top:16px;">
+        <div style="font-size:0.78rem;font-weight:600;color:var(--text-muted);margin-bottom:10px;">叙事视角</div>
+        <div class="perspective-toggle">
+          <button class="active">第一人称（我）</button>
+          <button>第二人称（你）</button>
+        </div>
+      </div>
+      <div style="margin-top:16px;">
+        <div style="font-size:0.78rem;font-weight:600;color:var(--text-muted);margin-bottom:10px;">默认人格</div>
+        <div class="persona-grid" style="grid-template-columns: repeat(3,1fr);">
+          <div class="persona-card selected">
+            <div class="persona-emoji">🌸</div>
+            <div class="persona-name">元气少女</div>
+          </div>
+          <div class="persona-card"><div class="persona-emoji">🧘</div><div class="persona-name">成熟稳重</div></div>
+          <div class="persona-card"><div class="persona-emoji">🐱</div><div class="persona-name">慵懒猫系</div></div>
+          <div class="persona-card"><div class="persona-emoji">🐕</div><div class="persona-name">阳光犬系</div></div>
+          <div class="persona-card"><div class="persona-emoji">🧊</div><div class="persona-name">简约直男</div></div>
+          <div class="persona-card"><div class="persona-emoji">📖</div><div class="persona-name">文艺青年</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Encryption -->
+    <div class="settings-section">
+      <div class="settings-section-title">🔐 端到端加密</div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">加密密码</div>
+          <div class="settings-row-desc">保护日记内容，密码不会上传到服务器</div>
+        </div>
+        <button class="btn btn-secondary" style="padding:8px 16px;font-size:0.85rem;">设置密码</button>
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">加密状态</div>
+          <div class="settings-row-desc">24 篇日记中 18 篇已加密</div>
+        </div>
+        <span style="font-size:0.82rem;color:var(--brand-dark);font-weight:600;">✅ 已开启</span>
+      </div>
+    </div>
+
+    <!-- Appearance -->
+    <div class="settings-section">
+      <div class="settings-section-title">🎨 外观</div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">深色模式</div>
+          <div class="settings-row-desc">切换深色/浅色主题</div>
+        </div>
+        <div class="toggle-switch" style="cursor:pointer;" onclick="this.classList.toggle('on')"></div>
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">弱化动画</div>
+          <div class="settings-row-desc">减少界面动效</div>
+        </div>
+        <div class="toggle-switch" style="cursor:pointer;" onclick="this.classList.toggle('on')"></div>
+      </div>
+    </div>
+
+    <!-- Subscription -->
+    <div class="settings-section">
+      <div class="settings-section-title">💎 订阅</div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">当前方案</div>
+          <div class="settings-row-desc">免费版 · 每月 50 次 AI 生成 · 100MB 存储</div>
+        </div>
+        <button class="btn btn-primary" style="padding:8px 16px;font-size:0.85rem;">升级方案</button>
+      </div>
+      <div style="margin-top:14px;display:flex;gap:12px;flex-wrap:wrap;">
+        <div class="card" style="flex:1;min-width:200px;text-align:center;padding:20px;">
+          <div style="font-size:0.75rem;color:var(--text-muted);font-weight:600;margin-bottom:4px;">本月已用</div>
+          <div style="font-size:1.4rem;font-weight:700;color:var(--text-primary);">32 / 50</div>
+          <div style="font-size:0.75rem;color:var(--text-muted);">AI 生成次数</div>
+        </div>
+        <div class="card" style="flex:1;min-width:200px;text-align:center;padding:20px;">
+          <div style="font-size:0.75rem;color:var(--text-muted);font-weight:600;margin-bottom:4px;">存储使用</div>
+          <div style="font-size:1.4rem;font-weight:700;color:var(--text-primary);">45 / 100 MB</div>
+          <div style="font-size:0.75rem;color:var(--text-muted);">图片 & 日记</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="settings-section danger-zone">
+      <div class="settings-section-title">⚠️ 危险操作</div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">导出所有数据</div>
+          <div class="settings-row-desc">下载你的所有日记和图片</div>
+        </div>
+        <button class="btn btn-secondary" style="padding:8px 16px;font-size:0.85rem;">导出</button>
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">删除账户</div>
+          <div class="settings-row-desc">永久删除你的账户和所有数据，不可恢复</div>
+        </div>
+        <button class="btn-danger">删除账户</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== Page: Login ====== -->
+  <div class="page-view" id="page-login">
+    <div class="login-container">
+      <div class="login-card">
+        <div class="login-logo">
+          <div class="icon">🌸</div>
+          <h1>玲音日记</h1>
+          <p>AI 驱动的温暖日记空间</p>
+        </div>
+        <form class="login-form" onsubmit="event.preventDefault();navigate('write');">
+          <div>
+            <label>邮箱地址</label>
+            <input class="input" type="email" placeholder="your@email.com" style="margin-top:6px;" value="sunny@example.com" readonly>
+          </div>
+          <div>
+            <label>密码</label>
+            <input class="input" type="password" placeholder="输入密码" style="margin-top:6px;" value="password" readonly>
+          </div>
+          <button type="submit" class="btn-primary">登录</button>
+        </form>
+        <div class="login-footer">
+          还没有账户？<a href="#" onclick="event.preventDefault()">注册</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ========== Mobile Bottom Tab Bar ========== -->
+<nav class="mobile-tab-bar" id="mobileTabBar">
+  <div class="mobile-tab-bar-inner">
+    <div class="mobile-tab active" data-view="write" onclick="navigate('write')">
+      <span class="tab-icon">✍️</span> 写日记
+    </div>
+    <div class="mobile-tab" data-view="timeline" onclick="navigate('timeline')">
+      <span class="tab-icon">📅</span> 时间轴
+    </div>
+    <div class="mobile-tab" data-view="settings" onclick="navigate('settings')">
+      <span class="tab-icon">⚙️</span> 设置
+    </div>
+  </div>
+</nav>
+
+<script>
+/* =============================================
+   Navigation
+   ============================================= */
+function navigate(view) {
+  // Hide all page views
+  document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+  // Show target
+  const target = document.getElementById('page-' + view);
+  if (target) target.classList.add('active');
+
+  // Update sidebar
+  document.querySelectorAll('.sidebar-nav-item').forEach(item => item.classList.remove('active'));
+  const sidebarItem = document.querySelector(`.sidebar-nav-item[data-view="${view}"]`);
+  if (sidebarItem) sidebarItem.classList.add('active');
+
+  // Update mobile tabs
+  document.querySelectorAll('.mobile-tab').forEach(item => item.classList.remove('active'));
+  const mobileTab = document.querySelector(`.mobile-tab[data-view="${view}"]`);
+  if (mobileTab) mobileTab.classList.add('active');
+
+  // Handle login page
+  if (view === 'login') {
+    document.getElementById('mainContent').style.display = 'none';
+    document.getElementById('sidebar').style.display = 'none';
+    document.getElementById('mobileTabBar').style.display = 'none';
+    document.querySelector('.mobile-header').style.display = 'none';
+  } else {
+    document.getElementById('mainContent').style.display = '';
+    document.getElementById('sidebar').style.display = '';
+  }
+}
+
+/* =============================================
+   Sakura Particles
+   ============================================= */
+(function() {
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 12; i++) {
+    const particle = document.createElement('div');
+    particle.className = 'sakura-particle';
+    const size = 4 + Math.random() * 10;
+    particle.style.width = size + 'px';
+    particle.style.height = size + 'px';
+    particle.style.left = Math.random() * 100 + '%';
+    particle.style.setProperty('--sway', (Math.random() * 80 - 40) + 'px');
+    particle.style.animationDuration = (8 + Math.random() * 12) + 's';
+    particle.style.animationDelay = Math.random() * 10 + 's';
+    container.appendChild(particle);
+  }
+})();
+</script>
+
+</body>
+</html>

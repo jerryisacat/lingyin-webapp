@@ -1,12 +1,13 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextRequest } from "next/server"
 import { prisma } from "@/lib/db"
+import { jsonOk, jsonError } from "@/lib/api-response"
 
 export async function GET(request: NextRequest) {
   const secret = process.env.HEALTH_SECRET
   if (secret) {
     const token = request.nextUrl.searchParams.get("token")
     if (token !== secret) {
-      return NextResponse.json({ ok: false }, { status: 401 })
+      return jsonError("Unauthorized", 401)
     }
   }
 
@@ -25,8 +26,6 @@ export async function GET(request: NextRequest) {
 
   const allOk = dbOk && emailOk
 
-  return NextResponse.json(
-    { ok: allOk },
-    { status: allOk ? 200 : 500 }
-  )
+  if (allOk) return jsonOk({ database: dbOk, email: emailOk })
+  return jsonError("Service unhealthy", 500)
 }

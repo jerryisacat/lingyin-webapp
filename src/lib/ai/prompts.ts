@@ -30,12 +30,6 @@ ${perspectiveInstruction}
 - 结尾加一个合适的 emoji 收尾`
 }
 
-// Legacy prompts kept for backward compatibility with existing entries
-export const WARM_SYSTEM_PROMPT = buildSystemPrompt({ perspective: "second_person", persona: "yuanshao" })
-export const GENKI_SYSTEM_PROMPT = buildSystemPrompt({ perspective: "second_person", persona: "yuanshao" })
-export const MINIMAL_SYSTEM_PROMPT = buildSystemPrompt({ perspective: "second_person", persona: "zhinan" })
-export const LITERARY_SYSTEM_PROMPT = buildSystemPrompt({ perspective: "second_person", persona: "wenyi" })
-
 export function buildDiaryPrompt(params: {
   userText: string
   imageDescriptions: Array<{ url: string; description: string }>

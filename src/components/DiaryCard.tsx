@@ -31,7 +31,7 @@ interface DiaryCardProps {
   entry: DiarySummary;
 }
 
-export default function DiaryCard({ entry }: DiaryCardProps) {
+export function DiaryCard({ entry }: DiaryCardProps) {
   const { day, weekday, full } = formatDate(entry.date);
   const title = extractTitleFromPreview(entry.preview);
   const previewText =

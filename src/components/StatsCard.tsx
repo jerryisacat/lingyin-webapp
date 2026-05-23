@@ -4,7 +4,7 @@ interface StatsCardProps {
   value: string | number;
 }
 
-export default function StatsCard({ icon, label, value }: StatsCardProps) {
+export function StatsCard({ icon, label, value }: StatsCardProps) {
   return (
     <div className="flex flex-col items-center gap-2 rounded-xl border border-sakura/15 bg-white/60 p-5 shadow-soft transition-shadow hover:shadow-md">
       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sakura/10">

@@ -1,31 +1,23 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { BookOpen } from "lucide-react"
-import WritingStyleConfig from "@/components/WritingStyleConfig"
-import type { WritingStyle } from "@/types"
-import type { ApiResponse } from "@/types"
+import { WritingStyleConfig } from "@/components/WritingStyleConfig"
+import { useUserConfig } from "@/contexts/UserConfigContext"
 
 export default function SetupPage() {
   const router = useRouter()
+  const { writingStyle, isLoading } = useUserConfig()
   const [hasExistingStyle, setHasExistingStyle] = useState<boolean | null>(null)
 
   useEffect(() => {
-    fetch("/api/user/style")
-      .then((res) => res.json())
-      .then((json: ApiResponse<{ writingStyle: WritingStyle }>) => {
-        if (json.ok && json.data?.writingStyle) {
-          const s = json.data.writingStyle
-          const isDefault =
-            s.perspective === "first_person" && s.persona === "yuanshao"
-          setHasExistingStyle(!isDefault)
-        } else {
-          setHasExistingStyle(false)
-        }
-      })
-      .catch(() => setHasExistingStyle(false))
-  }, [])
+    if (!isLoading) {
+      const isDefault =
+        writingStyle.perspective === "first_person" && writingStyle.persona === "yuanshao"
+      setHasExistingStyle(!isDefault)
+    }
+  }, [isLoading, writingStyle])
 
   const handleComplete = useCallback(() => {
     router.push("/diary")

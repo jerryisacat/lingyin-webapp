@@ -10,13 +10,12 @@ import {
   VISION_PROMPT,
 } from "@/lib/ai/prompts";
 import { trackStorageUsage } from "@/lib/quota-service";
-import type { ApiProvider, MediaFile, Tone, WritingStyle, DiarySummary, CalendarEntry } from "@/types";
+import type { ApiProvider, MediaFile, WritingStyle, DiarySummary, CalendarEntry } from "@/types";
 import { DEFAULT_WRITING_STYLE } from "@/config/personas";
 
 export async function* generateDiary(params: {
   text: string;
   images: MediaFile[];
-  tone?: Tone;
   writingStyle?: WritingStyle;
   date: string;
   apiKey: string;
@@ -55,11 +54,10 @@ export async function saveDiary(params: {
   userId: string;
   date: string;
   markdown: string;
-  tone: Tone;
   imagePaths: string[];
   encrypted?: boolean;
 }): Promise<DiarySummary> {
-  const { userId, date, markdown, tone, encrypted = false } = params;
+  const { userId, date, markdown, encrypted = false } = params;
 
   const saved = await storage.saveMarkdown(userId, date, markdown, encrypted);
 
@@ -87,7 +85,6 @@ export async function saveDiary(params: {
     create: {
       userId,
       date: new Date(date),
-      tone,
       preview,
       wordCount,
       hasImages,
@@ -96,7 +93,6 @@ export async function saveDiary(params: {
       tags,
     },
     update: {
-      tone,
       preview,
       wordCount,
       hasImages,

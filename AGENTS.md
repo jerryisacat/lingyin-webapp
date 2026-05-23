@@ -90,7 +90,7 @@ src/lib/             — services:
   crypto.ts          — AES-256-GCM encrypt/decrypt
   client-crypto.ts   — Web Crypto API E2EE (client-side only: encryptMarkdown, decryptMarkdown, generateSalt)
   email.ts           — Resend email sending
-  api-helpers.ts     — getUser() → getSessionUserId()
+  auth-helpers.ts     — getSessionUserId(), json helpers
   api-key-guard.ts   — getUserDecryptedApiKey(), extractApiKey()
   ai/client.ts       — OpenAI SDK wrapper
   ai/prompts.ts      — System/user prompts

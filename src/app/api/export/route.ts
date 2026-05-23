@@ -13,7 +13,6 @@ export async function GET(_request: NextRequest) {
     take: 200,
     select: {
       date: true,
-      tone: true,
       markdownPath: true,
       tags: true,
     },
@@ -24,7 +23,6 @@ export async function GET(_request: NextRequest) {
       const content = await readMarkdownByPath(entry.markdownPath);
       return {
         date: entry.date.toISOString().slice(0, 10),
-        tone: entry.tone,
         tags: entry.tags ? JSON.parse(entry.tags) : [],
         markdown: content,
       };

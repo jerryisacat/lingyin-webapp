@@ -5,8 +5,8 @@ import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { BookOpen, Loader2 } from "lucide-react"
-import PasswordInput from "@/components/auth/PasswordInput"
-import VerifyEmailBanner from "@/components/auth/VerifyEmailBanner"
+import { PasswordInput } from "@/components/auth/PasswordInput"
+import { VerifyEmailBanner } from "@/components/auth/VerifyEmailBanner"
 
 export default function LoginPage() {
   const router = useRouter()

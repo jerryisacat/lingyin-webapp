@@ -7,7 +7,7 @@ interface VerifyEmailBannerProps {
   email?: string
 }
 
-export default function VerifyEmailBanner({ email: initialEmail = "" }: VerifyEmailBannerProps) {
+export function VerifyEmailBanner({ email: initialEmail = "" }: VerifyEmailBannerProps) {
   const [email, setEmail] = useState(initialEmail)
   const [isPending, startTransition] = useTransition()
   const [status, setStatus] = useState<"idle" | "sent" | "error">("idle")

@@ -54,7 +54,6 @@ async function handleCheckoutCompleted(obj: Record<string, unknown>): Promise<vo
         where: { stripePaymentIntentId: paymentIntentId },
       });
       if (existing && existing.status === "paid") {
-        console.log(`Webhook topup: already processed ${paymentIntentId}, skipping`);
         return;
       }
     }
@@ -73,12 +72,9 @@ async function handleCheckoutCompleted(obj: Record<string, unknown>): Promise<vo
       status: "paid",
     });
     if (!created) {
-      console.log(`Webhook topup: duplicate ${paymentIntentId}, credit skipped`);
       return;
     }
     await creditTopUpBalance(userId, amountUsd);
-
-    console.log(`Webhook topup: credited $${amountUsd} to user ${userId}`);
     return;
   }
 
@@ -99,7 +95,7 @@ async function handleCheckoutCompleted(obj: Record<string, unknown>): Promise<vo
     currentPeriodStart: new Date(),
   });
 
-  console.log(`Webhook: subscription activated for user ${userId}, plan ${plan}`);
+  console.error(`Webhook: subscription activated for user ${userId}, plan ${plan}`);
 }
 
 async function handleInvoicePaid(obj: Record<string, unknown>): Promise<void> {
@@ -154,7 +150,7 @@ async function handleInvoicePaymentFailed(obj: Record<string, unknown>): Promise
   const userId = extractUserId(obj);
   if (userId) {
     await updateSubscriptionStatus(userId, "past_due");
-    console.log(`Webhook: subscription past_due for user ${userId}`);
+    console.error(`Webhook: subscription past_due for user ${userId}`);
   }
 }
 
@@ -190,7 +186,7 @@ async function handleSubscriptionDeleted(obj: Record<string, unknown>): Promise<
   if (!userId) return;
 
   await cancelUserSubscription(userId);
-  console.log(`Webhook: subscription canceled for user ${userId}`);
+  console.error(`Webhook: subscription canceled for user ${userId}`);
 }
 
 const HANDLERS: Record<string, (obj: Record<string, unknown>) => Promise<void>> = {

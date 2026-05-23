@@ -65,7 +65,7 @@ function ProgressBar({
   );
 }
 
-export default function QuotaUsage() {
+export function QuotaUsage() {
   const { data: session } = useSession();
   const router = useRouter();
   const [data, setData] = useState<QuotaStatusData | null>(null);

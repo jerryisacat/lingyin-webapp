@@ -1,3 +1,47 @@
+## 2026-05-24 — Issue #96: 前端全量代码重构（一致性治理 + UI/UX 升级）
+
+### 类型体系清理
+- 删除 `Tone` 类型及 10 个文件中的所有残余引用，完全切换到 `WritingStyle` 体系
+- 删除 `src/lib/ai/prompts.ts` 中 4 个 legacy prompt 常量 (`WARM_SYSTEM_PROMPT` 等)
+- 移除 `validations.ts` 中 `VALID_TONES` 及各 schema 中的 `tone` 字段
+- 清理 `api/user/config/route.ts` — 从 `tone` 迁移到 `writingStyle`
+- 清理 `api/ai/generate/route.ts`, `api/entries/route.ts`, `api/entries/[id]/route.ts`, `api/export/route.ts` 中 tone 字段
+- 清理 `hooks/useStreamGenerate.ts`, `components/DiaryEditor.tsx` 中的 tone 引用
+
+### 组件规范统一
+- 统一 Props: 所有 23 个组件使用 `interface XProps` 格式，修复 `DashboardStats` 3 处内联 Props + `UserConfigContext`/`EncryptionProvider` Props
+- 统一导出: 页面 `export default`，共享组件 `export function`（named export），更新 27 个 import 语句
+- 删除死代码: `Header.tsx`, `NavBar.tsx`, `prisma-errors.ts`, `env.ts`（4 个未使用文件）
+
+### 全局状态层
+- 新建 `src/contexts/UserConfigContext.tsx` — 集中管理写作风格，提供 `useUserConfig()` hook
+- `DiaryEditor`, `WritingStyleConfig`, `SetupPage` 移除各自 `fetch("/api/user/style")` 调用
+
+### 布局架构重构
+- 新建 `src/components/Sidebar.tsx` — 桌面端固定左侧导航（读取 `navigation.json`，与 MobileTabBar 同源）
+- 重写 `src/components/AppShell.tsx` — 桌面侧边栏 + 移动端 mini 顶栏 + 底部 Tab Bar 双轨响应式
+- Sidebar 导航项从硬编码改为读取 `config/navigation.json`
+
+### 组件拆分
+- `DiaryEditor` 从 291 行拆分为 4 个文件：
+  - `DiaryEditor.tsx` — 状态管理 + 组合 (~120行)
+  - `DiaryEditorToolbar.tsx` — 日期 + 风格标识
+  - `DiaryEditorInput.tsx` — 输入区 + 图片 + 人格选择
+  - `DiaryEditorOutput.tsx` — 流式输出 + 编辑/预览 + 保存
+
+### API 响应统一
+- 新建 `src/lib/api-response.ts` — 集中管理 `jsonOk`/`jsonError`
+- 重构 `auth-helpers.ts` 从 `api-response.ts` 重导出
+- 替换 7 个 API 路由文件中 21 处 `NextResponse.json()` 为统一格式
+- 移除 5 个 auth 路由中不必要的 `NextResponse` import
+
+### 代码质量
+- 清理 `console.log` 11 处，替换为 `console.error` 或移除
+- 修复硬编码 hex 色值 `page.tsx` SVG → Tailwind `stroke-sakura`
+- AppShell 相对导入改为 `@/` 别名导入
+- `AGENTS.md` 文档纠正 `api-helpers.ts` → `auth-helpers.ts`
+- `npx tsc --noEmit` 零错误，`npm run lint` 零错误
+
 ## 2026-05-23 — Issues #95: 首次登录引导 + 精细化语气风格配置
 
 ### 首次登录引导流程

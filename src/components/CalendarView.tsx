@@ -45,7 +45,7 @@ function CalendarSkeleton() {
   );
 }
 
-export default function CalendarView({
+export function CalendarView({
   entries,
   year,
   month,

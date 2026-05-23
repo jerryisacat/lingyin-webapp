@@ -11,10 +11,14 @@ import {
   Sparkles,
   RefreshCw,
 } from "lucide-react";
-import StatsCard from "@/components/StatsCard";
+import { StatsCard } from "@/components/StatsCard";
 import type { StatsData } from "@/types";
 
-function SkeletonBlock({ className }: { className?: string }) {
+interface SkeletonBlockProps {
+  className?: string
+}
+
+function SkeletonBlock({ className }: SkeletonBlockProps) {
   return (
     <div
       className={`animate-pulse rounded-xl bg-ink/5 ${className ?? ""}`}
@@ -22,7 +26,11 @@ function SkeletonBlock({ className }: { className?: string }) {
   );
 }
 
-function BarChart({ data }: { data: StatsData["monthlyData"] }) {
+interface BarChartProps {
+  data: StatsData["monthlyData"]
+}
+
+function BarChart({ data }: BarChartProps) {
   if (data.length === 0) {
     return (
       <div className="flex justify-center py-8 text-sm text-ink-light/60">
@@ -61,7 +69,11 @@ function BarChart({ data }: { data: StatsData["monthlyData"] }) {
   );
 }
 
-function TagCloud({ tags }: { tags: StatsData["topTags"] }) {
+interface TagCloudProps {
+  tags: StatsData["topTags"]
+}
+
+function TagCloud({ tags }: TagCloudProps) {
   if (tags.length === 0) {
     return (
       <div className="flex justify-center py-6 text-sm text-ink-light/60">
@@ -100,7 +112,7 @@ function TagCloud({ tags }: { tags: StatsData["topTags"] }) {
   );
 }
 
-export default function DashboardStats() {
+export function DashboardStats() {
   const [stats, setStats] = useState<StatsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

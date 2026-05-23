@@ -61,7 +61,7 @@ export async function checkRateLimit(
       "[RateLimit] Redis error:",
       error instanceof Error ? error.message : error
     )
-    console.warn("[RateLimit] Redis unavailable — skipping rate limit")
+    console.error("[RateLimit] Redis unavailable — skipping rate limit")
     return { success: true, limit: 0, remaining: 0, reset: 0 }
   }
 }

@@ -15,8 +15,8 @@ import {
   X,
   ImagePlus,
 } from "lucide-react";
-import MarkdownViewer from "@/components/MarkdownViewer";
-import PhotoUploader from "@/components/PhotoUploader";
+import { MarkdownViewer } from "@/components/MarkdownViewer";
+import { PhotoUploader } from "@/components/PhotoUploader";
 import { UnlockDiaryModal } from "@/components/UnlockDiaryModal";
 import { useEncryption } from "@/hooks/useEncryptionPassword";
 import { decryptMarkdown } from "@/lib/client-crypto";

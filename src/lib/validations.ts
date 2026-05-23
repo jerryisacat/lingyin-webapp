@@ -22,8 +22,6 @@ export const resendVerificationSchema = z.object({
   email: z.string().email("邮箱格式不正确"),
 });
 
-const VALID_TONES = ["warm", "genki", "minimal", "literary"] as const;
-
 const VALID_PERSPECTIVES = ["first_person", "second_person"] as const;
 const VALID_PERSONAS = ["yuanshao", "chengshu", "maoxi", "quanxi", "zhinan", "wenyi"] as const;
 
@@ -43,14 +41,14 @@ export const entriesListSchema = z.object({
 export const createEntrySchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   markdown: z.string().min(1, "日记内容不能为空"),
-  tone: z.enum(VALID_TONES).optional().default("warm"),
+  writingStyle: writingStyleSchema.optional(),
   imagePaths: z.array(z.string()).optional().default([]),
   encrypted: z.boolean().optional().default(false),
 });
 
 export const updateEntrySchema = z.object({
   markdown: z.string().min(1, "日记内容不能为空"),
-  tone: z.enum(VALID_TONES).optional().default("warm"),
+  writingStyle: writingStyleSchema.optional(),
   imagePaths: z.array(z.string()).optional().default([]),
   encrypted: z.boolean().optional().default(false),
 });
@@ -66,7 +64,6 @@ export const aiGenerateSchema = z.object({
     mime: z.string(),
     size: z.number(),
   })).optional().default([]),
-  tone: z.enum(VALID_TONES).optional(),
   writingStyle: writingStyleSchema.optional(),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   provider: z.enum(VALID_PROVIDERS).optional().default("openrouter"),
@@ -90,7 +87,7 @@ export const saveApiKeySchema = z.object({
 });
 
 export const userConfigSchema = z.object({
-  tone: z.enum(VALID_TONES),
+  writingStyle: writingStyleSchema.optional(),
 });
 
 export const encryptionPasswordSchema = z.object({
