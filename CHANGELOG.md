@@ -1,4 +1,18 @@
-## 2026-05-23 — 功能: 退出登录功能 (#90)
+## 2026-05-23 — 设计: Landing Page 和风编辑感重构 (#91)
+
+### 修改
+- `src/app/page.tsx`: 全页采用和风编辑感（Japanese Editorial）设计语言——去卡片化、左对齐排版、细横线分割、克制 sakura 色使用
+  - 用例场景：4 张同质化卡片 → 细线分割的编号列表式排版，hover 细线变深
+  - 特性 Features：去 `card` 背景，改用 `feature-card-editorial`（左侧竖线 hover 动画 + icon + 横向排版）
+  - 使用步骤：去掉卡片背景，序号改用白底 ring 圈徽章，SVG 连线细化
+  - Hero：Logo 与标题间加入细横线，CTA 按钮更克制
+  - CTA Bottom：去渐变背景块，改用留白 + 细横线 + 引用式排版
+  - Footer：分隔线变淡
+  - 所有 section 加入 `whileInView` 滚动 reveal 动画（fade-in-up + staggerChildren）
+- `src/app/globals.css`: 移除旧 `.use-case-card/.use-case-title/.use-case-desc`; 新增 `.feature-card-editorial`（左侧细线 hover 展开）和 `.btn-ghost-editorial`（淡色 ghost 按钮）
+
+### 设计决策
+- 和风编辑感三原则：排版代替卡片、细横线分割、sakura 色克制点缀
 
 ### 新增
 - `src/app/settings/page.tsx`: 页面底部新增「退出登录」危险按钮区域，红色卡片样式，点击调用 `signOut({ callbackUrl: "/" })` 跳回 Landing Page

@@ -51,33 +51,33 @@
   }
 }
 
-/* ── Feature 卡片左侧 accent bar ── */
-.feature-card {
-  @apply card flex flex-col items-start gap-4 p-6 transition-all duration-300;
+/* ── Feature 卡片（编辑感：无背景 + 左侧细线）── */
+.feature-card-editorial {
+  @apply flex flex-col gap-5 p-6 transition-colors duration-300;
   position: relative;
-  overflow: hidden;
 }
 
-.feature-card::before {
+.feature-card-editorial::before {
   content: "";
   position: absolute;
   left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 0;
   background: #f0a8b0;
-  border-radius: 0 4px 4px 0;
-  transform: scaleY(0);
-  transform-origin: top;
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 1px;
+  transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.feature-card:hover::before {
-  transform: scaleY(1);
+.feature-card-editorial:hover::before {
+  height: 60%;
 }
 
-.feature-card:hover {
-  @apply -translate-y-1 shadow-md;
+@media (min-width: 640px) {
+  .feature-card-editorial {
+    @apply flex-row items-start gap-6;
+  }
 }
 
 /* ── 步骤区 SVG 连线动画 ── */
@@ -123,6 +123,13 @@
            transition-colors duration-150 ease-in-out;
   }
 
+  .btn-ghost-editorial {
+    @apply text-ink-light/60 rounded-lg px-6 py-3
+           hover:text-ink hover:bg-sakura/5
+           focus:outline-none focus:ring-2 focus:ring-sakura/30 focus:ring-offset-2
+           transition-colors duration-200 ease-in-out;
+  }
+
   .input-field {
     @apply w-full bg-surface border border-surface-border rounded-lg px-4 py-3
            text-ink placeholder:text-ink-light/50
@@ -137,17 +144,4 @@
   .safe-area-bottom {
     padding-bottom: env(safe-area-inset-bottom);
   }
-}
-
-/* ── 用例场景卡片 ── */
-.use-case-card {
-  @apply flex flex-col items-center justify-center rounded-2xl border border-surface-border bg-white/30 p-8 text-center shadow-soft transition-all duration-300 hover:-translate-y-1.5 hover:shadow-md;
-}
-
-.use-case-title {
-  @apply text-xl font-bold text-ink mb-2;
-}
-
-.use-case-desc {
-  @apply text-ink-light leading-relaxed;
 }

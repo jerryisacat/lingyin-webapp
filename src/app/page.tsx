@@ -65,9 +65,50 @@ const STEPS = [
   },
 ];
 
+const USE_CASES = [
+  {
+    label: "追演出",
+    text: "今天看了草东没有派对的现场。拍两张照片，说两句感受，AI 帮你写成一篇有温度的演出日记。回来翻看，每个细节都还在。",
+  },
+  {
+    label: "旅行",
+    text: "每到一个城市，拍张照、说段话。不用修图排版，AI 会生成属于那一天的旅行日记。一年后翻看，像又走了一遍。",
+  },
+  {
+    label: "日常",
+    text: "猫又干了什么傻事？随手一拍，加句话，AI 扩写成一篇日常记录。生活里的小事，也能成为值得回味的文字。",
+  },
+  {
+    label: "生活",
+    text: "第一次做番茄牛腩。拍下成品、写下心得，AI 帮你整理成完整的烹饪日记。下次做的时候翻出来看。",
+  },
+];
+
 const FADE_IN_UP_VARIANTS = {
   hidden: { opacity: 0, y: 10 },
   visible: { opacity: 1, y: 0 },
+};
+
+const SECTION_REVEAL = {
+  hidden: { opacity: 0, y: 32 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.7,
+      ease: [0.16, 1, 0.3, 1] as const,
+      staggerChildren: 0.08,
+    },
+  },
+};
+
+const ITEM_REVEAL = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const },
+  },
 };
 
 export default function Home() {
@@ -160,11 +201,17 @@ export default function Home() {
         >
           {/* Logo 徽章 */}
           <motion.div
-            className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-sakura/15 to-sakura/5 ring-4 ring-sakura/15 backdrop-blur-sm"
+            className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-sakura/12 to-sakura/4 ring-1 ring-sakura/10 backdrop-blur-sm"
             variants={FADE_IN_UP_VARIANTS}
           >
-            <BookOpen className="h-12 w-12 text-sakura" strokeWidth={1.5} />
+            <BookOpen className="h-11 w-11 text-sakura/80" strokeWidth={1.5} />
           </motion.div>
+
+          {/* Thin decorative rule */}
+          <motion.div
+            className="h-px w-12 bg-sakura/20"
+            variants={FADE_IN_UP_VARIANTS}
+          />
 
           {/* 标题 */}
           <motion.h1
@@ -176,7 +223,7 @@ export default function Home() {
 
           {/* 副标题——渐变色 */}
           <motion.p
-            className="bg-gradient-to-r from-sakura-dark via-sakura to-sakura-light bg-clip-text text-xl font-medium text-transparent sm:text-2xl"
+            className="bg-gradient-to-r from-sakura-dark via-sakura to-sakura-light bg-clip-text text-lg font-medium text-transparent sm:text-xl"
             variants={FADE_IN_UP_VARIANTS}
           >
             记下此时此刻，温暖治愈的 AI 日记伴侣
@@ -217,14 +264,14 @@ export default function Home() {
           >
             <Link
               href="/login"
-              className="btn-primary flex items-center gap-2 text-lg px-8 py-3.5 shadow-soft hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
+              className="btn-primary flex items-center gap-2 px-8 py-3 text-sm font-medium shadow-none hover:shadow-soft hover:-translate-y-0.5 transition-all duration-300"
             >
               开启书写之旅
-              <ArrowRight className="h-5 w-5" />
+              <ArrowRight className="h-4 w-4" />
             </Link>
             <a
               href="#features"
-              className="btn-secondary flex items-center gap-2 px-8 py-3.5"
+              className="btn-ghost-editorial flex items-center gap-2 px-8 py-3 text-sm font-medium"
             >
               了解更多
               <ChevronRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
@@ -240,165 +287,221 @@ export default function Home() {
       </section>
 
       {/* ── 用例场景 ── */}
-      <section className="bg-surface/30 px-6 py-16 sm:py-20">
-        <div className="mx-auto max-w-5xl">
-          <div className="mb-10 text-center">
-            <h2 className="text-2xl font-bold text-ink sm:text-3xl">
-              用玲音记录你的生活
-            </h2>
-            <p className="mt-3 text-ink-light">
-              每个值得珍藏的瞬间，都有一篇温暖的日记
-            </p>
+      <section className="px-6 py-24 sm:py-32">
+        <motion.div
+          className="mx-auto max-w-3xl"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-80px" }}
+          variants={SECTION_REVEAL}
+        >
+          {/* Section label + thin rule */}
+          <div className="flex items-center gap-4">
+            <span className="text-xs font-medium uppercase tracking-[0.2em] text-sakura/40">
+              使用场景
+            </span>
+            <div className="h-px flex-1 bg-sakura/12" />
           </div>
-          <div className="flex flex-col gap-4">
-            <div className="use-case-card sm:flex-row sm:items-center">
-              <h3 className="use-case-title sm:w-24 sm:text-right">追演出</h3>
-              <p className="use-case-desc sm:flex-1">今天看了草东没有派对的现场。拍两张照片，说两句感受，AI 帮你写成一篇有温度的演出日记。回来翻看，每个细节都还在。</p>
-            </div>
-            <div className="use-case-card sm:flex-row sm:items-center">
-              <h3 className="use-case-title sm:w-24 sm:text-right">旅行</h3>
-              <p className="use-case-desc sm:flex-1">每到一个城市，拍张照、说段话。不用修图排版，AI 会生成属于那一天的旅行日记。一年后翻看，像又走了一遍。</p>
-            </div>
-            <div className="use-case-card sm:flex-row sm:items-center">
-              <h3 className="use-case-title sm:w-24 sm:text-right">日常</h3>
-              <p className="use-case-desc sm:flex-1">猫又干了什么傻事？随手一拍，加句话，AI 扩写成一篇日常记录。生活里的小事，也能成为值得回味的文字。</p>
-            </div>
-            <div className="use-case-card sm:flex-row sm:items-center">
-              <h3 className="use-case-title sm:w-24 sm:text-right">生活</h3>
-              <p className="use-case-desc sm:flex-1">第一次做番茄牛腩。拍下成品、写下心得，AI 帮你整理成完整的烹饪日记。下次做的时候翻出来看。</p>
-            </div>
+
+          <h2 className="mt-6 text-3xl font-bold tracking-tight text-ink sm:text-4xl">
+            用玲音记录你的生活
+          </h2>
+          <p className="mt-4 max-w-lg text-base text-ink-light/60 sm:text-lg">
+            每个值得珍藏的瞬间，都有一篇温暖的日记
+          </p>
+
+          {/* Use cases — editorial list */}
+          <div className="mt-16">
+            {USE_CASES.map((item, i) => (
+              <motion.div
+                key={item.label}
+                className="group flex flex-col gap-3 border-t border-sakura/10 py-6 transition-colors duration-500 hover:border-sakura/20 sm:flex-row sm:gap-10 sm:py-8"
+                variants={ITEM_REVEAL}
+              >
+                <div className="flex items-center gap-3 sm:w-36 shrink-0">
+                  <span className="text-2xs font-bold tabular-nums text-sakura/25">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span className="text-sm font-bold tracking-wide text-ink/75">
+                    {item.label}
+                  </span>
+                </div>
+                <p className="text-sm leading-relaxed text-ink-light/65 sm:text-base">
+                  {item.text}
+                </p>
+              </motion.div>
+            ))}
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* ── 特性 Features ── */}
-      <section id="features" className="bg-surface/50 px-6 py-20 sm:py-28">
-        <div className="mx-auto max-w-5xl">
-          <div className="mb-14 text-center">
-            <h2 className="text-2xl font-bold text-ink sm:text-3xl">
-              一个懂你的日记本
-            </h2>
-            <p className="mt-3 text-ink-light">
-              重拾书写的快乐，感受温暖的陪伴
-            </p>
+      <section id="features" className="px-6 py-24 sm:py-32">
+        <motion.div
+          className="mx-auto max-w-5xl"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-80px" }}
+          variants={SECTION_REVEAL}
+        >
+          {/* Section label + thin rule */}
+          <div className="flex items-center gap-4">
+            <span className="text-xs font-medium uppercase tracking-[0.2em] text-sakura/40">
+              产品特性
+            </span>
+            <div className="h-px flex-1 bg-sakura/12" />
           </div>
 
-          <div className="grid gap-8 sm:grid-cols-2">
+          <h2 className="mt-6 text-3xl font-bold tracking-tight text-ink sm:text-4xl">
+            一个懂你的日记本
+          </h2>
+          <p className="mt-4 max-w-lg text-base text-ink-light/60 sm:text-lg">
+            重拾书写的快乐，感受温暖的陪伴
+          </p>
+
+          <div className="mt-16 grid gap-px sm:grid-cols-2 sm:gap-0">
             {FEATURES.map((feature) => (
-              <div
+              <motion.div
                 key={feature.title}
-                className="feature-card group"
+                className="feature-card-editorial group"
+                variants={ITEM_REVEAL}
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-sakura/10 transition-transform duration-300 group-hover:scale-110">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sakura/8 transition-colors duration-300 group-hover:bg-sakura/12">
                   <feature.icon
-                    className="h-6 w-6 text-sakura"
+                    className="h-5 w-5 text-sakura/70"
                     strokeWidth={1.5}
                   />
                 </div>
-                <h3 className="text-lg font-medium text-ink">
-                  {feature.title}
-                </h3>
-                <p className="text-sm text-ink-light leading-relaxed">
-                  {feature.desc}
-                </p>
-              </div>
+                <div className="flex-1">
+                  <h3 className="text-base font-bold text-ink/85">
+                    {feature.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-ink-light/60">
+                    {feature.desc}
+                  </p>
+                </div>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* ── 使用步骤 How It Works ── */}
-      <section id="how-it-works" className="px-6 py-20 sm:py-28">
-        <div className="mx-auto max-w-4xl">
-          <div className="mb-14 text-center">
-            <h2 className="text-2xl font-bold text-ink sm:text-3xl">
-              你的专属写作流程
-            </h2>
-            <p className="mt-3 text-ink-light">
-              从随手记录到珍藏回忆
-            </p>
+      <section id="how-it-works" className="px-6 py-24 sm:py-32">
+        <motion.div
+          className="mx-auto max-w-4xl"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-80px" }}
+          variants={SECTION_REVEAL}
+        >
+          {/* Section label + thin rule */}
+          <div className="flex items-center gap-4">
+            <span className="text-xs font-medium uppercase tracking-[0.2em] text-sakura/40">
+              使用流程
+            </span>
+            <div className="h-px flex-1 bg-sakura/12" />
           </div>
 
-          {/* 步骤卡片 */}
-          <div className="relative grid gap-6 sm:grid-cols-3">
-            {/* SVG 贝塞尔连线（桌面端） */}
-            <div className="step-connector absolute inset-x-10 top-[72px] hidden sm:block pointer-events-none">
-              <svg className="w-full h-8" fill="none" preserveAspectRatio="none">
+          <h2 className="mt-6 text-3xl font-bold tracking-tight text-ink sm:text-4xl">
+            你的专属写作流程
+          </h2>
+          <p className="mt-4 max-w-lg text-base text-ink-light/60 sm:text-lg">
+            从随手记录到珍藏回忆
+          </p>
+
+          {/* Steps */}
+          <div className="relative mt-16 grid gap-8 sm:grid-cols-3">
+            {/* SVG connector */}
+            <div className="step-connector absolute inset-x-8 top-[36px] hidden sm:block pointer-events-none">
+              <svg className="w-full h-6" fill="none" preserveAspectRatio="none">
                 <path
-                  d="M 0,10 C 100,30 160,-10 260,10 S 420,30 520,10"
+                  d="M 0,6 C 100,20 160,-8 260,6 S 420,20 520,6"
                   stroke="#f0a8b0"
-                  strokeWidth="2"
-                  strokeDasharray="6,6"
-                  opacity="0.35"
+                  strokeWidth="1.5"
+                  strokeDasharray="4,6"
+                  opacity="0.25"
                 />
               </svg>
             </div>
 
             {STEPS.map((step, idx) => (
-              <div key={step.num} className="relative flex flex-col items-center text-center">
-                {/* 序号徽章 */}
-                <div className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full bg-sakura text-white text-sm font-bold shadow-soft mb-5">
-                  {step.num}
+              <motion.div
+                key={step.num}
+                className="relative flex flex-col items-center text-center"
+                variants={ITEM_REVEAL}
+              >
+                {/* Number */}
+                <div className="relative z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white ring-1 ring-sakura/15 shadow-sm mb-6">
+                  <span className="text-sm font-bold tabular-nums text-sakura/60">
+                    {step.num}
+                  </span>
                 </div>
 
-                {/* 卡片 */}
-                <div className="group w-full rounded-xl border border-surface-border bg-white p-6 shadow-soft transition-all duration-300 hover:-translate-y-1.5 hover:shadow-md">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-sakura/10 mx-auto mb-4 transition-transform duration-300 group-hover:scale-110">
-                    <step.icon className="h-5 w-5 text-sakura" strokeWidth={1.5} />
+                {/* Content */}
+                <div className="group w-full">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sakura/6 mx-auto mb-4 transition-colors duration-300 group-hover:bg-sakura/10">
+                    <step.icon className="h-5 w-5 text-sakura/60" strokeWidth={1.5} />
                   </div>
-                  <h3 className="font-bold text-lg text-ink mb-2">
+                  <h3 className="text-base font-bold text-ink/85 mb-2">
                     {step.title}
                   </h3>
-                  <p className="text-sm text-ink-light leading-relaxed">
+                  <p className="text-sm leading-relaxed text-ink-light/60">
                     {step.desc}
                   </p>
                 </div>
 
-                {/* 移动端竖线连接 */}
+                {/* Mobile vertical connector */}
                 {idx < STEPS.length - 1 && (
-                  <div className="my-2 sm:hidden flex justify-center">
-                    <div className="w-px h-8 bg-sakura/30" />
+                  <div className="my-4 sm:hidden flex justify-center">
+                    <div className="w-px h-10 bg-sakura/15" />
                   </div>
                 )}
-              </div>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* ── CTA ── */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-sakura/5 to-sakura/10 px-6 py-20 sm:py-28">
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-64 w-64 rounded-full bg-sakura/10 blur-3xl" />
-        </div>
-        <div className="relative z-10 mx-auto flex max-w-2xl flex-col items-center gap-6 text-center">
-          <Wand2 className="h-10 w-10 text-sakura" strokeWidth={1.5} />
-          <h2 className="text-2xl font-bold text-ink sm:text-3xl">
+      <section className="px-6 py-24 sm:py-32">
+        <motion.div
+          className="mx-auto flex max-w-2xl flex-col items-center gap-8 text-center"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-80px" }}
+          variants={SECTION_REVEAL}
+        >
+          {/* Thin rule */}
+          <div className="h-px w-12 bg-sakura/20" />
+
+          <Wand2 className="h-8 w-8 text-sakura/50" strokeWidth={1.5} />
+          <h2 className="text-3xl font-bold tracking-tight text-ink sm:text-4xl">
             开始记录你的生活
           </h2>
-          <p className="text-ink-light text-base leading-relaxed max-w-md">
+          <p className="max-w-md text-base leading-relaxed text-ink-light/60 sm:text-lg">
             不需要文笔，不需要构思。只要一张照片、几句话，
             <br />
             玲音会帮你写出属于你的日记。
           </p>
           <Link
             href="/login"
-            className="btn-primary flex items-center gap-2 text-lg px-10 py-3.5 mt-2 shadow-soft hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
+            className="btn-primary flex items-center gap-2 px-10 py-3 text-sm font-medium shadow-none hover:shadow-soft hover:-translate-y-0.5 transition-all duration-300"
           >
             免费开始使用
-            <ArrowRight className="h-5 w-5" />
+            <ArrowRight className="h-4 w-4" />
           </Link>
-        </div>
+        </motion.div>
       </section>
 
       {/* ── Footer ── */}
-      <footer className="border-t border-surface-border px-6 py-8">
+      <footer className="border-t border-sakura/8 px-6 py-8">
         <div className="mx-auto flex max-w-5xl flex-col items-center gap-2 text-center sm:flex-row sm:justify-between">
-          <div className="flex items-center gap-2 text-sm text-ink-light">
-            <BookOpen className="h-4 w-4 text-sakura" strokeWidth={1.5} />
+          <div className="flex items-center gap-2 text-sm text-ink-light/50">
+            <BookOpen className="h-4 w-4 text-sakura/40" strokeWidth={1.5} />
             <span>玲音日记</span>
           </div>
-          <p className="text-xs text-ink-light/60">
+          <p className="text-xs text-ink-light/40">
             &copy; {new Date().getFullYear()} 玲音日记. All rights reserved.
           </p>
         </div>
