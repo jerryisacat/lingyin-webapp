@@ -61,9 +61,11 @@
       "type": "context"
     },
     {
+      "abstractPath": "structure/stats/dashboard_stats_module.abstract.md",
+      "abstractTokens": 59,
       "importance": 50,
       "path": "structure/stats/dashboard_stats_module.md",
-      "tokens": 307,
+      "tokens": 59,
       "type": "context"
     },
     {
@@ -95,6 +97,12 @@
       "type": "context"
     },
     {
+      "importance": 50,
+      "path": "ui/landing/landing_page_refactor.md",
+      "tokens": 237,
+      "type": "context"
+    },
+    {
       "abstractPath": "ui/timeline/calendar_view_implementation.abstract.md",
       "abstractTokens": 56,
       "importance": 50,
@@ -103,13 +111,13 @@
       "type": "context"
     }
   ],
-  "generated_at": "2026-05-23T10:12:58.329Z",
+  "generated_at": "2026-05-23T10:37:17.688Z",
   "lane_tokens": {
-    "contexts": 3827,
+    "contexts": 3816,
     "stubs": 0,
     "summaries": 1968
   },
-  "source_fingerprint": "988a6672d7ca384e0fbfb0d8436cb5f179fe453270a45f24891b494f7f955c91",
-  "total_tokens": 5795,
+  "source_fingerprint": "3d31169a564b791e51f3f8be0625a613c65d736e065f2de6144ead6f6b65a47c",
+  "total_tokens": 5784,
   "version": 1
 }

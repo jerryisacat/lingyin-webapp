@@ -1,6 +1,6 @@
 {
   "brand": {
-    "label": "铃英日记",
+    "label": "玲音日记",
     "href": "/",
     "icon": "BookOpen"
   },
@@ -10,7 +10,7 @@
     { "id": "timeline", "href": "/timeline", "label": "时间线", "icon": "Clock", "show": "authenticated" },
     { "id": "settings", "href": "/settings", "label": "设置", "icon": "Settings", "show": "authenticated" },
     { "id": "social", "href": null, "label": "社交网络", "icon": "Users", "show": "always", "disabled": true },
-    { "id": "login", "href": "/login", "label": "登陆", "icon": "LogIn", "show": "unauthenticated" }
+    { "id": "login", "href": "/login", "label": "登录", "icon": "LogIn", "show": "unauthenticated" }
   ],
   "mobileItems": [
     { "id": "home", "href": "/", "label": "首页", "icon": "Home" },

@@ -27,12 +27,12 @@ const FEATURES = [
   {
     icon: Image,
     title: "照片入文",
-    desc: "上传照片，AI 会分析场景和氛围，自然地融入日记。每一篇都有配图。",
+    desc: "上传照片，AI 会分析场景和氛围，自然地融入日记。",
   },
   {
     icon: Lock,
     title: "隐私优先",
-    desc: "你的 API Key 只存在本地浏览器。内容加密存储在云端，只有你能访问。",
+    desc: "你的 API 密钥在服务端通过 AES-256-GCM 加密存储，仅在需要时解密使用，确保安全。",
   },
   {
     icon: Smartphone,
@@ -111,10 +111,10 @@ export default async function Home() {
         <div className="flex max-w-sm flex-col gap-3 rounded-xl bg-sakura/5 border border-sakura/20 px-6 py-4 text-left">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-sakura" strokeWidth={1.5} />
-            <span className="text-sm font-medium text-ink">铃英小贴士</span>
+            <span className="text-sm font-medium text-ink">玲音小贴士</span>
           </div>
           <p className="text-sm text-ink-light leading-relaxed">
-            试试上传一张今天的照片，铃英可以帮你分析照片中的场景和氛围，写出一篇温暖的日记。
+            试试上传一张今天的照片，玲音可以帮你分析照片中的场景和氛围，写出一篇温暖的日记。
           </p>
         </div>
       </div>
@@ -154,6 +154,21 @@ export default async function Home() {
             记下此时此刻，温暖治愈的 AI 日记伴侣
           </p>
 
+          {/* 开源信息 */}
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-ink-light/70 mt-2">
+            <span>
+              由 <a href="https://vibe-coding.x-dev.club/" target="_blank" className="font-semibold text-ink-light hover:text-sakura transition-colors">Vibe Coding</a> 构建
+            </span>
+            <span className="hidden sm:inline">·</span>
+            <span>
+              Powered by <a href="https://www.deepseek.com/" target="_blank" className="font-semibold text-ink-light hover:text-sakura transition-colors">DeepSeek</a>
+            </span>
+            <span className="hidden sm:inline">·</span>
+            <a href="https://github.com/jerryisacat/lingyin-webapp" target="_blank" className="flex items-center gap-1 font-semibold text-ink-light hover:text-sakura transition-colors">
+              开源
+            </a>
+          </div>
+
           {/* 描述 */}
           <p className="max-w-md text-base text-ink-light/80 leading-relaxed sm:text-lg">
             拍张照片，说几句话。AI 自动写成一篇优美的日记。
@@ -187,15 +202,47 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* ── 用例场景 ── */}
+      <section className="bg-surface/30 px-6 py-16 sm:py-20">
+        <div className="mx-auto max-w-5xl">
+          <div className="mb-10 text-center">
+            <h2 className="text-2xl font-bold text-ink sm:text-3xl">
+              用玲音记录你的生活
+            </h2>
+            <p className="mt-3 text-ink-light">
+              每个值得珍藏的瞬间，都有一篇温暖的日记
+            </p>
+          </div>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="use-case-card">
+              <h3 className="use-case-title">追演出</h3>
+              <p className="use-case-desc">记录每一次现场</p>
+            </div>
+            <div className="use-case-card">
+              <h3 className="use-case-title">旅行</h3>
+              <p className="use-case-desc">旅途中的随身笔</p>
+            </div>
+            <div className="use-case-card">
+              <h3 className="use-case-title">日常</h3>
+              <p className="use-case-desc">随手记下小日子</p>
+            </div>
+            <div className="use-case-card">
+              <h3 className="use-case-title">生活</h3>
+              <p className="use-case-desc">热爱有迹可循</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── 特性 Features ── */}
       <section id="features" className="bg-surface/50 px-6 py-20 sm:py-28">
         <div className="mx-auto max-w-5xl">
           <div className="mb-14 text-center">
             <h2 className="text-2xl font-bold text-ink sm:text-3xl">
-              为什么选择玲音日记？
+              一个懂你的日记本
             </h2>
             <p className="mt-3 text-ink-light">
-              让 AI 帮你记录每一天的美好
+              重拾书写的快乐，感受温暖的陪伴
             </p>
           </div>
 
@@ -228,10 +275,10 @@ export default async function Home() {
         <div className="mx-auto max-w-4xl">
           <div className="mb-14 text-center">
             <h2 className="text-2xl font-bold text-ink sm:text-3xl">
-              三步开始
+              你的专属写作流程
             </h2>
             <p className="mt-3 text-ink-light">
-              简单三步，开始你的 AI 日记之旅
+              从随手记录到珍藏回忆
             </p>
           </div>
 
