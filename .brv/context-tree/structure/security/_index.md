@@ -1,24 +1,22 @@
 ---
-children_hash: f307aaa343b0b4db0fafd6715efdf67d3cd0704b0b92c9ad99dc3c9621bdaee1
-compression_ratio: 0.23509369676320271
+children_hash: 881d260552b7054da158792e07c8afec100628ced9c65ffa83dd0d06514e7781
+compression_ratio: 0.13629283489096572
 condensation_order: 1
-covers: [security_hardening.md]
-covers_token_total: 587
+covers: [rate_limiting.md, security_hardening.md]
+covers_token_total: 1284
 summary_level: d1
-token_count: 138
+token_count: 175
 type: summary
 ---
-## Security Hardening
+## structure/security
 
-**Entry:** `structure/security/security_hardening.md` (2026-05-23; consolidated from `.abstract.md` and `.overview.md` due to high overlap)
+### Rate Limiting (rate_limiting.md)
+- Upstash sliding-window rate limiting via `@upstash/ratelimit` + `@upstash/redis` on 8 endpoints (login, register, email, password reset, AI generate/rewrite/test).
+- Unified `checkRateLimit()` wrapper in `src/lib/rate-limit.ts` with environment-aware degradation: fail-open (dev), fail-closed (prod).
+- Flow: `request → checkRateLimit() → allow/deny`.
 
-### Key Changes
-- Added security response headers to `next.config.mjs`
-- Fixed AI endpoint error leakage: generic client messages + server-side logging only
-- Removed OpenRouter preflight network check from API test endpoint
-
-### Files
-- `next.config.mjs`
-
-### Highlights
-- Prevents information leakage; eliminates unnecessary preflight checks; Next.js config updates for header hardening.
+### Security Hardening (security_hardening.md)
+- Response headers added to `next.config.mjs`.
+- AI endpoints now return generic client errors + server-side logging only (prevents leakage).
+- Removed OpenRouter preflight network check from API test endpoint.
+- Timestamped 2026-05-23.

@@ -53,7 +53,9 @@ export function Sidebar() {
         const keys = await caches.keys()
         await Promise.all(keys.map((k) => caches.delete(k)))
       }
-    } catch {}
+    } catch (error) {
+      console.error("Failed to clear caches on sign out:", error);
+    }
     await signOut({ callbackUrl: "/" })
   }
 

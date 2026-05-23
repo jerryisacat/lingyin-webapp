@@ -2,7 +2,7 @@
 title: Token TopUp and Unified API Key
 summary: Token top-up packages via Stripe, TokenTopUp model, topUpBalanceUsd, unified getEffectiveApiKey with user key priority, quota effective budget, AI endpoint migration, QuotaUsage UI updates
 tags: []
-related: []
+related: [billing/quota/free_tier_quota_system.md, billing/stripe_subscription/stripe_subscription_implementation.md]
 keywords: []
 createdAt: '2026-05-23T15:36:23.047Z'
 updatedAt: '2026-05-23T15:36:23.047Z'

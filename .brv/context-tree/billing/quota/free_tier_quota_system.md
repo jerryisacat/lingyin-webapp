@@ -2,7 +2,7 @@
 title: Free Tier Quota System
 summary: 'Free tier quota system: TokenUsage model, quota-service.ts for token/storage/model checks, enforced on generate/rewrite/test endpoints, storage tracking in saveDiary, QuotaUsage dashboard component'
 tags: []
-related: []
+related: [billing/quota/token_topup_and_unified_api_key.md, billing/stripe_subscription/stripe_subscription_implementation.md]
 keywords: []
 createdAt: '2026-05-23T15:22:57.696Z'
 updatedAt: '2026-05-23T15:22:57.696Z'

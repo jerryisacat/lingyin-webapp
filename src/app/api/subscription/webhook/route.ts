@@ -95,7 +95,7 @@ async function handleCheckoutCompleted(obj: Record<string, unknown>): Promise<vo
     currentPeriodStart: new Date(),
   });
 
-  console.error(`Webhook: subscription activated for user ${userId}, plan ${plan}`);
+  console.log(`Webhook: subscription activated for user ${userId}, plan ${plan}`);
 }
 
 async function handleInvoicePaid(obj: Record<string, unknown>): Promise<void> {

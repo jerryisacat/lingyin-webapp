@@ -1,43 +1,37 @@
 ---
-children_hash: c1566d7bca1257953fc61d06dd7371919c4ae2c724ab19c7b58d967964f68f95
-compression_ratio: 0.5220183486238532
+children_hash: 92f5e60085a0614ad08623345346b993e057cbd7a038fdfc36581a25002f3587
+compression_ratio: 0.4401325130146711
 condensation_order: 2
-covers: [demo/_index.md, epic_30/_index.md, landing/_index.md]
-covers_token_total: 1090
+covers: [auth-driven-conditional-rendering.md, demo/_index.md, epic_30/_index.md, landing/_index.md, logout/_index.md, timeline/_index.md]
+covers_token_total: 2113
 summary_level: d2
-token_count: 569
+token_count: 930
 type: summary
 ---
-# ui/
+# UI Domain Structural Overview (d2)
 
-Structural overview of UI/UX domain covering interactive demo, full-site design spec (Epic #30), and landing/auth routing. Consolidated from `demo/_index.md`, `epic_30/_index.md`, and `landing/_index.md`.
+The `ui` domain consolidates authentication-driven rendering, landing page architecture, design system upgrades, logout flows, timeline/calendar views, and interactive demos. Core pattern: Supabase session state as single source of truth for conditional UI branching between public and authenticated experiences, enforced across middleware, AppShell, and root routing.
 
-## Core Files & Sources
-- `public/demo.html` — single-file interactive demo (Tailwind CDN + custom keyframes)
-- `docs/issue-30-spec.md` — source for Epic #30 spec (curated 2026-05-22)
-- `src/app/globals.css`, `src/app/layout.tsx`, `tailwind.config.ts` — design tokens & FOUC prevention
-- `src/app/page.tsx`, `src/lib/supabase/middleware.ts`, `src/components/AppShell.tsx` — conditional landing/dashboard rendering
+## Auth & Routing Foundation
+- **auth-driven-conditional-rendering.md**: Supabase session dictates root (`/`) behavior—public landing (hero + features) for guests vs. dashboard for authenticated users. `PUBLIC_ROUTES` + `NO_SHELL_ROUTES` constants; middleware marks `/` public; `AppShell.tsx` excludes it from shell. Cross-references `structure/_index.md` and `ui/_index.md`.
 
-## Architectural Decisions
-- CSS variables for dual themes (sakura pink `#f0a8b0`, warm white `#faf3e8`, glassmorphism)
-- Blocking script in `layout.tsx` head eliminates FOUC; theme detection is mandatory
-- Lightweight sakura snowfall (no canvas libs); all animations respect `prefers-reduced-motion`
-- Tailwind transitions only; no Lottie/Framer Motion
-- `PUBLIC_ROUTES` + `NO_SHELL_ROUTES` constants drive middleware & AppShell behavior
-- Performance targets: LCP < 2s, CLS < 0.1, WCAG AA contrast
+## Landing & Navigation
+- **landing/_index.md**: Dual-state `src/app/page.tsx` renders full public landing or centered dashboard. Auth routing via `src/lib/supabase/middleware.ts` and `AppShell.tsx`. 2026-05-23 refactor: branding fixes, OSS/GitHub mentions, four use-case blocks, sticky frosted-glass navbar, Header migration from NavBar, AES-256-GCM privacy clarification. Preserves dual-state while adding glassmorphism and PWA emphasis. Consolidates `landing_page_and_auth_routing.md` + `landing_page_refactor.md`.
 
-## Modules & Features (9 total from Epic #30)
-- Design Tokens, Dark Mode, Landing Page, Navigation, Diary Editor, Timeline, Login/Settings, Micro-interactions, Onboarding
-- Key patterns: sakura particles (GPU-accelerated, 18), AI breathing glow, spring toast animations, iOS-standard mobile tab bar, immersive distraction-free editor
+## Design System & Epic Upgrades
+- **epic_30/_index.md**: Comprehensive spec (curated 2026-05-22 from `docs/issue-30-spec.md`) for 玲音日记 PWA. Covers 9 modules: design tokens (CSS vars for sakura pink `#f0a8b0`, warm white `#faf3e8`, glassmorphism), dark-mode FOUC blocking script in `layout.tsx`, sakura animations, immersive editor, timeline, navigation, micro-interactions, onboarding. Key decisions: Tailwind-only transitions, `prefers-reduced-motion` respect, LCP < 2s / CLS < 0.1, WCAG AA. Source files: `src/app/globals.css`, `tailwind.config.ts`. Flow: tokens → blocking script → landing → editor → timeline.
 
-## Landing & Auth Routing
-- Dual-state root: public landing (hero + features grid + steps + CTA) for guests; minimal dashboard (greeting + Write/Timeline buttons) for authenticated users
-- Supabase session drives conditional rendering; middleware marks `/` public; AppShell excludes it from nav shell
-- Highlights: PWA installable/offline, local API keys only, photo-to-text, Markdown timeline
+- **demo/_index.md**: High-fidelity single-file interactive demo (`public/demo.html`) showcasing v2.0 features. Tailwind CDN + custom keyframes (snowfall, breathing, slide-in-spring). Sections: hero → features → editor → PWA mobile preview. Highlights: 18 GPU sakura particles, zero-FOUC dark toggle, AI breathing glow, spring toasts, iOS tab feedback.
 
-## Demo Implementation
-- Flow: Landing hero → Feature steps → Interactive editor → Mobile PWA preview
-- Features: Zero-FOUC dark toggle, typewriter cursor, sakura snowfall, PWA tab slide/scale feedback
-- Consolidated from `.abstract.md` / `.overview.md` (identical topic, >80% overlap)
+## Logout & Session Management
+- **logout/_index.md**: Consistent `signOut` reuse across entry points. `src/app/settings/page.tsx` (red danger button), `src/components/Header.tsx` (desktop/mobile buttons), `MobileTabBar.tsx` (800ms long-press + modal confirmation on settings tab). Mobile-only safety pattern; cross-platform unification.
 
-Drill-down: `demo/_index.md` (demo mechanics), `epic_30/_index.md` (full spec + rules), `landing/_index.md` (auth routing logic).
+## Timeline & Calendar
+- **timeline/_index.md**: Calendar view toggle on timeline page (Issue #2). `CalendarView.tsx` renders month grid with sakura dots (memoized calc, entry map, skeleton/empty states). `src/app/api/entries/route.ts` extends GET with `?view=calendar&year=&month=` returning minimal `{id, date}`. `src/app/timeline/page.tsx` manages list/calendar toggle, preserves cursor state, respects date boundaries. Dependencies: lucide-react, `DiarySummary`/`CalendarEntry` types, `@/lib/diary` helpers. Flow: toggle → fetch → clickable grid → diary navigation.
+
+## Relationships & Patterns
+- All entries reference shared files (`src/app/page.tsx`, `AppShell.tsx`, `Header.tsx`, `MobileTabBar.tsx`, `globals.css`, `layout.tsx`).
+- Auth session drives conditional rendering across landing, demo, and timeline.
+- Design tokens and animations (sakura, glassmorphism) unify epic_30, demo, and landing.
+- No external libs beyond Tailwind/lucide-react; emphasis on performance, accessibility, and PWA installability.
+- Child entries provide drill-down: abstracts/overviews consolidated where overlap >80%.

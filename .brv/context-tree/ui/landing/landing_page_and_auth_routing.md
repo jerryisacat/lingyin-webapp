@@ -2,7 +2,7 @@
 title: Landing Page and Auth Routing
 summary: Landing page with hero/features/steps for guests; dashboard for users; middleware marks / as public; AppShell excludes / from nav shell
 tags: []
-related: []
+related: [ui/landing/landing_page_refactor.md]
 keywords: []
 createdAt: '2026-05-21T19:12:36.897Z'
 updatedAt: '2026-05-21T19:12:36.897Z'
