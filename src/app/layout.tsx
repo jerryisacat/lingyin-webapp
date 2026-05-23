@@ -3,6 +3,7 @@ import { Noto_Sans_SC } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { auth } from "@/lib/auth";
 import AppShell from "@/components/AppShell";
+import AuthProvider from "@/components/AuthProvider";
 import "./globals.css";
 
 const notoSansSC = Noto_Sans_SC({
@@ -37,7 +38,9 @@ export default async function RootLayout({
   return (
     <html lang="zh-CN" className={notoSansSC.variable}>
       <body className="min-h-screen bg-warm-white text-ink font-sans">
-        <AppShell authenticated={authenticated}>{children}</AppShell>
+        <AuthProvider session={session}>
+          <AppShell authenticated={authenticated}>{children}</AppShell>
+        </AuthProvider>
         <Analytics />
       </body>
     </html>
