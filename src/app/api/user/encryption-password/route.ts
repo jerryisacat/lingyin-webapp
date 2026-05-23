@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db"
 import { NextRequest } from "next/server"
 import bcrypt from "bcryptjs"
 import crypto from "crypto"
-import { formatZodError, encryptionPasswordSchema } from "@/lib/validations"
+import { formatZodError, encryptionPasswordSchema, changeEncryptionPasswordSchema } from "@/lib/validations"
 import { checkRateLimit, rateLimiters, rateLimitError } from "@/lib/rate-limit"
 
 const SALT_ROUNDS = 12
@@ -71,12 +71,12 @@ export async function PUT(request: NextRequest) {
     return jsonError("Invalid JSON body")
   }
 
-  const parseResult = encryptionPasswordSchema.safeParse(rawBody)
+  const parseResult = changeEncryptionPasswordSchema.safeParse(rawBody)
   if (!parseResult.success) {
     return jsonError(formatZodError(parseResult.error), 400)
   }
 
-  const { password } = parseResult.data
+  const { oldPassword, newPassword } = parseResult.data
 
   const existing = await prisma.user.findUnique({
     where: { id: user.id },
@@ -87,7 +87,12 @@ export async function PUT(request: NextRequest) {
     return jsonError("尚未设置加密密码，请使用 POST 创建", 400)
   }
 
-  const encryptionPasswordHash = await bcrypt.hash(password, SALT_ROUNDS)
+  const valid = await bcrypt.compare(oldPassword, existing.encryptionPasswordHash)
+  if (!valid) {
+    return jsonError("旧密码不正确", 401)
+  }
+
+  const encryptionPasswordHash = await bcrypt.hash(newPassword, SALT_ROUNDS)
   const encryptionSalt = generateEncryptionSalt()
 
   await prisma.user.update({

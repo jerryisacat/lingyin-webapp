@@ -1,4 +1,4 @@
-import { getUser, jsonError, jsonOk } from "@/lib/api-helpers";
+import { getSessionUserId as getUser, jsonError, jsonOk } from "@/lib/auth-helpers";
 import { getEntries, getCalendarEntries, saveDiary } from "@/lib/diary";
 import { NextRequest } from "next/server";
 import { formatZodError, entriesListSchema, createEntrySchema } from "@/lib/validations";

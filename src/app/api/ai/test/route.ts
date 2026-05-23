@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { getUser, jsonError, jsonOk } from "@/lib/api-helpers";
+import { getSessionUserId as getUser, jsonError, jsonOk } from "@/lib/auth-helpers";
 import { getUserDecryptedApiKey } from "@/lib/api-key-guard";
 import { createOpenAIClient, PROVIDER_CONFIGS } from "@/lib/ai/client";
 import { NextRequest } from "next/server";

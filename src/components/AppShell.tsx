@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import Header from "./Header";
 import MobileTabBar from "./MobileTabBar";
@@ -18,11 +18,15 @@ interface AppShellProps {
 export default function AppShell({ children, authenticated: ssrAuth }: AppShellProps) {
   const pathname = usePathname();
 
-  // Client-side auth — always fresh, even after client navigation
+  // Client-side auth — verify session once on initial mount
   const [authenticated, setAuthenticated] = useState(ssrAuth);
   const [authLoaded, setAuthLoaded] = useState(false);
+  const mounted = useRef(false);
 
   useEffect(() => {
+    if (mounted.current) return;
+    mounted.current = true;
+
     fetch("/api/auth/session")
       .then((res) => res.json())
       .then((data) => {
@@ -32,7 +36,7 @@ export default function AppShell({ children, authenticated: ssrAuth }: AppShellP
       .catch(() => {
         setAuthLoaded(true);
       });
-  }, [pathname]);
+  }, []);
 
   if (ALWAYS_NO_SHELL.some((route) => pathname.startsWith(route))) {
     return <>{children}</>;

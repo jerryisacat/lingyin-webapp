@@ -1,4 +1,4 @@
-import { getUser, jsonError, jsonOk } from "@/lib/api-helpers";
+import { getSessionUserId as getUser, jsonError, jsonOk } from "@/lib/auth-helpers";
 import { uploadImage } from "@/lib/storage";
 import { NextRequest } from "next/server";
 import { getClientIP, checkRateLimit, rateLimiters, rateLimitError } from "@/lib/rate-limit";

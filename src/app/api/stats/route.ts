@@ -1,4 +1,4 @@
-import { getUser, jsonError, jsonOk } from "@/lib/api-helpers";
+import { getSessionUserId as getUser, jsonError, jsonOk } from "@/lib/auth-helpers";
 import { getStats } from "@/lib/stats";
 import { checkRateLimit, rateLimiters, rateLimitError } from "@/lib/rate-limit";
 

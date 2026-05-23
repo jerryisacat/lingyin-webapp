@@ -37,12 +37,10 @@ export default function ForgotEncryptionPasswordPage() {
           </button>
           <button
             type="button"
-            onClick={() => {
-              // TODO: Implement reset flow in a future issue
-            }}
-            className="btn-ghost flex-1 text-sm text-red-500 hover:bg-red-50"
+            onClick={() => router.push("/settings")}
+            className="btn-primary flex-1 text-sm"
           >
-            我明白风险，继续重置
+            前往设置
           </button>
         </div>
       </div>

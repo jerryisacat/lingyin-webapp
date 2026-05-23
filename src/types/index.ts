@@ -2,25 +2,6 @@ export type Tone = "warm" | "genki" | "minimal" | "literary";
 
 export type ApiProvider = "openrouter";
 
-export interface UserConfig {
-  apiProvider: ApiProvider;
-  tone: Tone;
-}
-
-export interface DiaryEntry {
-  id: string;
-  userId: string;
-  date: string;
-  title?: string;
-  markdown: string;
-  tone: Tone;
-  tags: string[];
-  images: MediaFile[];
-  wordCount: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface DiarySummary {
   id: string;
   date: string;
@@ -43,19 +24,6 @@ export interface MediaFile {
   thumbnail?: string;
 }
 
-export interface AIGenerateRequest {
-  text: string;
-  images: MediaFile[];
-  tone: Tone;
-  date: string;
-}
-
-export interface AIGenerateResponse {
-  markdown: string;
-  title?: string;
-  tags: string[];
-}
-
 export interface CalendarEntry {
   id: string;
   date: string;
@@ -65,11 +33,6 @@ export interface ApiResponse<T> {
   ok: boolean;
   data?: T;
   error?: string;
-}
-
-export interface LocalApiKeyStore {
-  provider: ApiProvider;
-  apiKey: string;
 }
 
 export interface MonthlyData {

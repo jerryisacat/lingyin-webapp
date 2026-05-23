@@ -17,8 +17,12 @@ function createLimiter(maxRequests: number, window: Duration) {
   })
 }
 
+const MAX_FAILED_LOGIN_ATTEMPTS = 5
+const ACCOUNT_LOCK_MINUTES = "15 m"
+
 export const rateLimiters = {
   login: createLimiter(5, "1 m"),
+  loginAccount: createLimiter(MAX_FAILED_LOGIN_ATTEMPTS, ACCOUNT_LOCK_MINUTES),
   register: createLimiter(3, "15 m"),
   forgotPassword: createLimiter(2, "5 m"),
   resendVerification: createLimiter(2, "5 m"),

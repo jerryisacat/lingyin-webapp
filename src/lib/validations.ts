@@ -92,6 +92,15 @@ export const encryptionPasswordSchema = z.object({
     .regex(/[0-9]/, "密码需包含数字"),
 });
 
+export const changeEncryptionPasswordSchema = z.object({
+  oldPassword: z.string().min(1, "请输入旧密码"),
+  newPassword: z
+    .string()
+    .min(8, "加密密码至少需要 8 位")
+    .regex(/[a-zA-Z]/, "密码需包含字母")
+    .regex(/[0-9]/, "密码需包含数字"),
+});
+
 export const verifyEncryptionPasswordSchema = z.object({
   password: z.string().min(1, "密码不能为空"),
 });

@@ -1,4 +1,4 @@
-import { getUser, jsonError } from "@/lib/api-helpers";
+import { getSessionUserId as getUser, jsonError } from "@/lib/auth-helpers";
 import { getUserDecryptedApiKey } from "@/lib/api-key-guard";
 import { generateDiary } from "@/lib/diary";
 import { NextRequest } from "next/server";

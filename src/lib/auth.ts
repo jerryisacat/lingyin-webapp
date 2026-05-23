@@ -34,8 +34,19 @@ const result = NextAuth({
         if (!email || !password) return null
 
         const ip = getClientIP(request)
-        const { success } = await checkRateLimit(rateLimiters.login, ip)
-        if (!success) throw new RateLimitError()
+        const { success: ipOk } = await checkRateLimit(rateLimiters.login, ip)
+        if (!ipOk) throw new RateLimitError()
+
+        const { success: accountOk, reset } = await checkRateLimit(
+          rateLimiters.loginAccount,
+          `login:account:${email.toLowerCase()}`
+        )
+        if (!accountOk) {
+          const minutes = Math.ceil((reset - Date.now()) / 1000 / 60)
+          throw new CredentialsSignin(
+            `Account temporarily locked — too many failed attempts. Try again in ${minutes} minutes.`
+          )
+        }
 
         const user = await prisma.user.findUnique({ where: { email } })
         if (!user || !user.emailVerified) return null

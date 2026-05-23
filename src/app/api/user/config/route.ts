@@ -1,4 +1,4 @@
-import { getUser, jsonError, jsonOk } from "@/lib/api-helpers";
+import { getSessionUserId as getUser, jsonError, jsonOk } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/db";
 import type { Tone } from "@/types";
 import { NextRequest } from "next/server";

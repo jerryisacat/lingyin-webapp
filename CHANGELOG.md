@@ -417,9 +417,55 @@ Upstash Redis 环境变量 (`UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN
 - `docs/05-数据模型.md`: 更新 — 完整 Prisma Schema、类型定义
 - `AGENTS.md`: 更新 — Auth、API Key、设计决策、项目结构
 
+## 2026-05-23 — P2+P3 审计修复: 安全加固 + 代码质量 + 基础设施
+
+### P2-1: 加密密码变更添加旧密码验证
+- `src/app/api/user/encryption-password/route.ts`: PUT handler 新增 `changeEncryptionPasswordSchema`（含 oldPassword/newPassword），变更前验证旧密码 bcrypt 匹配
+- `src/lib/validations.ts`: 新增 `changeEncryptionPasswordSchema` Zod schema
+
+### P2-2: 忘记加密密码页面完善
+- `src/app/forgot-encryption-password/page.tsx`: 移除 TODO 占位按钮，改为"前往设置"导航按钮
+
+### P2-3: 账号级登录失败锁定
+- `src/lib/rate-limit.ts`: 新增 `loginAccount` limiter（5 次 / 15 分钟），按邮箱账号维度限流
+- `src/lib/auth.ts`: `authorize()` 新增账号级速率限制，超额时抛出 `CredentialsSignin` 含剩余分钟数提示
+
+### P2-4: AppShell 认证逻辑优化
+- `src/components/AppShell.tsx`: `useEffect` 从 `[pathname]` 依赖改为 `[]`（仅挂载时验证一次），使用 `useRef` 防止重复 fetch
+
+### P2-5: 死代码清理
+- 删除 `src/lib/api-helpers.ts`，9 个 API Route import 改为 `@/lib/auth-helpers` 直接 import
+- `src/types/index.ts`: 删除 5 个未使用类型（UserConfig, DiaryEntry, AIGenerateRequest, AIGenerateResponse, LocalApiKeyStore）
+
+### P2-6: API 校验模板函数
+- `src/lib/auth-helpers.ts`: 新增 `validateBody<T>()` 通用函数，Zod schema → JSON parse → 校验 → 返回 data 或 400 错误
+
+### P2-7: 删除旧验证 Token
+- `src/lib/auth-service.ts`: `resendVerification()` 和 `forgotPassword()` 创建新 token 前调用 `deleteMany` 清理旧 token
+
+### P3-1: ESLint 配置
+- 新增 `.eslintrc.json`（`next/core-web-vitals`），安装 `eslint`、`eslint-config-next`
+- `package.json`: `lint`/`lint:fix` 脚本已就绪，零 error
+
+### P3-2: 嵌套三元 → Map 查找
+- `src/lib/diary.ts`: `TONE_PROMPTS` 常量替代嵌套三元表达式，`systemPrompt = TONE_PROMPTS[tone]`
+
+### P3-3: noUncheckedIndexedAccess 评估
+- 评估后放弃启用：现存代码 25+ 类型错误，修复成本过高（与审计"exactOptionalPropertyTypes: false"决策一致）
+
+### P3-4: 全局环境变量校验
+- 新建 `src/lib/env.ts`: `env` 对象使用 getter 懒加载，10 个环境变量统一校验（AUTH_SECRET, R2_*, RESEND_*, KV_* 等）
+
+### P3-5: Prisma 错误处理中间件
+- 新建 `src/lib/prisma-errors.ts`: `handlePrismaError()` 统一处理 Prisma 错误码（P2002→409, P2025→404, P2003→400）
+
+### P3-6: vercel.json 构建校验
+- `vercel.json`: `buildCommand` 添加 `npx tsc --noEmit` 前置校验
+
+### 验证结果
+- `npx tsc --noEmit` — 零错误
+- `npm test` — 7/7 通过
+- `npm run lint` — 零 error（3 warnings 均为预存）
+
 ### 决策记录
-- **Auth.js v5 over Supabase Auth**: Credentials + JWT + Resend 替代 Magic Link，完全自建
-- **API Routes over Server Actions**: 注册/验证/重置改用 API Routes，便于独立测试和中间件透传
-- **API Key 服务端加密**: localStorage → PostgreSQL AES-256-GCM，鉴权走 Auth.js session，降低泄露风险
-- **bcrypt 12 rounds**: 平衡安全性和登录延迟 (~300ms)
-- **Token 生成**: `crypto.randomUUID()`，验证 24h 过期，重置 1h 过期
+
