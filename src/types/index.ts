@@ -1,4 +1,24 @@
 export type Tone = "warm" | "genki" | "minimal" | "literary";
+export type Perspective = "first_person" | "second_person";
+export type Persona =
+  | "yuanshao"
+  | "chengshu"
+  | "maoxi"
+  | "quanxi"
+  | "zhinan"
+  | "wenyi";
+
+export interface WritingStyle {
+  perspective: Perspective;
+  persona: Persona;
+}
+
+export interface PersonaDefinition {
+  id: Persona;
+  name: string;
+  emoji: string;
+  description: string;
+}
 
 export type ApiProvider = "openrouter";
 

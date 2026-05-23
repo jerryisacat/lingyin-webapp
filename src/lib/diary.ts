@@ -5,32 +5,24 @@ import {
   generateStream,
 } from "@/lib/ai/client";
 import {
-  WARM_SYSTEM_PROMPT,
-  GENKI_SYSTEM_PROMPT,
-  MINIMAL_SYSTEM_PROMPT,
-  LITERARY_SYSTEM_PROMPT,
+  buildSystemPrompt,
   buildDiaryPrompt,
   VISION_PROMPT,
 } from "@/lib/ai/prompts";
 import { trackStorageUsage } from "@/lib/quota-service";
-import type { ApiProvider, MediaFile, Tone, DiarySummary, CalendarEntry } from "@/types";
-
-const TONE_PROMPTS: Record<Tone, string> = {
-  warm: WARM_SYSTEM_PROMPT,
-  genki: GENKI_SYSTEM_PROMPT,
-  minimal: MINIMAL_SYSTEM_PROMPT,
-  literary: LITERARY_SYSTEM_PROMPT,
-}
+import type { ApiProvider, MediaFile, Tone, WritingStyle, DiarySummary, CalendarEntry } from "@/types";
+import { DEFAULT_WRITING_STYLE } from "@/config/personas";
 
 export async function* generateDiary(params: {
   text: string;
   images: MediaFile[];
-  tone: Tone;
+  tone?: Tone;
+  writingStyle?: WritingStyle;
   date: string;
   apiKey: string;
   provider: ApiProvider;
 }): AsyncGenerator<string> {
-  const { text, images, tone, date, apiKey, provider } = params;
+  const { text, images, writingStyle, date, apiKey, provider } = params;
 
   const imageUrls = images.map((img) => img.url);
   const imageDescriptions =
@@ -49,7 +41,7 @@ export async function* generateDiary(params: {
     description: imageDescriptions[i] ?? "",
   }));
 
-  const systemPrompt = TONE_PROMPTS[tone]
+  const systemPrompt = buildSystemPrompt(writingStyle ?? DEFAULT_WRITING_STYLE)
   const userPrompt = buildDiaryPrompt({
     userText: text,
     imageDescriptions: imageData,

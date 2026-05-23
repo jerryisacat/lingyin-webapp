@@ -38,6 +38,7 @@ export async function POST(request: NextRequest) {
     text,
     images,
     tone,
+    writingStyle,
     date: inputDate,
     provider,
   } = parseResult.data;
@@ -71,6 +72,7 @@ export async function POST(request: NextRequest) {
       size: img.size,
     })),
     tone,
+    writingStyle,
     date,
     apiKey,
     provider,

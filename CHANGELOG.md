@@ -1,3 +1,29 @@
+## 2026-05-23 — Issues #95: 首次登录引导 + 精细化语气风格配置
+
+### 首次登录引导流程
+- 新增 `src/app/setup/page.tsx` — 两步引导：叙事视角（第一/第二人称）→ 人格偏好（6选1）
+- 引导完成后保存配置并跳转到写日记页面
+- 提供"跳过"选项，使用默认值
+
+### 语气风格重构
+- `src/config/personas.ts` — 6 个人格定义（元气少女/成熟稳重/慵懒猫系/阳光犬系/简约直男/文艺青年），含 emoji + 描述 + prompt 指令
+- `src/components/WritingStyleConfig.tsx` — 公用组件，支持引导模式和嵌入模式（设置页复用）
+- `src/lib/ai/prompts.ts` — 重构为 `buildSystemPrompt(writingStyle)` 动态生成人格化 system prompt
+- `src/lib/diary.ts` — 使用动态 prompt 替代旧 TONE_PROMPTS 映射
+- `src/components/DiaryEditor.tsx` — 语气选择器替换为 6 人格卡片选择器
+- `src/hooks/useStreamGenerate.ts` — 传递 `writingStyle` 到 API
+- `src/app/api/ai/generate/route.ts` — 接受 `writingStyle` 参数
+- `src/app/api/ai/rewrite/route.ts` — 改用 `writingStyle` 替代旧 `tone` 字段
+
+### 数据模型
+- `prisma/schema.prisma` — User 表新增 `writingStyle Json` 字段，默认值 `{ perspective: "first_person", persona: "yuanshao" }`
+- `src/types/index.ts` — 新增 `WritingStyle` / `Persona` / `Perspective` / `PersonaDefinition` 类型
+- `src/lib/validations.ts` — 新增 `writingStyleSchema`（perspective + persona 校验）
+- `src/app/api/user/style/route.ts` — 新增风格配置 CRUD API（GET/PUT）
+
+### 设置页
+- `src/app/settings/page.tsx` — 新增「日记风格」区块，嵌入 `WritingStyleConfig` 组件
+
 ## 2026-05-23 — Stream C 完善：Webhook 幂等修复 + Token 结转 + 账单记录 + 数据导出 + 管理面板
 
 ### Webhook 幂等修复 (P0)

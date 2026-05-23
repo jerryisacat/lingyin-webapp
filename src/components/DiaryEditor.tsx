@@ -6,7 +6,9 @@ import { Sparkles, StopCircle, Eye, EyeOff, Save, RefreshCw, ArrowLeft } from "l
 import { useStreamGenerate } from "@/hooks/useStreamGenerate";
 import TypewriterText from "@/components/TypewriterText";
 import PhotoUploader from "@/components/PhotoUploader";
-import type { ApiProvider, MediaFile, Tone } from "@/types";
+import type { ApiProvider, MediaFile, WritingStyle, PersonaDefinition } from "@/types";
+import type { ApiResponse } from "@/types";
+import { PERSONAS } from "@/config/personas";
 
 type EditorState = "input" | "generating" | "editing";
 
@@ -34,7 +36,23 @@ export default function DiaryEditor({ date, provider }: DiaryEditorProps) {
   const [showPreview, setShowPreview] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [selectedTone, setSelectedTone] = useState<Tone>("warm");
+  const [writingStyle, setWritingStyle] = useState<WritingStyle>({
+    perspective: "first_person",
+    persona: "yuanshao",
+  });
+  const [styleLoaded, setStyleLoaded] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/user/style")
+      .then((res) => res.json())
+      .then((json: ApiResponse<{ writingStyle: WritingStyle }>) => {
+        if (json.ok && json.data?.writingStyle) {
+          setWritingStyle(json.data.writingStyle);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setStyleLoaded(true));
+  }, []);
 
   const { text: streamedText, isStreaming, error: streamError, generate, stop, reset } =
     useStreamGenerate({
@@ -42,7 +60,7 @@ export default function DiaryEditor({ date, provider }: DiaryEditorProps) {
       images,
       date,
       provider,
-      tone: selectedTone,
+      writingStyle,
     });
 
   useEffect(() => {
@@ -89,7 +107,8 @@ export default function DiaryEditor({ date, provider }: DiaryEditorProps) {
         body: JSON.stringify({
           date,
           markdown,
-          tone: selectedTone,
+          tone: "warm",
+          writingStyle,
           imagePaths: images.map((img) => img.path),
         }),
       });
@@ -107,7 +126,7 @@ export default function DiaryEditor({ date, provider }: DiaryEditorProps) {
       setSaveError(msg);
       setSaveStatus("error");
     }
-  }, [markdown, date, images, selectedTone, router]);
+  }, [markdown, date, images, writingStyle, router]);
 
   const handleRegenerate = useCallback(() => {
     reset();
@@ -170,29 +189,24 @@ export default function DiaryEditor({ date, provider }: DiaryEditorProps) {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs text-ink-light/60 mr-1">语气：</span>
-            {(["warm", "genki", "minimal", "literary"] as const).map((tone) => {
-              const labels: Record<string, string> = {
-                warm: "温暖姐姐",
-                genki: "元气少女",
-                minimal: "简约派",
-                literary: "文艺风",
-              };
-              return (
-                <button
-                  key={tone}
-                  type="button"
-                  onClick={() => setSelectedTone(tone)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                    selectedTone === tone
-                      ? "bg-sakura text-white"
-                      : "border border-sakura/30 text-ink-light hover:border-sakura/60"
-                  }`}
-                >
-                  {labels[tone]}
-                </button>
-              );
-            })}
+            <span className="text-xs text-ink-light/60 mr-1">风格：</span>
+            {Object.values(PERSONAS).map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() =>
+                  setWritingStyle((prev) => ({ ...prev, persona: p.id }))
+                }
+                className={`px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                  writingStyle.persona === p.id
+                    ? "bg-sakura text-white"
+                    : "border border-sakura/30 text-ink-light hover:border-sakura/60"
+                }`}
+                title={p.description}
+              >
+                {p.emoji} {p.name}
+              </button>
+            ))}
           </div>
 
           <button

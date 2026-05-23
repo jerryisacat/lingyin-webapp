@@ -24,6 +24,14 @@ export const resendVerificationSchema = z.object({
 
 const VALID_TONES = ["warm", "genki", "minimal", "literary"] as const;
 
+const VALID_PERSPECTIVES = ["first_person", "second_person"] as const;
+const VALID_PERSONAS = ["yuanshao", "chengshu", "maoxi", "quanxi", "zhinan", "wenyi"] as const;
+
+export const writingStyleSchema = z.object({
+  perspective: z.enum(VALID_PERSPECTIVES),
+  persona: z.enum(VALID_PERSONAS),
+});
+
 export const entriesListSchema = z.object({
   view: z.enum(["calendar"]).optional(),
   year: z.coerce.number().int().optional(),
@@ -58,7 +66,8 @@ export const aiGenerateSchema = z.object({
     mime: z.string(),
     size: z.number(),
   })).optional().default([]),
-  tone: z.enum(VALID_TONES).optional().default("warm"),
+  tone: z.enum(VALID_TONES).optional(),
+  writingStyle: writingStyleSchema.optional(),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   provider: z.enum(VALID_PROVIDERS).optional().default("openrouter"),
 });

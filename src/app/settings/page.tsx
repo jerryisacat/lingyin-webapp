@@ -8,6 +8,7 @@ import { useEncryption } from "@/hooks/useEncryptionPassword"
 import { EncryptionSettings } from "@/components/EncryptionSettings"
 import { SetEncryptionPasswordModal } from "@/components/SetEncryptionPasswordModal"
 import type { ApiProvider, SubscriptionData } from "@/types"
+import WritingStyleConfig from "@/components/WritingStyleConfig"
 import {
   Key,
   Eye,
@@ -388,6 +389,8 @@ export default function SettingsPage() {
         }}
         onResetPassword={() => {}}
       />
+
+      <WritingStyleConfig embedded />
 
       <div className="card space-y-3">
         <div className="flex items-center gap-2">

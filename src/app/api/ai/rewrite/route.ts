@@ -1,13 +1,9 @@
 import { getSessionUserId as getUser, jsonError } from "@/lib/auth-helpers";
 import { getEffectiveApiKey } from "@/lib/api-key-guard";
 import { generateStream } from "@/lib/ai/client";
-import {
-  WARM_SYSTEM_PROMPT,
-  GENKI_SYSTEM_PROMPT,
-  MINIMAL_SYSTEM_PROMPT,
-  LITERARY_SYSTEM_PROMPT,
-} from "@/lib/ai/prompts";
-import type { Tone } from "@/types";
+import { buildSystemPrompt } from "@/lib/ai/prompts";
+import type { WritingStyle } from "@/types";
+import { DEFAULT_WRITING_STYLE } from "@/config/personas";
 import { prisma } from "@/lib/db";
 import { NextRequest } from "next/server";
 import { checkRateLimit, rateLimiters, rateLimitError } from "@/lib/rate-limit";
@@ -19,13 +15,6 @@ import {
   recordTokenUsage,
   estimateTokensFromChars,
 } from "@/lib/quota-service";
-
-const TONE_PROMPTS: Record<Tone, string> = {
-  warm: WARM_SYSTEM_PROMPT,
-  genki: GENKI_SYSTEM_PROMPT,
-  minimal: MINIMAL_SYSTEM_PROMPT,
-  literary: LITERARY_SYSTEM_PROMPT,
-};
 
 const BASE_MODEL = "deepseek/deepseek-v4-flash";
 
@@ -75,10 +64,10 @@ export async function POST(request: NextRequest) {
 
   const dbUser = await prisma.user.findUnique({
     where: { id: user.id },
-    select: { tone: true },
+    select: { writingStyle: true },
   });
-  const tone = (dbUser?.tone ?? "warm") as Tone;
-  const systemPrompt = TONE_PROMPTS[tone];
+  const writingStyle: WritingStyle = (dbUser?.writingStyle as WritingStyle | null) ?? DEFAULT_WRITING_STYLE;
+  const systemPrompt = buildSystemPrompt(writingStyle);
   const userPrompt = `原始日记如下：
 
 ${content}

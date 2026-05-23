@@ -1,14 +1,15 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import type { ApiProvider, MediaFile } from "@/types";
+import type { ApiProvider, MediaFile, WritingStyle } from "@/types";
 
 interface UseStreamGenerateOptions {
   text: string;
   images: MediaFile[];
   date: string;
   provider: ApiProvider;
-  tone: string;
+  tone?: string;
+  writingStyle?: WritingStyle;
 }
 
 interface UseStreamGenerateReturn {
@@ -23,7 +24,7 @@ interface UseStreamGenerateReturn {
 export function useStreamGenerate(
   options: UseStreamGenerateOptions
 ): UseStreamGenerateReturn {
-  const { text, images, date, provider, tone } = options;
+  const { text, images, date, provider, tone, writingStyle } = options;
 
   const [output, setOutput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -56,7 +57,7 @@ export function useStreamGenerate(
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ text, images, date, tone, provider }),
+        body: JSON.stringify({ text, images, date, tone, writingStyle, provider }),
         signal: controller.signal,
       });
 
@@ -117,7 +118,7 @@ export function useStreamGenerate(
       setIsStreaming(false);
       abortRef.current = null;
     }
-  }, [text, images, date, provider, tone]);
+  }, [text, images, date, provider, tone, writingStyle]);
 
   return { text: output, isStreaming, error, generate, stop, reset };
 }
