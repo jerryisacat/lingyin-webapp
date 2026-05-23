@@ -41,9 +41,11 @@
       "type": "context"
     },
     {
+      "abstractPath": "structure/security/rate_limiting.abstract.md",
+      "abstractTokens": 45,
       "importance": 50,
       "path": "structure/security/rate_limiting.md",
-      "tokens": 286,
+      "tokens": 45,
       "type": "context"
     },
     {
@@ -85,15 +87,21 @@
       "path": "ui/landing/landing_page_and_auth_routing.md",
       "tokens": 847,
       "type": "context"
+    },
+    {
+      "importance": 50,
+      "path": "ui/timeline/calendar_view_implementation.md",
+      "tokens": 371,
+      "type": "context"
     }
   ],
-  "generated_at": "2026-05-23T08:25:31.458Z",
+  "generated_at": "2026-05-23T08:37:05.050Z",
   "lane_tokens": {
-    "contexts": 3705,
+    "contexts": 3835,
     "stubs": 0,
     "summaries": 1968
   },
-  "source_fingerprint": "87e7ea5588bcb5b761060f3cec250dd353117cd2c56c36b0204c4feacf1719ed",
-  "total_tokens": 5673,
+  "source_fingerprint": "bdd67479a140198d3901ced89abbe5a093722f102e8b921638698d6815c3eab9",
+  "total_tokens": 5803,
   "version": 1
 }

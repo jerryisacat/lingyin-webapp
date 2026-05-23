@@ -56,6 +56,11 @@ export interface AIGenerateResponse {
   tags: string[];
 }
 
+export interface CalendarEntry {
+  id: string;
+  date: string;
+}
+
 export interface ApiResponse<T> {
   ok: boolean;
   data?: T;

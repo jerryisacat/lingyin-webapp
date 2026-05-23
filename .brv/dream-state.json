@@ -1,5 +1,5 @@
 {
-  "curationsSinceDream": 1,
+  "curationsSinceDream": 2,
   "lastDreamAt": "2026-05-23T05:46:43.447Z",
   "lastDreamLogId": "drm-1779515102271",
   "pendingMerges": [],
@@ -7,6 +7,10 @@
     {
       "enqueuedAt": 1779524731446,
       "path": "structure/security/rate_limiting.md"
+    },
+    {
+      "enqueuedAt": 1779525425037,
+      "path": "ui/timeline/calendar_view_implementation.md"
     }
   ],
   "totalDreams": 2,
