@@ -3,10 +3,14 @@ import { getUserDecryptedApiKey } from "@/lib/api-key-guard";
 import { generateDiary } from "@/lib/diary";
 import type { ApiProvider, Tone } from "@/types";
 import { NextRequest } from "next/server";
+import { checkRateLimit, rateLimiters, rateLimitError } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
   const user = await getUser();
   if (!user) return jsonError("Unauthorized", 401);
+
+  const { success, reset } = await checkRateLimit(rateLimiters.aiGenerate, user.id);
+  if (!success) return rateLimitError(reset);
 
   let body: {
     text?: string;

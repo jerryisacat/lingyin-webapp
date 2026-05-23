@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server"
 import { resendVerification } from "@/lib/auth-service"
+import { getClientIP, checkRateLimit, rateLimiters, rateLimitError } from "@/lib/rate-limit"
 
 export async function POST(request: Request) {
+  const ip = getClientIP(request)
+  const { success, reset } = await checkRateLimit(rateLimiters.resendVerification, ip)
+  if (!success) return rateLimitError(reset)
+
   try {
     const { email } = await request.json()
     const result = await resendVerification(email)

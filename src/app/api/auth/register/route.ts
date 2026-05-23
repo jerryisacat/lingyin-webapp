@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server"
 import { registerUser } from "@/lib/auth-service"
+import { getClientIP, checkRateLimit, rateLimiters, rateLimitError } from "@/lib/rate-limit"
 
 export async function POST(request: Request) {
+  const ip = getClientIP(request)
+  const { success, reset } = await checkRateLimit(rateLimiters.register, ip)
+  if (!success) return rateLimitError(reset)
+
   try {
     const body = await request.json()
     const result = await registerUser(body)

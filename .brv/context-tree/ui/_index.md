@@ -1,40 +1,43 @@
 ---
-children_hash: 39259dba98025e7e454bb2399c59f1430f19ffa246a7699afbcbb154575571a5
-compression_ratio: 0.7576601671309192
+children_hash: c1566d7bca1257953fc61d06dd7371919c4ae2c724ab19c7b58d967964f68f95
+compression_ratio: 0.5220183486238532
 condensation_order: 2
-covers: [landing/_index.md]
-covers_token_total: 359
+covers: [demo/_index.md, epic_30/_index.md, landing/_index.md]
+covers_token_total: 1090
 summary_level: d2
-token_count: 272
+token_count: 569
 type: summary
 ---
-# Landing Page and Auth Routing
+# ui/
 
-**Source:** `landing/_index.md` (condenses `landing_page_and_auth_routing.md`)
+Structural overview of UI/UX domain covering interactive demo, full-site design spec (Epic #30), and landing/auth routing. Consolidated from `demo/_index.md`, `epic_30/_index.md`, and `landing/_index.md`.
 
-## Purpose
-Dual-state root page: public landing for guests, minimal dashboard for authenticated users. Middleware treats `/` as public; AppShell excludes it from navigation shell.
-
-## Core Files
-- `src/app/page.tsx` — conditional rendering
-- `src/lib/supabase/middleware.ts` — route protection via `PUBLIC_ROUTES`
-- `src/components/AppShell.tsx` — shell exclusion via `NO_SHELL_ROUTES`
+## Core Files & Sources
+- `public/demo.html` — single-file interactive demo (Tailwind CDN + custom keyframes)
+- `docs/issue-30-spec.md` — source for Epic #30 spec (curated 2026-05-22)
+- `src/app/globals.css`, `src/app/layout.tsx`, `tailwind.config.ts` — design tokens & FOUC prevention
+- `src/app/page.tsx`, `src/lib/supabase/middleware.ts`, `src/components/AppShell.tsx` — conditional landing/dashboard rendering
 
 ## Architectural Decisions
-- Supabase session drives rendering
-- Full landing for unauthenticated; centered greeting + actions for authenticated
-- PWA installable with offline diary read; local API key only
+- CSS variables for dual themes (sakura pink `#f0a8b0`, warm white `#faf3e8`, glassmorphism)
+- Blocking script in `layout.tsx` head eliminates FOUC; theme detection is mandatory
+- Lightweight sakura snowfall (no canvas libs); all animations respect `prefers-reduced-motion`
+- Tailwind transitions only; no Lottie/Framer Motion
+- `PUBLIC_ROUTES` + `NO_SHELL_ROUTES` constants drive middleware & AppShell behavior
+- Performance targets: LCP < 2s, CLS < 0.1, WCAG AA contrast
 
-## Unauthenticated View
-- Hero + login CTA
-- Features grid (AI generate, photo-to-text, privacy, PWA)
-- Steps: record → AI polish → save
-- CTA + Footer
+## Modules & Features (9 total from Epic #30)
+- Design Tokens, Dark Mode, Landing Page, Navigation, Diary Editor, Timeline, Login/Settings, Micro-interactions, Onboarding
+- Key patterns: sakura particles (GPU-accelerated, 18), AI breathing glow, spring toast animations, iOS-standard mobile tab bar, immersive distraction-free editor
 
-## Authenticated View
-- Greeting
-- Primary actions: Write Diary / Timeline
-- Tip card
+## Landing & Auth Routing
+- Dual-state root: public landing (hero + features grid + steps + CTA) for guests; minimal dashboard (greeting + Write/Timeline buttons) for authenticated users
+- Supabase session drives conditional rendering; middleware marks `/` public; AppShell excludes it from nav shell
+- Highlights: PWA installable/offline, local API keys only, photo-to-text, Markdown timeline
 
-## Key Relationships
-- Landing integrates with auth flow and PWA capabilities; photo analysis feeds diary entries; Markdown timeline support.
+## Demo Implementation
+- Flow: Landing hero → Feature steps → Interactive editor → Mobile PWA preview
+- Features: Zero-FOUC dark toggle, typewriter cursor, sakura snowfall, PWA tab slide/scale feedback
+- Consolidated from `.abstract.md` / `.overview.md` (identical topic, >80% overlap)
+
+Drill-down: `demo/_index.md` (demo mechanics), `epic_30/_index.md` (full spec + rules), `landing/_index.md` (auth routing logic).

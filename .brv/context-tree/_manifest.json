@@ -3,19 +3,25 @@
     {
       "order": 3,
       "path": "_index.md",
-      "tokens": 222,
+      "tokens": 812,
       "type": "summary"
     },
     {
       "order": 2,
-      "path": "ui/_index.md",
-      "tokens": 272,
+      "path": "api/_index.md",
+      "tokens": 258,
       "type": "summary"
     },
     {
-      "order": 1,
-      "path": "ui/landing/_index.md",
-      "tokens": 293,
+      "order": 2,
+      "path": "project/_index.md",
+      "tokens": 150,
+      "type": "summary"
+    },
+    {
+      "order": 2,
+      "path": "structure/_index.md",
+      "tokens": 748,
       "type": "summary"
     },
     {
@@ -36,16 +42,20 @@
     },
     {
       "importance": 50,
-      "path": "structure/security/security_hardening.md",
-      "tokens": 249,
+      "path": "structure/security/rate_limiting.md",
+      "tokens": 286,
       "type": "context"
     },
     {
-      "abstractPath": "structure/src_app/application_source.abstract.md",
-      "abstractTokens": 57,
+      "importance": 50,
+      "path": "structure/security/security_hardening.md",
+      "tokens": 587,
+      "type": "context"
+    },
+    {
       "importance": 50,
       "path": "structure/src_app/application_source.md",
-      "tokens": 57,
+      "tokens": 1086,
       "type": "context"
     },
     {
@@ -57,11 +67,9 @@
       "type": "context"
     },
     {
-      "abstractPath": "ui/demo/ui_ux_interactive_demo_v2_0.abstract.md",
-      "abstractTokens": 50,
       "importance": 50,
       "path": "ui/demo/ui_ux_interactive_demo_v2_0.md",
-      "tokens": 50,
+      "tokens": 681,
       "type": "context"
     },
     {
@@ -79,13 +87,13 @@
       "type": "context"
     }
   ],
-  "generated_at": "2026-05-23T05:29:58.318Z",
+  "generated_at": "2026-05-23T08:25:31.458Z",
   "lane_tokens": {
-    "contexts": 1421,
+    "contexts": 3705,
     "stubs": 0,
-    "summaries": 787
+    "summaries": 1968
   },
-  "source_fingerprint": "4077511c9541b27030990052a1965a3ec0f443ea723eb57afc31a962c4b19379",
-  "total_tokens": 2208,
+  "source_fingerprint": "87e7ea5588bcb5b761060f3cec250dd353117cd2c56c36b0204c4feacf1719ed",
+  "total_tokens": 5673,
   "version": 1
 }

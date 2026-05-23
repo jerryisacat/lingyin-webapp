@@ -1,38 +1,14 @@
 {
-  "curationsSinceDream": 8,
-  "lastDreamAt": "2026-05-22T06:05:02.522Z",
-  "lastDreamLogId": "drm-1779429861536",
+  "curationsSinceDream": 1,
+  "lastDreamAt": "2026-05-23T05:46:43.447Z",
+  "lastDreamLogId": "drm-1779515102271",
   "pendingMerges": [],
   "staleSummaryPaths": [
     {
-      "enqueuedAt": 1779441438161,
-      "path": "structure/src_app/application_source.md"
-    },
-    {
-      "enqueuedAt": 1779446611353,
-      "path": "structure/storage/r2_privacy_and_asset_management.md"
-    },
-    {
-      "enqueuedAt": 1779451548226,
-      "path": "ui/epic_30/full_site_ui_ux_design_upgrade_spec.md"
-    },
-    {
-      "enqueuedAt": 1779451807872,
-      "path": "ui/demo/ui_ux_interactive_demo_v2_0.md"
-    },
-    {
-      "enqueuedAt": 1779452589131,
-      "path": "project/context_curation/rlm_context_curation.md"
-    },
-    {
-      "enqueuedAt": 1779453895861,
-      "path": "api/ai_integration/api_test_endpoint_and_openrouter_client.md"
-    },
-    {
-      "enqueuedAt": 1779514198309,
-      "path": "structure/security/security_hardening.md"
+      "enqueuedAt": 1779524731446,
+      "path": "structure/security/rate_limiting.md"
     }
   ],
-  "totalDreams": 1,
+  "totalDreams": 2,
   "version": 1
 }

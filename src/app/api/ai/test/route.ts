@@ -4,6 +4,7 @@ import { getUserDecryptedApiKey } from "@/lib/api-key-guard";
 import { createOpenAIClient, PROVIDER_CONFIGS } from "@/lib/ai/client";
 import type { ApiProvider } from "@/types";
 import { NextRequest } from "next/server";
+import { checkRateLimit, rateLimiters, rateLimitError } from "@/lib/rate-limit";
 
 /** Log detailed error diagnostics for Vercel debugging */
 function logConnectionError(error: unknown, context: Record<string, unknown> = {}) {
@@ -13,7 +14,7 @@ function logConnectionError(error: unknown, context: Record<string, unknown> = {
   console.error("[API Test] Connection failed:", {
     message: err.message,
     name: err.name,
-    isAPIConnectionError: err instanceof OpenAI.APIConnectionError,
+    isAPIConnectionError: error instanceof OpenAI.APIConnectionError,
     causeName: cause instanceof Error ? cause.name : typeof cause,
     causeMessage: cause instanceof Error ? cause.message : String(cause ?? "N/A"),
     causeCode: (cause as NodeJS.ErrnoException)?.code ?? "N/A",
@@ -25,6 +26,9 @@ function logConnectionError(error: unknown, context: Record<string, unknown> = {
 export async function POST(request: NextRequest) {
   const user = await getUser();
   if (!user) return jsonError("Unauthorized", 401);
+
+  const { success, reset } = await checkRateLimit(rateLimiters.aiTest, user.id);
+  if (!success) return rateLimitError(reset);
 
   let body: { provider?: ApiProvider; apiKey?: string };
   try {

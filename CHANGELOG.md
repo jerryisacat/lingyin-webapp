@@ -1,5 +1,36 @@
 # CHANGELOG
 
+## 2026-05-23 — 速率限制: 全量 API 端点添加速率限制
+
+**触发原因**: 修复审计发现 #60 — 所有 API 路由无速率限制（P0 安全漏洞）。
+
+### 新增
+- `src/lib/rate-limit.ts`: 基于 @upstash/ratelimit + @upstash/redis 的集中速率限制模块，支持 IP 和 userId 标识
+- 依赖: @upstash/ratelimit, @upstash/redis
+
+### 速率限制规则
+| 端点 | 窗口 | 最大请求 | 标识 |
+|------|------|---------|------|
+| POST /api/auth/register | 15 分钟 | 3 | IP |
+| POST /api/auth/forgot-password | 5 分钟 | 2 | IP |
+| POST /api/auth/resend-verification | 5 分钟 | 2 | IP |
+| POST /api/auth/reset-password | 15 分钟 | 5 | IP |
+| POST /api/auth/[...nextauth] (登录) | 1 分钟 | 5 | IP |
+| POST /api/ai/generate | 1 分钟 | 5 | userId |
+| POST /api/ai/rewrite | 1 分钟 | 5 | userId |
+| POST /api/ai/test | 1 分钟 | 3 | userId |
+
+### 变更
+- `.env.example`: 添加 UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN 环境变量
+- `src/lib/auth.ts`: Credentials provider authorize 回调添加登录速率限制，新增 RateLimitError 类
+- `src/app/api/auth/register/route.ts`: 添加注册速率限制 (#60)
+- `src/app/api/auth/forgot-password/route.ts`: 添加密码重置邮件速率限制 (#60)
+- `src/app/api/auth/resend-verification/route.ts`: 添加验证邮件重发速率限制 (#60)
+- `src/app/api/auth/reset-password/route.ts`: 添加密码重置速率限制 (#60)
+- `src/app/api/ai/generate/route.ts`: 添加 AI 生成速率限制 (#60)
+- `src/app/api/ai/rewrite/route.ts`: 添加 AI 改写速率限制 (#60)
+- `src/app/api/ai/test/route.ts`: 添加 AI 测试速率限制 (#60)
+
 ## 2026-05-23 — 安全加固: 修复代码审计发现的 High/Medium 漏洞
 
 **触发原因**: 全量代码安全审计（排除数据库层）发现 5 High + 10 Medium + 8 Low + 6 Info 问题。

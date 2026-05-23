@@ -4,10 +4,14 @@ import { generateStream } from "@/lib/ai/client";
 import { WARM_SYSTEM_PROMPT } from "@/lib/ai/prompts";
 import type { ApiProvider } from "@/types";
 import { NextRequest } from "next/server";
+import { checkRateLimit, rateLimiters, rateLimitError } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
   const user = await getUser();
   if (!user) return jsonError("Unauthorized", 401);
+
+  const { success, reset } = await checkRateLimit(rateLimiters.aiRewrite, user.id);
+  if (!success) return rateLimitError(reset);
 
   let body: { content?: string; instruction?: string; provider?: ApiProvider };
   try {

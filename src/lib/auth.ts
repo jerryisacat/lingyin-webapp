@@ -1,7 +1,12 @@
-import NextAuth, { DefaultSession } from "next-auth"
+import NextAuth, { CredentialsSignin, DefaultSession } from "next-auth"
 import Credentials from "next-auth/providers/credentials"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/db"
+import { getClientIP, checkRateLimit, rateLimiters } from "@/lib/rate-limit"
+
+class RateLimitError extends CredentialsSignin {
+  code = "rate_limited"
+}
 
 if (!process.env.AUTH_SECRET) {
   if (process.env.NODE_ENV === "production") {
@@ -25,11 +30,15 @@ const result = NextAuth({
         email: { label: "邮箱", type: "email" },
         password: { label: "密码", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
         const email = credentials?.email as string | undefined
         const password = credentials?.password as string | undefined
 
         if (!email || !password) return null
+
+        const ip = getClientIP(request)
+        const { success } = await checkRateLimit(rateLimiters.login, ip)
+        if (!success) throw new RateLimitError()
 
         const user = await prisma.user.findUnique({ where: { email } })
         if (!user || !user.emailVerified) return null
