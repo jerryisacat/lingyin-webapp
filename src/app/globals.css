@@ -149,5 +149,5 @@
 }
 
 .use-case-desc {
-  @apply text-ink-light;
+  @apply text-ink-light leading-relaxed;
 }

@@ -216,19 +216,19 @@ export default async function Home() {
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             <div className="use-case-card">
               <h3 className="use-case-title">追演出</h3>
-              <p className="use-case-desc">记录每一次现场</p>
+              <p className="use-case-desc">今天看了草东没有派对的现场。拍两张照片，说两句感受，AI 帮你写成一篇有温度的演出日记。回来翻看，每个细节都还在。</p>
             </div>
             <div className="use-case-card">
               <h3 className="use-case-title">旅行</h3>
-              <p className="use-case-desc">旅途中的随身笔</p>
+              <p className="use-case-desc">每到一个城市，拍张照、说段话。不用修图排版，AI 会生成属于那一天的旅行日记。一年后翻看，像又走了一遍。</p>
             </div>
             <div className="use-case-card">
               <h3 className="use-case-title">日常</h3>
-              <p className="use-case-desc">随手记下小日子</p>
+              <p className="use-case-desc">猫又干了什么傻事？随手一拍，加句话，AI 扩写成一篇日常记录。生活里的小事，也能成为值得回味的文字。</p>
             </div>
             <div className="use-case-card">
               <h3 className="use-case-title">生活</h3>
-              <p className="use-case-desc">热爱有迹可循</p>
+              <p className="use-case-desc">第一次做番茄牛腩。拍下成品、写下心得，AI 帮你整理成完整的烹饪日记。下次做的时候翻出来看。</p>
             </div>
           </div>
         </div>
