@@ -1,3 +1,84 @@
+## 2026-05-23 — #11 免费版配额系统 (Stream C Phase 2)
+
+### 数据库变更
+- 新增 `TokenUsage` 模型 — 记录每次 AI 调用的 Token 消耗（userId, model, inputTokens, outputTokens, costUsd）
+- `db push` 同步到 Supabase PostgreSQL
+
+### 配额服务
+- `src/lib/quota-service.ts`: 核心配额逻辑
+  - `getUserTier()` / `getUserPlan()` — 获取用户套餐配置
+  - `isModelAllowed()` / `checkModelAccess()` — 模型权限检查（免费版仅 deepseek-v4-flash）
+  - `getMonthlyTokenCost()` / `getMonthlyTokenUsage()` — 当月 Token 统计（PostgreSQL 聚合查询）
+  - `checkTokenBudget()` — Token 预算预检（返回 allowed/used/limit/remaining）
+  - `checkStorageBudget()` — 存储配额预检
+  - `estimateTokensFromChars()` — 字符转 Token 估算（中文 ~1.5x, 英文 ~3.5x）
+  - `estimateCost()` — 按模型定价计算 USD 成本
+  - `recordTokenUsage()` — 记录 Token 消耗到 TokenUsage 表
+  - `trackStorageUsage()` / `releaseStorageUsage()` — 存储字节追踪
+  - `getQuotaStatus()` — 聚合配额状态（Token + 存储 + 模型限制）
+
+### API Routes
+- `GET /api/quota/status` — 返回当前用户配额使用情况
+
+### AI 端点强制配额
+- `POST /api/ai/generate`: 新增预检（模型权限 + Token 预算）→ 流式生成后记录 Token 消耗
+- `POST /api/ai/rewrite`: 同上（模型权限 + Token 预算预检 + 流后记录）
+- `POST /api/ai/test`: 新增模型权限检查
+- 超限返回 403 错误信息（中文提示）
+
+### 存储追踪
+- `src/lib/diary.ts` saveDiary: 保存日记后自动追踪 markdown 文件大小到 User.storageBytes
+
+### 类型定义
+- `src/types/index.ts`: 新增 `QuotaStatusData` 接口
+
+### UI 组件
+- `src/components/QuotaUsage.tsx`: 配额使用仪表板组件（Token 预算 + 存储空间进度条，超过 80% 黄色警告，100% 红色告警）
+- `src/app/page.tsx`: 集成 QuotaUsage 到仪表盘 DashboardStats 下方
+
+### 验证结果
+- `npx tsc --noEmit` — 零错误
+- `npx next build` — 构建成功
+- `npx prisma db push` — Schema 已同步到远程 Supabase DB
+
+## 2026-05-23 — #10 订阅支付 Stripe 集成 (Stream C Phase 1)
+
+### 依赖
+- 新增 `stripe ^22.1.1` — Stripe 服务端 SDK（API 版本 2026-04-22.dahlia）
+- 新增 `@stripe/stripe-js` — Stripe 客户端 SDK
+
+### Stripe 基础设施
+- `src/lib/stripe.ts`: 服务端/客户端实例管理 + 环境变量获取 + 配置状态检查
+- `src/lib/subscription-service.ts`: DB 操作层 — upsertSubscription, getUserSubscription, createInvoice, cancelUserSubscription
+
+### API Routes
+- `POST /api/subscription/checkout` — 创建 Stripe Checkout Session（支持 card + alipay），metadata 传 userId+plan
+- `POST /api/subscription/webhook` — 处理 5 种 Stripe 事件（checkout.completed, invoice.paid, invoice.payment_failed, subscription.updated, subscription.deleted）
+- `GET /api/subscription/status` — 返回当前用户订阅状态 + stripeConfigured
+- `POST /api/subscription/portal` — 跳转 Stripe Customer Portal
+- `GET /api/pricing` — 返回 config/billing-pricing.json 套餐定义（含当前方案标记）
+
+### 类型定义
+- `src/types/index.ts`: 新增 SubscriptionPlan, SubscriptionStatus, SubscriptionData, PriceInfo, PricingData
+
+### UI 组件
+- `src/components/SubscriptionPlans.tsx`: 套餐选择组件（三卡对比，当前方案高亮，Stripe Checkout 跳转）
+- `src/app/subscription/page.tsx`: 订阅管理页面（支付成功/取消提示 + Customer Portal 入口）
+- `src/app/settings/page.tsx`: 新增「订阅方案」区块
+
+### 环境变量
+- `.env.example`: 新增 STRIPE_SECRET_KEY, NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_BASIC_MONTHLY, STRIPE_PRICE_ADVANCED_MONTHLY
+
+### 设计决策
+- Stripe API 版本: 2026-04-22.dahlia
+- Stripe v22 类型系统重大变更（取消 namespace 类型），Webhook 路由使用 Record<string, unknown> 运行时访问
+- 取消订阅后 User.subscription 自动降级为 free
+- Stripe 环境变量非必需，未配置时返回 503
+
+### 验证结果
+- `npx tsc --noEmit` — 零错误
+- `npx next build` — 构建成功
+
 ## 2026-05-23 — P1 安全加固: API 限流全覆盖 + CSP + Magic Bytes + SSE 超时
 
 ### P1-1: API 限流全覆盖

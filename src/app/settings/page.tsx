@@ -1,12 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { signOut } from "next-auth/react"
 import { useApiKeys } from "@/hooks/useApiKeys"
 import { useEncryption } from "@/hooks/useEncryptionPassword"
 import { EncryptionSettings } from "@/components/EncryptionSettings"
 import { SetEncryptionPasswordModal } from "@/components/SetEncryptionPasswordModal"
-import type { ApiProvider } from "@/types"
+import type { ApiProvider, SubscriptionData } from "@/types"
 import {
   Key,
   Eye,
@@ -17,6 +18,10 @@ import {
   XCircle,
   Shield,
   LogOut,
+  Sparkles,
+  Crown,
+  TrendingUp,
+  ArrowRight,
 } from "lucide-react"
 
 const PROVIDERS: { value: ApiProvider; label: string; description: string }[] = [
@@ -30,6 +35,10 @@ const PROVIDERS: { value: ApiProvider; label: string; description: string }[] = 
 export default function SettingsPage() {
   const { keys, loading, saveKey, deleteKey, hasKey } = useApiKeys()
   const { unlock } = useEncryption()
+  const router = useRouter()
+
+  const [subscription, setSubscription] = useState<SubscriptionData | null>(null)
+  const [subLoading, setSubLoading] = useState(true)
 
   const [provider, setProvider] = useState<ApiProvider>("openrouter")
   const [draftApiKey, setDraftApiKey] = useState("")
@@ -45,6 +54,16 @@ export default function SettingsPage() {
 
   const [showEncryptionModal, setShowEncryptionModal] = useState(false)
   const [encryptionModalMode, setEncryptionModalMode] = useState<"set" | "change">("set")
+
+  useEffect(() => {
+    fetch("/api/subscription/status")
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.ok) setSubscription(json.data.subscription)
+      })
+      .catch(() => {})
+      .finally(() => setSubLoading(false))
+  }, [])
 
   useEffect(() => {
     if (keys.length > 0) {
@@ -350,6 +369,53 @@ export default function SettingsPage() {
         }}
         onResetPassword={() => {}}
       />
+
+      <div className="card space-y-3">
+        <div className="flex items-center gap-2">
+          {subscription?.plan === "advanced" ? (
+            <Crown className="h-5 w-5 text-amber-500" strokeWidth={1.5} />
+          ) : subscription?.plan === "basic" ? (
+            <TrendingUp className="h-5 w-5 text-sakura" strokeWidth={1.5} />
+          ) : (
+            <Sparkles className="h-5 w-5 text-sakura" strokeWidth={1.5} />
+          )}
+          <h2 className="text-lg font-medium text-ink">订阅方案</h2>
+        </div>
+
+        {subLoading ? (
+          <div className="flex items-center justify-center py-3">
+            <div className="w-5 h-5 border-2 border-sakura border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : (
+          <>
+            <p className="text-sm text-ink-light leading-relaxed">
+              当前方案:{" "}
+              <span className="font-medium text-ink">
+                {subscription?.plan === "basic"
+                  ? "🌸 基础版"
+                  : subscription?.plan === "advanced"
+                    ? "💎 高级版"
+                    : "🆓 免费版"}
+              </span>
+              {subscription?.currentPeriodEnd && (
+                <>
+                  {" · "}
+                  到期: {new Date(subscription.currentPeriodEnd).toLocaleDateString("zh-CN")}
+                </>
+              )}
+            </p>
+            <button
+              type="button"
+              onClick={() => router.push("/subscription")}
+              className="btn-secondary flex items-center gap-2 text-sm"
+            >
+              <Sparkles className="h-4 w-4" />
+              查看方案
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </>
+        )}
+      </div>
 
       <div className="card space-y-3">
         <h2 className="text-lg font-medium text-ink">关于</h2>

@@ -1,0 +1,1 @@
+This document details Stripe SDK v22 integration for subscription payments, including Checkout flows with metadata, handling of five webhook events, Prisma-based DB operations via subscription-service, and a SubscriptionPlans UI component.

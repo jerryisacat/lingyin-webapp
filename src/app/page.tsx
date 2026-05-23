@@ -20,6 +20,7 @@ import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import SakuraParticles from "@/components/SakuraParticles";
 import DashboardStats from "@/components/DashboardStats";
+import QuotaUsage from "@/components/QuotaUsage";
 
 const FEATURES = [
   {
@@ -155,6 +156,7 @@ export default function Home() {
 
         <div className="w-full max-w-2xl">
           <DashboardStats />
+          <QuotaUsage />
         </div>
 
         <div className="flex max-w-sm flex-col gap-3 rounded-xl bg-sakura/5 border border-sakura/20 px-6 py-4 text-left">

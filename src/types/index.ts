@@ -2,6 +2,9 @@ export type Tone = "warm" | "genki" | "minimal" | "literary";
 
 export type ApiProvider = "openrouter";
 
+export type SubscriptionPlan = "free" | "basic" | "advanced";
+export type SubscriptionStatus = "active" | "past_due" | "canceled" | "incomplete" | "trialing";
+
 export interface DiarySummary {
   id: string;
   date: string;
@@ -53,4 +56,47 @@ export interface StatsData {
   totalImages: number;
   monthlyData: MonthlyData[];
   topTags: TagCount[];
+}
+
+export interface SubscriptionData {
+  plan: SubscriptionPlan;
+  status: SubscriptionStatus;
+  currentPeriodEnd: string | null;
+  subscribedAt: string | null;
+  canceledAt: string | null;
+}
+
+export interface PriceInfo {
+  price: number;
+  currency: string;
+  interval: string;
+  plan: SubscriptionPlan;
+  label: string;
+  features: string[];
+  isCurrent: boolean;
+}
+
+export interface PricingData {
+  stripeConfigured: boolean;
+  plans: PriceInfo[];
+}
+
+export interface QuotaStatusData {
+  tokenBudget: {
+    used: number;
+    limit: number;
+    remaining: number;
+    usedInCents: number;
+  };
+  storage: {
+    used: number;
+    limit: number;
+    remaining: number;
+  };
+  modelRestriction: {
+    allowedModels: string[] | "*";
+    currentModel: string;
+  };
+  plan: string;
+  planLabel: string;
 }

@@ -33,6 +33,20 @@
       "type": "context"
     },
     {
+      "importance": 50,
+      "path": "billing/quota/free_tier_quota_system.md",
+      "tokens": 349,
+      "type": "context"
+    },
+    {
+      "abstractPath": "billing/stripe_subscription/stripe_subscription_implementation.abstract.md",
+      "abstractTokens": 60,
+      "importance": 50,
+      "path": "billing/stripe_subscription/stripe_subscription_implementation.md",
+      "tokens": 60,
+      "type": "context"
+    },
+    {
       "abstractPath": "project/context_curation/rlm_context_curation.abstract.md",
       "abstractTokens": 34,
       "importance": 50,
@@ -97,27 +111,21 @@
       "type": "context"
     },
     {
+      "abstractPath": "ui/landing/landing_page_refactor.abstract.md",
+      "abstractTokens": 68,
       "importance": 50,
-      "path": "ui/logout/logout_functionality.md",
-      "tokens": 279,
-      "type": "context"
-    },
-    {
-      "abstractPath": "ui/timeline/calendar_view_implementation.abstract.md",
-      "abstractTokens": 56,
-      "importance": 50,
-      "path": "ui/timeline/calendar_view_implementation.md",
-      "tokens": 56,
+      "path": "ui/landing/landing_page_refactor.md",
+      "tokens": 68,
       "type": "context"
     }
   ],
-  "generated_at": "2026-05-23T10:42:50.757Z",
+  "generated_at": "2026-05-23T15:22:59.518Z",
   "lane_tokens": {
-    "contexts": 3858,
+    "contexts": 4000,
     "stubs": 0,
     "summaries": 1968
   },
-  "source_fingerprint": "87ef4a034abb573634b3031e082c1bd7b5213f569f361aa2135b2a653bfd115c",
-  "total_tokens": 5826,
+  "source_fingerprint": "030bd19c1e2699228c18dd5e0342551c0d1b6222a237b8668885a6a09e15e921",
+  "total_tokens": 5968,
   "version": 1
 }

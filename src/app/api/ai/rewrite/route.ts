@@ -12,13 +12,22 @@ import { prisma } from "@/lib/db";
 import { NextRequest } from "next/server";
 import { checkRateLimit, rateLimiters, rateLimitError } from "@/lib/rate-limit";
 import { formatZodError, aiRewriteSchema } from "@/lib/validations";
+import {
+  getUserTier,
+  isModelAllowed,
+  checkTokenBudget,
+  recordTokenUsage,
+  estimateTokensFromChars,
+} from "@/lib/quota-service";
 
 const TONE_PROMPTS: Record<Tone, string> = {
   warm: WARM_SYSTEM_PROMPT,
   genki: GENKI_SYSTEM_PROMPT,
   minimal: MINIMAL_SYSTEM_PROMPT,
   literary: LITERARY_SYSTEM_PROMPT,
-}
+};
+
+const BASE_MODEL = "deepseek/deepseek-v4-flash";
 
 export async function POST(request: NextRequest) {
   const user = await getUser();
@@ -46,6 +55,19 @@ export async function POST(request: NextRequest) {
   } = parseResult.data;
   const instruction = inputInstruction ?? "请润色这篇日记，让语言更优美流畅";
 
+  const tier = await getUserTier(user.id);
+  if (!isModelAllowed(tier, BASE_MODEL)) {
+    return jsonError(
+      `免费版仅支持 ${Array.isArray(tier.allowedModels) ? (tier.allowedModels as string[]).join(", ") : "所有"} 模型，升级套餐以使用更多模型`,
+      403
+    );
+  }
+
+  const tokenBudget = await checkTokenBudget(user.id);
+  if (!tokenBudget.allowed) {
+    return jsonError("本月 Token 预算已用完，请升级套餐或等待下月重置", 403);
+  }
+
   const apiKey = await getUserDecryptedApiKey(user.id, provider);
   if (!apiKey) {
     return jsonError("API Key not configured for this provider — configure it in Settings", 400);
@@ -54,9 +76,9 @@ export async function POST(request: NextRequest) {
   const dbUser = await prisma.user.findUnique({
     where: { id: user.id },
     select: { tone: true },
-  })
-  const tone = (dbUser?.tone ?? "warm") as Tone
-  const systemPrompt = TONE_PROMPTS[tone]
+  });
+  const tone = (dbUser?.tone ?? "warm") as Tone;
+  const systemPrompt = TONE_PROMPTS[tone];
   const userPrompt = `原始日记如下：
 
 ${content}
@@ -69,21 +91,22 @@ ${content}
 
   const stream = new ReadableStream({
     async start(controller) {
-      let aborted = false
+      let aborted = false;
+      let fullContent = "";
 
       request.signal?.addEventListener("abort", () => {
-        aborted = true
-        controller.close()
-      })
+        aborted = true;
+        controller.close();
+      });
 
       const timeout = setTimeout(() => {
         if (!aborted) {
           controller.enqueue(
             encoder.encode(`data: ${JSON.stringify({ error: "改写超时，请稍后重试" })}\n\n`)
-          )
-          controller.close()
+          );
+          controller.close();
         }
-      }, 8_000)
+      }, 120_000);
 
       try {
         for await (const chunk of generateStream({
@@ -92,13 +115,30 @@ ${content}
           systemPrompt,
           userPrompt,
         })) {
-          if (aborted) break
+          if (aborted) break;
+          fullContent += chunk;
           controller.enqueue(
             encoder.encode(`data: ${JSON.stringify({ content: chunk })}\n\n`)
           );
         }
         if (!aborted) {
           controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+        }
+
+        // Record estimated token usage
+        if (fullContent.length > 0) {
+          const inputTokens = estimateTokensFromChars(systemPrompt + userPrompt, false);
+          const outputTokens = estimateTokensFromChars(fullContent, false);
+          try {
+            await recordTokenUsage({
+              userId: user.id,
+              model: BASE_MODEL,
+              inputTokens,
+              outputTokens,
+            });
+          } catch {
+            console.error("[AI Rewrite] Failed to record token usage");
+          }
         }
       } catch (error) {
         console.error("[AI Rewrite] stream error:", error instanceof Error ? error.message : error);
@@ -108,7 +148,7 @@ ${content}
           );
         }
       } finally {
-        clearTimeout(timeout)
+        clearTimeout(timeout);
         controller.close();
       }
     },

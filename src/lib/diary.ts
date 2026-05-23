@@ -12,6 +12,7 @@ import {
   buildDiaryPrompt,
   VISION_PROMPT,
 } from "@/lib/ai/prompts";
+import { trackStorageUsage } from "@/lib/quota-service";
 import type { ApiProvider, MediaFile, Tone, DiarySummary, CalendarEntry } from "@/types";
 
 const TONE_PROMPTS: Record<Tone, string> = {
@@ -69,6 +70,14 @@ export async function saveDiary(params: {
   const { userId, date, markdown, tone, encrypted = false } = params;
 
   const saved = await storage.saveMarkdown(userId, date, markdown, encrypted);
+
+  // Track markdown storage size
+  const contentSize = new TextEncoder().encode(markdown).length;
+  try {
+    await trackStorageUsage(userId, contentSize);
+  } catch {
+    console.error("[saveDiary] Failed to track storage usage");
+  }
 
   const preview = encrypted
     ? null
