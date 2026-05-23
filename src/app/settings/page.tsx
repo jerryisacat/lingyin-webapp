@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { signOut } from "next-auth/react"
 import { useApiKeys } from "@/hooks/useApiKeys"
 import type { ApiProvider } from "@/types"
 import {
@@ -12,6 +13,7 @@ import {
   CheckCircle2,
   XCircle,
   Shield,
+  LogOut,
 } from "lucide-react"
 
 const STORAGE_KEY = "lingyin-api-config"
@@ -336,6 +338,25 @@ export default function SettingsPage() {
           API Key 使用 AES-256-GCM 加密存储在服务器端。
         </p>
         <p className="text-xs text-ink-light">Version 0.1.0 — Phase 1 MVP</p>
+      </div>
+
+      {/* 退出登录 */}
+      <div className="card space-y-3 border-red-200/50 bg-red-50/30">
+        <div className="flex items-center gap-2">
+          <LogOut className="h-5 w-5 text-red-400" strokeWidth={1.5} />
+          <h2 className="text-lg font-medium text-ink">退出登录</h2>
+        </div>
+        <p className="text-sm text-ink-light leading-relaxed">
+          退出后需要重新登录才能访问你的日记。会话将被清除，但日记内容和 API Key 不受影响。
+        </p>
+        <button
+          type="button"
+          onClick={() => signOut({ callbackUrl: "/" })}
+          className="flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2.5 text-sm font-medium text-white transition-all hover:bg-red-600 hover:shadow-md active:scale-[0.98]"
+        >
+          <LogOut className="h-4 w-4" />
+          退出登录
+        </button>
       </div>
     </div>
   )

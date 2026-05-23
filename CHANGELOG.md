@@ -1,3 +1,12 @@
+## 2026-05-23 — 功能: 退出登录功能 (#90)
+
+### 新增
+- `src/app/settings/page.tsx`: 页面底部新增「退出登录」危险按钮区域，红色卡片样式，点击调用 `signOut({ callbackUrl: "/" })` 跳回 Landing Page
+- `src/components/MobileTabBar.tsx`: 长按「设置」Tab（800ms）弹出退出登录确认浮层（桌面端 mouse 事件同样支持），含「取消」和「确认退出」两个按钮
+
+### 依赖
+- 导航栏退出登录已在 #39 中通过 `Header.tsx` 实现（桌面端+移动端均含登出按钮）
+
 ## 2026-05-23 — 功能: Landing Page 内容重构 + 导航栏升级 (#39)
 
 ### 修改
@@ -12,13 +21,6 @@
 - 导航栏从扁平顶部栏升级为 sticky 毛玻璃圆角卡片式（参考 public/demo.html）
 - "社交网络" 导航项设为 disabled 隐藏，等待后续功能
 - Header 使用 useMemo 优化导航链接计算
-
-# CHANGELOG
-
-## 2026-05-23 — 杂项: 更新品牌名称
-
-### 修改
-- `config/navigation.json`: "铃英日记" → "玲音日记"
 
 ## 2026-05-23 — 功能: 首页数据统计仪表盘 (#18)
 

@@ -98,8 +98,8 @@
     },
     {
       "importance": 50,
-      "path": "ui/landing/landing_page_refactor.md",
-      "tokens": 237,
+      "path": "ui/logout/logout_functionality.md",
+      "tokens": 279,
       "type": "context"
     },
     {
@@ -111,13 +111,13 @@
       "type": "context"
     }
   ],
-  "generated_at": "2026-05-23T10:37:17.688Z",
+  "generated_at": "2026-05-23T10:42:50.757Z",
   "lane_tokens": {
-    "contexts": 3816,
+    "contexts": 3858,
     "stubs": 0,
     "summaries": 1968
   },
-  "source_fingerprint": "3d31169a564b791e51f3f8be0625a613c65d736e065f2de6144ead6f6b65a47c",
-  "total_tokens": 5784,
+  "source_fingerprint": "87ef4a034abb573634b3031e082c1bd7b5213f569f361aa2135b2a653bfd115c",
+  "total_tokens": 5826,
   "version": 1
 }
