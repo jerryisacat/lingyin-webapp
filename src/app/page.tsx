@@ -188,7 +188,7 @@ export default function Home() {
             variants={FADE_IN_UP_VARIANTS}
           >
             <span>
-              由 <a href="https://hi.jerryiscat.one/" target="_blank" className="font-semibold text-ink-light hover:text-sakura transition-colors">Jerryiscat</a> 使用 <a href="https://vibe-coding.x-dev.club/" target="_blank" className="font-semibold text-ink-light hover:text-sakura transition-colors">Vibe Coding</a> 构建
+              由 <a href="https://hi.jerryiscat.one/" target="_blank" className="font-semibold text-ink-light hover:text-sakura transition-colors">Jerryiscat</a> 使用 Vibe Coding 构建
             </span>
             <span className="hidden sm:inline">·</span>
             <span>
