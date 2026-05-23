@@ -1,0 +1,1 @@
+The dashboard stats module adds server-side Prisma aggregation in src/lib/stats.ts for totals, streaks and monthly data, served via GET /api/stats and rendered in a pure-Tailwind DashboardStats component without external charting libs.
