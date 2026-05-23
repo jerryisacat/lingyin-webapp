@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 2026-05-23 — 安全: 密码最小长度从 8 提升至 12 (#74)
+
+### 变更
+- `src/lib/auth-service.ts`: `registerUser()` 和 `resetPassword()` 密码最小长度 `8 → 12`，错误提示同步更新
+- `src/app/register/page.tsx`: `minLength` 和 placeholder 文本 `8 → 12`
+- `src/app/reset-password/page.tsx`: `minLength` 和 placeholder 文本 `8 → 12`
+
 ## 2026-05-23 — 日历视图: Timeline 增加日历浏览模式 (#2)
 
 ### 新增

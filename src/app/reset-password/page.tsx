@@ -88,9 +88,9 @@ export default function ResetPasswordPage({
           id="password"
           name="password"
           label="新密码"
-          placeholder="至少 8 个字符"
+          placeholder="至少 12 个字符"
           required
-          minLength={8}
+          minLength={12}
           autoFocus
         />
 

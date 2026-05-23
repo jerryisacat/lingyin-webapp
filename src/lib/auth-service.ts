@@ -38,8 +38,8 @@ export async function registerUser(input: RegisterInput): Promise<ServiceResult<
     return { ok: false, error: "邮箱格式不正确" }
   }
 
-  if (password.length < 8) {
-    return { ok: false, error: "密码至少需要 8 个字符" }
+  if (password.length < 12) {
+    return { ok: false, error: "密码至少需要 12 个字符" }
   }
 
   if (password !== confirmPassword) {
@@ -202,8 +202,8 @@ export async function resetPassword(input: ResetPasswordInput): Promise<ServiceR
     return { ok: false, error: "请填写所有字段" }
   }
 
-  if (password.length < 8) {
-    return { ok: false, error: "密码至少需要 8 个字符" }
+  if (password.length < 12) {
+    return { ok: false, error: "密码至少需要 12 个字符" }
   }
 
   if (password !== confirmPassword) {
