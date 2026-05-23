@@ -1,3 +1,12 @@
+## 2026-05-23 — 功能: 退出登录功能 (#90)
+
+### 新增
+- `src/app/settings/page.tsx`: 页面底部新增「退出登录」危险按钮区域，红色卡片样式，点击调用 `signOut({ callbackUrl: "/" })` 跳回 Landing Page
+- `src/components/MobileTabBar.tsx`: 长按「设置」Tab（800ms）弹出退出登录确认浮层（桌面端 mouse 事件同样支持），含「取消」和「确认退出」两个按钮
+
+### 依赖
+- 导航栏退出登录已在 #39 中通过 `Header.tsx` 实现（桌面端+移动端均含登出按钮）
+
 # CHANGELOG
 
 ## 2026-05-23 — 功能: 首页数据统计仪表盘 (#18)
