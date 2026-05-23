@@ -71,3 +71,23 @@ export interface LocalApiKeyStore {
   provider: ApiProvider;
   apiKey: string;
 }
+
+export interface MonthlyData {
+  month: string;
+  count: number;
+  words: number;
+}
+
+export interface TagCount {
+  tag: string;
+  count: number;
+}
+
+export interface StatsData {
+  totalWords: number;
+  totalDays: number;
+  currentStreak: number;
+  totalImages: number;
+  monthlyData: MonthlyData[];
+  topTags: TagCount[];
+}
