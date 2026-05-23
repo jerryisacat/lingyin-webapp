@@ -157,7 +157,7 @@ export default async function Home() {
           {/* 开源信息 */}
           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-ink-light/70 mt-2">
             <span>
-              由 <a href="https://vibe-coding.x-dev.club/" target="_blank" className="font-semibold text-ink-light hover:text-sakura transition-colors">Vibe Coding</a> 构建
+              由 <a href="https://hi.jerryiscat.one/" target="_blank" className="font-semibold text-ink-light hover:text-sakura transition-colors">Jerryiscat</a> 使用 <a href="https://vibe-coding.x-dev.club/" target="_blank" className="font-semibold text-ink-light hover:text-sakura transition-colors">Vibe Coding</a> 构建
             </span>
             <span className="hidden sm:inline">·</span>
             <span>
