@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import SakuraParticles from "@/components/SakuraParticles";
+import DashboardStats from "@/components/DashboardStats";
 
 const FEATURES = [
   {
@@ -101,6 +102,10 @@ export default async function Home() {
             <Clock className="h-5 w-5" strokeWidth={1.5} />
             浏览时间线
           </Link>
+        </div>
+
+        <div className="w-full max-w-2xl">
+          <DashboardStats />
         </div>
 
         <div className="flex max-w-sm flex-col gap-3 rounded-xl bg-sakura/5 border border-sakura/20 px-6 py-4 text-left">

@@ -1,5 +1,22 @@
 # CHANGELOG
 
+## 2026-05-23 — 功能: 首页数据统计仪表盘 (#18)
+
+### 新增
+- `src/lib/stats.ts`: `getStats()` 聚合函数 — 单次 `findMany` + JS 侧计算总字数/写作天数/连续天数/月度趋势/标签频率
+- `src/app/api/stats/route.ts`: `GET /api/stats` 端点（session 保护）
+- `src/components/StatsCard.tsx`: 统计卡片组件（icon + 标签 + 大数字）
+- `src/components/DashboardStats.tsx`: "use client" 客户端组件 — loading shimmer / error 重试 / empty 空状态 / 数据展示四态
+- `src/types/index.ts`: 新增 `StatsData` / `MonthlyData` / `TagCount` 类型
+
+### 修改
+- `src/app/page.tsx`: 登录后仪表盘插入 `<DashboardStats />`（位于快捷操作和小贴士之间），含 4 卡指标网格、Tailwind 柱状月度趋势、标签云
+
+### 设计决策
+- 不做独立 `/stats` 页面 — 统计模块嵌入首页已登录仪表盘，无导航入口变更
+- 不安装 charting 库 — 月度趋势用纯 Tailwind div 柱状图
+- Streak 算法: 日期倒排 → 从今天/昨天倒推连续天数
+
 ## 2026-05-23 — 修复: 速率限制 Redis 不可用时导致所有受保护端点返回 500
 
 ### 根因
