@@ -44,10 +44,7 @@ export async function checkRateLimit(
       "[RateLimit] Redis error:",
       error instanceof Error ? error.message : error
     )
-    if (process.env.NODE_ENV === "production") {
-      throw error
-    }
-    console.warn("[RateLimit] Redis unavailable in development — skipping rate limit")
+    console.warn("[RateLimit] Redis unavailable — skipping rate limit")
     return { success: true, limit: 0, remaining: 0, reset: 0 }
   }
 }

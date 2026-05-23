@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 2026-05-23 — 修复: 速率限制 Redis 不可用时导致所有受保护端点返回 500
+
+### 根因
+Upstash Redis 环境变量 (`UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`) 未在 Vercel 配置，`checkRateLimit()` 在 production 环境抛出异常而非优雅降级，导致登录/注册/忘记密码等端点全部 500。
+
+### 修复
+- `src/lib/rate-limit.ts`: `checkRateLimit()` 在 Redis 不可用时静默跳过速率限制（fail-open），所有环境行为统一
+- `.env`: 添加 `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` 占位符
+
+### 数据库连接验证
+- Prisma datasource 使用 `POSTGRES_PRISMA_URL` + `POSTGRES_URL_NON_POOLING`（Vercel Supabase 集成自动注入），健康检查 `/api/health` 确认连接正常
+- `DATABASE_URL` 保留在 Vercel 环境变量中作为回退（与 `POSTGRES_PRISMA_URL` 值一致）
+
 ## 2026-05-23 — 安全: 密码最小长度从 8 提升至 12 (#74)
 
 ### 变更
