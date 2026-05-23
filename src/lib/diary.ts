@@ -64,16 +64,19 @@ export async function saveDiary(params: {
   markdown: string;
   tone: Tone;
   imagePaths: string[];
+  encrypted?: boolean;
 }): Promise<DiarySummary> {
-  const { userId, date, markdown, tone } = params;
+  const { userId, date, markdown, tone, encrypted = false } = params;
 
-  const markdownPath = await storage.saveMarkdown(userId, date, markdown);
+  const saved = await storage.saveMarkdown(userId, date, markdown, encrypted);
 
-  const preview = markdown.replace(/[#*!\[\]`>\-_\n]/g, " ").replace(/\s+/g, " ").trim().slice(0, 200);
-  const wordCount = markdown.replace(/[#*!\[\]`>\-_\n]/g, "").replace(/\s+/g, "").length;
-  const hasImages = markdown.includes("![");
-  const imageCount = (markdown.match(/!\[.*?\]\(.*?\)/g) ?? []).length;
-  const tagMatches = markdown.match(/#\S+/g) ?? [];
+  const preview = encrypted
+    ? null
+    : markdown.replace(/[#*!\[\]`>\-_\n]/g, " ").replace(/\s+/g, " ").trim().slice(0, 200);
+  const wordCount = encrypted ? 0 : markdown.replace(/[#*!\[\]`>\-_\n]/g, "").replace(/\s+/g, "").length;
+  const hasImages = encrypted ? false : markdown.includes("![");
+  const imageCount = encrypted ? 0 : (markdown.match(/!\[.*?\]\(.*?\)/g) ?? []).length;
+  const tagMatches = encrypted ? [] : (markdown.match(/#\S+/g) ?? []);
   const tags = tagMatches.length > 0 ? JSON.stringify(tagMatches.slice(0, 10)) : null;
 
   const entry = await prisma.entry.upsert({
@@ -88,7 +91,7 @@ export async function saveDiary(params: {
       wordCount,
       hasImages,
       imageCount,
-      markdownPath,
+      markdownPath: saved.path,
       tags,
     },
     update: {
@@ -97,7 +100,7 @@ export async function saveDiary(params: {
       wordCount,
       hasImages,
       imageCount,
-      markdownPath,
+      markdownPath: saved.path,
       tags,
     },
   });
@@ -166,7 +169,7 @@ export async function getCalendarEntries(
 export async function getEntry(
   userId: string,
   entryId: string
-): Promise<{ markdown: string; metadata: DiarySummary } | null> {
+): Promise<{ markdown: string; isEncrypted: boolean; metadata: DiarySummary } | null> {
   const entry = await prisma.entry.findFirst({
     where: { id: entryId, userId },
   });
@@ -174,10 +177,11 @@ export async function getEntry(
   if (!entry) return null;
 
   const dateStr = entry.date.toISOString().slice(0, 10);
-  const markdown = (await storage.readMarkdown(userId, dateStr)) ?? "";
+  const result = await storage.readMarkdown(userId, dateStr);
 
   return {
-    markdown,
+    markdown: result?.content ?? "",
+    isEncrypted: result?.encrypted ?? false,
     metadata: {
       id: entry.id,
       date: dateStr,

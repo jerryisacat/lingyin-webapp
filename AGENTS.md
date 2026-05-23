@@ -3,7 +3,7 @@
 ## Project summary
 AI-powered diary PWA. Users submit text + images, AI generates a polished Markdown diary entry. Phase 1: user brings their own LLM API key (encrypted server-side); later phases add subscription billing.
 
-**Status: Issue #29 complete — Supabase Auth removed, Auth.js v5 independent account system integrated.**
+**Status: Phase 2 (Stream B) complete — End-to-end encryption infrastructure integrated. Issues #53, #54, #55, #56, #57, #58 done.**
 
 ## Tech stack
 - **Framework:** Next.js 14+ (App Router), TypeScript, Tailwind CSS
@@ -14,15 +14,18 @@ AI-powered diary PWA. Users submit text + images, AI generates a polished Markdo
 - **LLM SDK:** `openai` npm package (compatible with OpenRouter API)
 - **Markdown:** `react-markdown` for rendering
 - **Image & file storage:** CloudFlare R2 (S3-compatible, `@aws-sdk/client-s3`)
+- **Encryption:** Web Crypto API (`SubtleCrypto`) — client-side AES-256-GCM + PBKDF2 (100k iter, SHA-256) for diary E2EE
 - **Deploy:** Vercel (monolith, region: hkg1)
 
 ## Critical privacy constraints
 - **API Keys are stored server-side** encrypted with AES-256-GCM in the `ApiKey` table. The server decrypts and forwards to LLM providers per-request. Never logged, never persisted in plaintext.
 - Diary content (Markdown) is stored in CloudFlare R2. The database holds only metadata (Prisma `Entry` model).
 - **`API_KEY_ENCRYPTION_KEY` must be backed up.** If lost, all stored API keys become permanently unrecoverable.
+- **Encryption password is never stored in plaintext.** The server stores `encryptionPasswordHash` (bcrypt) for verification and `encryptionSalt` (plaintext) for PBKDF2 derivation. The client derives AES-256 keys locally using Web Crypto API — the server never sees the encryption password or the derived key.
+- **If the user loses their encryption password, diaries are permanently unrecoverable.** This is by design — true zero-knowledge encryption.
 
 ## Architecture: content vs metadata split
-Diary bodies live as `.md` files in CloudFlare R2, NOT in the database. The `Entry` table stores: `id`, `userId`, `date`, `tone`, `markdownPath`, `wordCount`, `hasImages`, `preview` (first 200 chars for timeline), `tags`, timestamps. There is a `@@unique([userId, date])` constraint — one entry per user per day.
+Diary bodies live as `.md` or `.enc.md` files in CloudFlare R2, NOT in the database. Encrypted diaries use AES-256-GCM with a `.enc.md` extension and `encrypted=true` S3 metadata flag. The `Entry` table stores: `id`, `userId`, `date`, `tone`, `markdownPath`, `wordCount`, `hasImages`, `preview` (first 200 chars for timeline, null for encrypted entries), `tags`, timestamps. There is a `@@unique([userId, date])` constraint — one entry per user per day.
 
 **Vercel note:** Vercel has no persistent filesystem, so all file content (`.md` diaries, uploaded images) MUST use CloudFlare R2. The `data/` directory is for local dev only (gitignore it).
 
@@ -40,16 +43,22 @@ Flow: User registers → verification email → clicks verify link → emailConf
 - **Usage:** LLM API routes call `getUserDecryptedApiKey(userId, provider)` to retrieve and decrypt on the fly
 - **Test:** `/api/ai/test` accepts optional `apiKey` in body (testing unsaved key) or reads from DB (testing saved key)
 
+## End-to-End Encryption (E2EE)
+- **Lib:** `src/lib/client-crypto.ts` — client-side only, uses Web Crypto API (`SubtleCrypto`). No third-party encryption libraries. Functions: `encryptMarkdown`, `decryptMarkdown`, `generateSalt`
+- **Encryption:** AES-256-GCM with random 12-byte IV per encryption. Output format: `iv:authTag:ciphertext` (base64). PBKDF2 key derivation: 100,000 iterations, SHA-256, 256-bit output
+- **Password management:** Server stores `encryptionPasswordHash` (bcrypt 12 rounds) for verification + `encryptionSalt` (32 bytes random, plaintext) for PBKDF2. Client derives keys locally — server never sees encryption password or derived key
+- **API Routes:** `/api/user/encryption-password` (POST set, PUT change) → returns `salt`; `/api/user/encryption-password/verify` (POST) → `{ valid }`; `/api/user/encryption-password/status` (GET) → `{ hasEncryptionPassword, salt }`
+- **Session cache:** `EncryptionProvider` React Context holds password+salt in memory for the session. Cleared on page refresh / tab close. `useEncryption()` hook provides `unlock(password, salt)` / `lock()` / `isUnlocked`
+- **Unlock flow:** Diary detail page detects `isEncrypted` from API response → shows `UnlockDiaryModal` → verifies password server-side → derives key client-side → decrypts in browser. 5 failed attempts lock for 5 minutes
+- **Migration:** `GET /api/diary/migrate-encrypt` lists plaintext entries; `POST` accepts encrypted content per entry; `GET /api/diary/migrate-status` shows progress. Migration UI in `EncryptionSettings` component: client reads plaintext → encrypts with Web Crypto → uploads encrypted → server deletes old plaintext file and updates DB record
+- **UI components:** `SetEncryptionPasswordModal`, `UnlockDiaryModal`, `EncryptionSettings`, `/forgot-encryption-password` page
+- **Zero-knowledge guarantee:** If user loses encryption password, all encrypted diaries are permanently unrecoverable — the server has no way to decrypt them
+
 ## Prisma ↔ User management
 `User.id` is generated by Prisma (`@default(cuid())`). No Supabase Auth trigger needed. Prisma manages User lifecycle independently:
 - Registration creates User + VerificationToken in a transaction
 - `passwordHash` stored as bcrypt (12 rounds)
 - `emailVerified` set on successful verification
-
-## Phase 1 scope (MVP)
-AI diary generation (single tone: `warm`), Markdown editor, image upload, timeline browsing, PWA install, API Key settings.
-
-**Excluded from Phase 1:** video upload, calendar view, multiple tones, subscription, diary editing after save, diary export, frontend-backend split.
 
 ## Confirmed design decisions
 | Decision | Choice |
@@ -65,7 +74,7 @@ AI diary generation (single tone: `warm`), Markdown editor, image upload, timeli
 | Image & file storage | CloudFlare R2 (S3 API via `@aws-sdk/client-s3`) |
 | LLM providers | OpenRouter (unified gateway) |
 | Timeline preview | first 200 chars in `Entry.preview` |
-| PWA offline | Serwist: CacheFirst for shell, NetworkFirst for entries |
+| PWA offline | Serwist: CacheFirst for shell, NetworkOnly for entries |
 | Secrets management | `.env` in dev, Vercel Environment Variables in production |
 | Deploy | Vercel monolith, region hkg1 |
 
@@ -79,6 +88,7 @@ src/lib/             — services:
   auth-helpers.ts    — getSessionUserId, json helpers
   auth-service.ts    — register, verify, forgot/reset password business logic
   crypto.ts          — AES-256-GCM encrypt/decrypt
+  client-crypto.ts   — Web Crypto API E2EE (client-side only: encryptMarkdown, decryptMarkdown, generateSalt)
   email.ts           — Resend email sending
   api-helpers.ts     — getUser() → getSessionUserId()
   api-key-guard.ts   — getUserDecryptedApiKey(), extractApiKey()
@@ -95,7 +105,8 @@ docs/                — architecture docs, deploy guide
 ## Conventions
 - Design: sakura pink (#f0a8b0) + warm white (#faf3e8), Noto Sans SC font, Lucide icons
 - LLM streaming via SSE with typewriter animation on frontend
-- R2 storage paths: `users/{userId}/entries/{YYYY}/{MM}/{YYYY-MM-DD}.md`
+- R2 storage paths: `users/{userId}/entries/{YYYY}/{MM}/{YYYY-MM-DD}.md` (plaintext) or `.enc.md` (encrypted)
+- Encrypted entries have S3 metadata `encrypted: "true"` and `preview` set to null in DB
 - Auth Service returns `ServiceResult<T>` (`{ ok, data? }` | `{ ok, error }`)
 - API routes return `{ ok, data }` or `{ ok, error }` via `jsonOk`/`jsonError`
 - **Every change MUST be logged in `CHANGELOG.md`**

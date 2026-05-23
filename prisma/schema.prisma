@@ -22,6 +22,9 @@ model User {
   subscribedAt     DateTime?
   subscriptionEnds DateTime?
 
+  encryptionPasswordHash String?
+  encryptionSalt         String?
+
   dailyEntryCount Int      @default(0)
   dailyEntryDate  DateTime?
   totalEntries    Int      @default(0)

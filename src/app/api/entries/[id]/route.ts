@@ -38,7 +38,7 @@ export async function PUT(
     return jsonError(formatZodError(parseResult.error), 400);
   }
 
-  const { markdown, tone, imagePaths } = parseResult.data;
+  const { markdown, tone, imagePaths, encrypted } = parseResult.data;
 
   const updated = await saveDiary({
     userId: user.id,
@@ -46,6 +46,7 @@ export async function PUT(
     markdown,
     tone,
     imagePaths,
+    encrypted,
   });
 
   return jsonOk(updated);

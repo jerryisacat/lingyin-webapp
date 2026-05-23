@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Header from "./Header";
 import MobileTabBar from "./MobileTabBar";
+import { EncryptionProvider } from "@/hooks/useEncryptionPassword";
 
 const AUTH_PAGES = ["/login", "/register", "/forgot-password", "/reset-password", "/verify-email"];
 const ALWAYS_NO_SHELL = ["/auth"];
@@ -54,12 +55,12 @@ export default function AppShell({ children, authenticated: ssrAuth }: AppShellP
 
   // Authenticated pages → full shell
   return (
-    <>
+    <EncryptionProvider>
       <Header />
       <main className="mx-auto max-w-2xl px-4 py-6 pb-20 md:pb-6">
         {children}
       </main>
       <MobileTabBar />
-    </>
+    </EncryptionProvider>
   );
 }

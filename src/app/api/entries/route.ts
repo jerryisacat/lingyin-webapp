@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     return jsonError(formatZodError(parseResult.error), 400);
   }
 
-  const { date: inputDate, markdown, tone, imagePaths } = parseResult.data;
+  const { date: inputDate, markdown, tone, imagePaths, encrypted } = parseResult.data;
   const date = inputDate ?? new Date().toISOString().slice(0, 10);
 
   const entry = await saveDiary({
@@ -56,6 +56,7 @@ export async function POST(request: NextRequest) {
     markdown,
     tone,
     imagePaths,
+    encrypted,
   });
 
   return jsonOk(entry, 201);

@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react"
 import { signOut } from "next-auth/react"
 import { useApiKeys } from "@/hooks/useApiKeys"
+import { useEncryption } from "@/hooks/useEncryptionPassword"
+import { EncryptionSettings } from "@/components/EncryptionSettings"
+import { SetEncryptionPasswordModal } from "@/components/SetEncryptionPasswordModal"
 import type { ApiProvider } from "@/types"
 import {
   Key,
@@ -26,6 +29,7 @@ const PROVIDERS: { value: ApiProvider; label: string; description: string }[] = 
 
 export default function SettingsPage() {
   const { keys, loading, saveKey, deleteKey, hasKey } = useApiKeys()
+  const { unlock } = useEncryption()
 
   const [provider, setProvider] = useState<ApiProvider>("openrouter")
   const [draftApiKey, setDraftApiKey] = useState("")
@@ -38,6 +42,9 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState("")
+
+  const [showEncryptionModal, setShowEncryptionModal] = useState(false)
+  const [encryptionModalMode, setEncryptionModalMode] = useState<"set" | "change">("set")
 
   useEffect(() => {
     if (keys.length > 0) {
@@ -332,6 +339,18 @@ export default function SettingsPage() {
         </div>
       )}
 
+      <EncryptionSettings
+        onSetPassword={() => {
+          setEncryptionModalMode("set")
+          setShowEncryptionModal(true)
+        }}
+        onChangePassword={() => {
+          setEncryptionModalMode("change")
+          setShowEncryptionModal(true)
+        }}
+        onResetPassword={() => {}}
+      />
+
       <div className="card space-y-3">
         <h2 className="text-lg font-medium text-ink">关于</h2>
         <p className="text-sm text-ink-light leading-relaxed">
@@ -359,6 +378,17 @@ export default function SettingsPage() {
           退出登录
         </button>
       </div>
+
+      {showEncryptionModal && (
+        <SetEncryptionPasswordModal
+          mode={encryptionModalMode}
+          onClose={() => setShowEncryptionModal(false)}
+          onSuccess={(password, salt) => {
+            unlock(password, salt)
+            setShowEncryptionModal(false)
+          }}
+        />
+      )}
     </div>
   )
 }

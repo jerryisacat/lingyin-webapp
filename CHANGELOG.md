@@ -1,3 +1,53 @@
+## 2026-05-23 — Phase 2 (Stream B): 端到端加密基础设施 (#53, #54, #55, #56, #57, #58)
+
+### #53 新增: DB 加密密码字段
+- `prisma/schema.prisma`: `User` 表新增 `encryptionPasswordHash` (TEXT?) 和 `encryptionSalt` (TEXT?) 字段
+- `encryptionPasswordHash` 存储 bcrypt hash（服务端验证用），`encryptionSalt` 存储 PBKDF2 salt（客户端密钥派生用）
+- 两个字段均为可选，已有用户不强制设置
+
+### #54 新增: 客户端 AES-256-GCM + PBKDF2 加密模块
+- `src/lib/client-crypto.ts`: 使用 Web Crypto API (SubtleCrypto) 实现
+  - `encryptMarkdown(plaintext, password, salt)`: AES-256-GCM 加密，输出 `iv:authTag:ciphertext` (base64)
+  - `decryptMarkdown(encoded, password, salt)`: AES-256-GCM 解密
+  - `generateSalt()`: 生成 32 bytes 随机 salt
+- PBKDF2 100,000 轮迭代，SHA-256 哈希，12 bytes 随机 IV
+
+### #55 新增: R2 存储加密适配
+- `src/lib/storage.ts`: 
+  - `saveMarkdown(userId, date, content, encrypted?)` → 返回 `{ path, encrypted }` 封装，支持 `.enc.md` 路径 + S3 metadata
+  - `readMarkdown(userId, date)` → 自动检测加密文件（优先 `.enc.md`，回退 `.md`），返回 `{ content, encrypted }`
+  - `readMarkdownByPath(path)` / `deleteMarkdownByPath(path)`: 显式路径读写
+  - `deleteEntry`: 同时清理 `.md` 和 `.enc.md`
+  - 新增 `buildEncryptedMarkdownPath`, `isEncryptedPath`, `listEntriesByPrefix`
+
+### #56 新增: 加密密码 API
+- `POST /api/user/encryption-password`: 设置加密密码（bcrypt 12 轮）→ 返回 `salt`
+- `PUT /api/user/encryption-password`: 修改加密密码（生成新 salt，旧加密日记无法用新密码解密）
+- `POST /api/user/encryption-password/verify`: 验证加密密码 → `{ valid: boolean }`
+- `GET /api/user/encryption-password/status`: 查询是否已设置 + 返回 salt
+- `src/lib/validations.ts`: 新增 `encryptionPasswordSchema`（≥8 位，含字母+数字）和 `verifyEncryptionPasswordSchema`
+
+### #57 新增: 明文日记批量加密迁移
+- `GET /api/diary/migrate-encrypt`: 列出所有明文日记（支持 ?dryRun）
+- `POST /api/diary/migrate-encrypt`: 接收客户端加密后的密文，上传 R2，更新 DB，删除旧明文
+- `GET /api/diary/migrate-status`: 返回 `{ plainEntries, encryptedEntries, needsMigration }`
+- `src/components/EncryptionSettings.tsx`: 集成迁移 UI（进度条、错误处理、逐篇迁移）
+
+### #58 新增: 加密 UI 组件
+- `src/hooks/useEncryptionPassword.tsx`: `EncryptionProvider` + `useEncryption` hook，内存缓存密码（刷新清除）
+- `src/components/EncryptionSettings.tsx`: 设置页加密区块（未设置/已激活/迁移三种状态）
+- `src/components/SetEncryptionPasswordModal.tsx`: 设置/修改密码弹窗（风险提醒 checkbox + 双输入确认）
+- `src/components/UnlockDiaryModal.tsx`: 日记解锁弹窗（5 次锁定 5 分钟 + 密码强度提示）
+- `src/app/forgot-encryption-password/page.tsx`: 忘记加密密码提示页
+- `src/components/AppShell.tsx`: 接入 `EncryptionProvider`
+- `src/app/settings/page.tsx`: 集成加密设置区块 + 弹窗
+- `src/app/diary/[id]/page.tsx`: 加密日记查看解锁流程（自动弹窗 + 客户端解密 + loading 态）
+
+### 基础设施变更
+- `src/lib/diary.ts`: `saveDiary` 新增 `encrypted?` 参数，加密时 preview/wordCount 置空；`getEntry` 返回 `isEncrypted`
+- `src/lib/validations.ts`: `createEntrySchema` / `updateEntrySchema` 新增 `encrypted` 字段
+- `src/app/api/entries/route.ts` / `src/app/api/entries/[id]/route.ts`: 透传 `encrypted` 参数
+
 ## 2026-05-23 — Phase 1 安全加固 + Bug 修复（7 Issues）(#59, #61, #65, #71, #73, #84, #93)
 
 ### #59 修复: API Key localStorage 明文泄露

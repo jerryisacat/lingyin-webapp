@@ -37,12 +37,14 @@ export const createEntrySchema = z.object({
   markdown: z.string().min(1, "日记内容不能为空"),
   tone: z.enum(VALID_TONES).optional().default("warm"),
   imagePaths: z.array(z.string()).optional().default([]),
+  encrypted: z.boolean().optional().default(false),
 });
 
 export const updateEntrySchema = z.object({
   markdown: z.string().min(1, "日记内容不能为空"),
   tone: z.enum(VALID_TONES).optional().default("warm"),
   imagePaths: z.array(z.string()).optional().default([]),
+  encrypted: z.boolean().optional().default(false),
 });
 
 const VALID_PROVIDERS = ["openrouter"] as const;
@@ -80,6 +82,18 @@ export const saveApiKeySchema = z.object({
 
 export const userConfigSchema = z.object({
   tone: z.enum(VALID_TONES),
+});
+
+export const encryptionPasswordSchema = z.object({
+  password: z
+    .string()
+    .min(8, "加密密码至少需要 8 位")
+    .regex(/[a-zA-Z]/, "密码需包含字母")
+    .regex(/[0-9]/, "密码需包含数字"),
+});
+
+export const verifyEncryptionPasswordSchema = z.object({
+  password: z.string().min(1, "密码不能为空"),
 });
 
 export function formatZodError(error: z.ZodError): string {
