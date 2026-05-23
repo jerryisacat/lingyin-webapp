@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import NavBar from "./NavBar";
+import Header from "./Header";
 import MobileTabBar from "./MobileTabBar";
 
 const AUTH_PAGES = ["/login", "/register", "/forgot-password", "/reset-password", "/verify-email"];
@@ -46,7 +46,7 @@ export default function AppShell({ children, authenticated: ssrAuth }: AppShellP
   if (pathname === "/" && !authenticated) {
     return (
       <>
-        <NavBar authenticated={false} />
+        <Header />
         {children}
       </>
     );
@@ -55,7 +55,7 @@ export default function AppShell({ children, authenticated: ssrAuth }: AppShellP
   // Authenticated pages → full shell
   return (
     <>
-      <NavBar authenticated={true} />
+      <Header />
       <main className="mx-auto max-w-2xl px-4 py-6 pb-20 md:pb-6">
         {children}
       </main>
