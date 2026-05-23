@@ -61,10 +61,9 @@ export async function POST(request: NextRequest) {
         }
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "Generation failed";
+        console.error("[AI Generate] stream error:", error instanceof Error ? error.message : error);
         controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify({ error: message })}\n\n`)
+          encoder.encode(`data: ${JSON.stringify({ error: "生成失败，请稍后再试" })}\n\n`)
         );
       } finally {
         controller.close();

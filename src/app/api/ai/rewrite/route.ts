@@ -57,10 +57,9 @@ ${content}
         }
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "Rewrite failed";
+        console.error("[AI Rewrite] stream error:", error instanceof Error ? error.message : error);
         controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify({ error: message })}\n\n`)
+          encoder.encode(`data: ${JSON.stringify({ error: "改写失败，请稍后再试" })}\n\n`)
         );
       } finally {
         controller.close();

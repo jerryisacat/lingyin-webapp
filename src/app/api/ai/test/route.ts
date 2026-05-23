@@ -48,23 +48,6 @@ export async function POST(request: NextRequest) {
   const config = PROVIDER_CONFIGS[provider];
   const model = config.defaultModel;
 
-  // Preflight: test basic connectivity to OpenRouter
-  let networkReachable = false;
-  let networkError = "";
-  try {
-    const preflight = await fetch("https://openrouter.ai/api/v1/models", {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-      signal: AbortSignal.timeout(10000),
-    });
-    networkReachable = preflight.ok || preflight.status === 401; // 401 means reachable but unauthenticated
-    if (!networkReachable) {
-      networkError = `OpenRouter returned HTTP ${preflight.status}`;
-    }
-  } catch (e) {
-    networkError = e instanceof Error ? e.message : String(e);
-  }
-
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
@@ -92,26 +75,20 @@ export async function POST(request: NextRequest) {
       provider,
       model,
       baseURL: config.baseURL,
-      networkReachable,
-      networkError,
     });
 
     if (error instanceof DOMException && error.name === "AbortError") {
       return jsonOk({
         connected: false,
         error: "Connection timed out after 15 seconds",
-        detail: networkReachable
-          ? "OpenRouter is reachable but the API request timed out"
-          : `Cannot reach OpenRouter at all: ${networkError}`,
+        detail: "The API request timed out — please verify your API key and try again.",
       });
     }
 
     const message = error instanceof Error ? error.message : "Connection failed";
 
-    // Provide actionable diagnostics
-    const detail = !networkReachable
-      ? `Network unreachable — Vercel serverless function cannot connect to OpenRouter (${networkError}). Please check if the Vercel region (hkg1) allows outbound connections to openrouter.ai.`
-      : error instanceof OpenAI.AuthenticationError
+    const detail =
+      error instanceof OpenAI.AuthenticationError
         ? "API Key is invalid or expired — please check your OpenRouter key."
         : error instanceof OpenAI.RateLimitError
           ? "Rate limited — your OpenRouter account may have run out of credits."

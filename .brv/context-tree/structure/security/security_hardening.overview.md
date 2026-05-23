@@ -1,0 +1,6 @@
+- Added security response headers to next.config.mjs
+- Fixed AI endpoint error leakage via generic client messages + server-side logging only
+- Removed OpenRouter preflight network check from API test endpoint
+- Timestamped 2026-05-23; focused on Next.js security hardening
+- Sections: Reason, Raw Concept (Task/Changes/Files), Narrative (Structure/Highlights)
+- Notable: prevention of information leakage, removal of unnecessary preflight checks, Next.js config updates

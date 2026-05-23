@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## 2026-05-23 — 安全加固: 修复代码审计发现的 High/Medium 漏洞
+
+**触发原因**: 全量代码安全审计（排除数据库层）发现 5 High + 10 Medium + 8 Low + 6 Info 问题。
+
+### 修复 (本次)
+- `next.config.mjs`: 添加安全响应头 `X-Content-Type-Options: nosniff`、`X-Frame-Options: DENY`、`Referrer-Policy: strict-origin-when-cross-origin` (#64)
+- `src/app/api/ai/generate/route.ts`: SSE 错误消息通用化，避免原始错误信息泄露至客户端 (#63)
+- `src/app/api/ai/rewrite/route.ts`: 同上 (#63)
+- `src/app/api/ai/test/route.ts`: 移除 OpenRouter preflight 网络连通性检查，简化错误处理 (#62)
+- 创建 29 个审计发现 Issue (#59-#87)
+
 ## 2026-05-22 — 商业化定价模型重构：Token 预算 + 存储配额
 
 **触发原因**: 弃用旧版「每日限额 + 功能门控」定价模式，改为 Token 预算 + 存储配额制。

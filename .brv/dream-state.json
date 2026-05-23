@@ -1,5 +1,5 @@
 {
-  "curationsSinceDream": 7,
+  "curationsSinceDream": 8,
   "lastDreamAt": "2026-05-22T06:05:02.522Z",
   "lastDreamLogId": "drm-1779429861536",
   "pendingMerges": [],
@@ -27,6 +27,10 @@
     {
       "enqueuedAt": 1779453895861,
       "path": "api/ai_integration/api_test_endpoint_and_openrouter_client.md"
+    },
+    {
+      "enqueuedAt": 1779514198309,
+      "path": "structure/security/security_hardening.md"
     }
   ],
   "totalDreams": 1,
