@@ -7,7 +7,20 @@
 ### 依赖
 - 导航栏退出登录已在 #39 中通过 `Header.tsx` 实现（桌面端+移动端均含登出按钮）
 
-# CHANGELOG
+## 2026-05-23 — 功能: Landing Page 内容重构 + 导航栏升级 (#39)
+
+### 修改
+- `config/navigation.json`: "铃英日记" → "玲音日记", "登陆" → "登录"
+- `src/app/page.tsx`: Hero 区加入开源标识、Vibe Coding、DeepSeek 和 GitHub 链接; 新增四个用例场景区块; FEATURES 文案修正（隐私优先强调 AES-256-GCM, 照片入文删除"每一篇都有配图"）; Features/Steps 标题和副文本更新; 已登录仪表盘 "铃英" → "玲音"
+- `src/app/settings/page.tsx`: "铃英日记" → "玲音日记"
+- `src/components/Header.tsx`: 全新玻璃态悬浮导航栏（sticky top-4, backdrop-blur-md, 圆角卡片, 渐变品牌徽章）; 移动端折叠菜单; 基于 useSession 的导航项过滤; 禁用项处理
+- `src/components/AppShell.tsx`: NavBar → Header 替换
+- `src/app/globals.css`: 新增 use-case-card / use-case-title / use-case-desc 样式
+
+### 设计决策
+- 导航栏从扁平顶部栏升级为 sticky 毛玻璃圆角卡片式（参考 public/demo.html）
+- "社交网络" 导航项设为 disabled 隐藏，等待后续功能
+- Header 使用 useMemo 优化导航链接计算
 
 ## 2026-05-23 — 功能: 首页数据统计仪表盘 (#18)
 

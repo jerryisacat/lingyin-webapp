@@ -138,7 +138,7 @@ export default function SettingsPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-ink">设置</h1>
         <p className="mt-1 text-sm text-ink-light">
-          配置你的 AI 服务，铃英需要它来帮你写日记
+          配置你的 AI 服务，玲音需要它来帮你写日记
         </p>
       </div>
 
@@ -334,7 +334,7 @@ export default function SettingsPage() {
       <div className="card space-y-3">
         <h2 className="text-lg font-medium text-ink">关于</h2>
         <p className="text-sm text-ink-light leading-relaxed">
-          铃英日记是一个 AI 驱动的日记 PWA。你的日记内容和图片存储在云端，
+          玲音日记是一个 AI 驱动的日记 PWA。你的日记内容和图片存储在云端，
           API Key 使用 AES-256-GCM 加密存储在服务器端。
         </p>
         <p className="text-xs text-ink-light">Version 0.1.0 — Phase 1 MVP</p>

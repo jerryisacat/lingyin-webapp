@@ -1,0 +1,3 @@
+- Key points: fixed brand/copy errors; added OSS/GitHub/Vibe Coding to Hero; introduced 4 use-case blocks (performance/travel/daily/life); upgraded navbar to sticky top-4 frosted-glass floating card; Header optimized via useMemo; switched FEATURES privacy text to AES-256-GCM; migrated AppShell from NavBar to Header
+- Structure/sections summary: Reason (document changes); Raw Concept (task + detailed changes + refactor flow); Narrative (Structure of hero/navbar/use-cases/privacy/Header updates + Highlights on glassmorphism/UX/security)
+- Notable entities/patterns/decisions: glassmorphism polish, component migration pattern, security clarification to AES-256-GCM, disabled social items, UI/UX refactor flow

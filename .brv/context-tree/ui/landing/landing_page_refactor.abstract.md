@@ -1,0 +1,1 @@
+The document details a landing page refactor that fixes branding/copy, adds OSS/GitHub info and four use-case blocks, upgrades the navbar to a sticky frosted-glass style, optimizes Header with useMemo, migrates AppShell, and clarifies privacy with AES-256-GCM encryption.
