@@ -34,7 +34,6 @@ export const rateLimiters = {
   entriesWrite: createLimiter(20, "1 m"),
   userConfig: createLimiter(10, "1 m"),
   encryptionPassword: createLimiter(5, "5 m"),
-  apiKeyWrite: createLimiter(5, "5 m"),
   uploadImage: createLimiter(10, "1 m"),
   imageProxy: createLimiter(30, "1 m"),
   stats: createLimiter(10, "1 m"),

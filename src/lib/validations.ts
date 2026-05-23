@@ -77,14 +77,8 @@ export const aiRewriteSchema = z.object({
 
 export const aiTestSchema = z.object({
   provider: z.enum(VALID_PROVIDERS).optional().default("openrouter"),
-  apiKey: z.string().optional(),
 });
 
-export const saveApiKeySchema = z.object({
-  provider: z.enum(VALID_PROVIDERS),
-  apiKey: z.string().min(1, "API Key 不能为空"),
-  label: z.string().optional(),
-});
 
 export const userConfigSchema = z.object({
   writingStyle: writingStyleSchema.optional(),

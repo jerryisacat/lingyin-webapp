@@ -1,9 +1,9 @@
 # AGENTS.md — 玲音日记 (lingyin-webapp)
 
 ## Project summary
-AI-powered diary PWA. Users submit text + images, AI generates a polished Markdown diary entry. Phase 1: user brings their own LLM API key (encrypted server-side); later phases add subscription billing.
+AI-powered diary PWA. Users submit text + images, AI generates a polished Markdown diary entry. All LLM calls are managed server-side via `OPENROUTER_API_KEY`; subscription billing is in place.
 
-**Status: Phase 2 (Stream B) complete — End-to-end encryption infrastructure integrated. Issues #53, #54, #55, #56, #57, #58 done.**
+**Status: V1 — BYOK removed (Issue #104), E2EE infrastructure integrated (Issues #53-#58).**
 
 ## Tech stack
 - **Framework:** Next.js 14+ (App Router), TypeScript, Tailwind CSS
@@ -18,9 +18,8 @@ AI-powered diary PWA. Users submit text + images, AI generates a polished Markdo
 - **Deploy:** Vercel (monolith, region: hkg1)
 
 ## Critical privacy constraints
-- **API Keys are stored server-side** encrypted with AES-256-GCM in the `ApiKey` table. The server decrypts and forwards to LLM providers per-request. Never logged, never persisted in plaintext.
+- **LLM API Key is server-side only** via `OPENROUTER_API_KEY` environment variable. Users do not manage API keys.
 - Diary content (Markdown) is stored in CloudFlare R2. The database holds only metadata (Prisma `Entry` model).
-- **`API_KEY_ENCRYPTION_KEY` must be backed up.** If lost, all stored API keys become permanently unrecoverable.
 - **Encryption password is never stored in plaintext.** The server stores `encryptionPasswordHash` (bcrypt) for verification and `encryptionSalt` (plaintext) for PBKDF2 derivation. The client derives AES-256 keys locally using Web Crypto API — the server never sees the encryption password or the derived key.
 - **If the user loses their encryption password, diaries are permanently unrecoverable.** This is by design — true zero-knowledge encryption.
 
@@ -38,10 +37,8 @@ Using Auth.js v5 with Credentials provider + JWT strategy:
 Flow: User registers → verification email → clicks verify link → emailConfirmed set → logs in with email+password → JWT cookie set → all subsequent requests carry the session.
 
 ## API Key management
-- **Storage:** AES-256-GCM encrypted in PostgreSQL `ApiKey` table, one per `(userId, provider)`
-- **API Routes:** `/api/user/api-keys` (GET/POST/DELETE) — CRUD operations, session-gated
-- **Usage:** LLM API routes call `getUserDecryptedApiKey(userId, provider)` to retrieve and decrypt on the fly
-- **Test:** `/api/ai/test` accepts optional `apiKey` in body (testing unsaved key) or reads from DB (testing saved key)
+- **Storage:** Server-side only — `OPENROUTER_API_KEY` environment variable (no user-managed keys)
+- **Usage:** All LLM API routes use `getSystemApiKey(provider)` from `src/lib/api-key-guard.ts`
 
 ## End-to-End Encryption (E2EE)
 - **Lib:** `src/lib/client-crypto.ts` — client-side only, uses Web Crypto API (`SubtleCrypto`). No third-party encryption libraries. Functions: `encryptMarkdown`, `decryptMarkdown`, `generateSalt`
@@ -69,7 +66,7 @@ Flow: User registers → verification email → clicks verify link → emailConf
 | Email | Resend (verification, password reset) |
 | Token generation | `crypto.randomUUID()` |
 | Token expiry | verification 24h, password reset 1h |
-| API Key storage | AES-256-GCM encrypted in PostgreSQL |
+| API Key storage | Server-side env var (`OPENROUTER_API_KEY`) |
 | LLM 定价配置 | `config/billing-pricing.json` — 模型价格、套餐定义、加购包 |
 | Image & file storage | CloudFlare R2 (S3 API via `@aws-sdk/client-s3`) |
 | LLM providers | OpenRouter (unified gateway) |
@@ -82,16 +79,14 @@ Flow: User registers → verification email → clicks verify link → emailConf
 ```
 src/app/             — Next.js App Router pages (login, register, diary, timeline, settings, etc.)
 src/components/      — shared UI components (auth/, DiaryEditor, etc.)
-src/hooks/           — React hooks (useApiKeys, useStreamGenerate)
+src/hooks/           — React hooks (useStreamGenerate)
 src/lib/             — services:
   auth.ts            — Auth.js v5 config
   auth-helpers.ts    — getSessionUserId, json helpers
   auth-service.ts    — register, verify, forgot/reset password business logic
-  crypto.ts          — AES-256-GCM encrypt/decrypt
   client-crypto.ts   — Web Crypto API E2EE (client-side only: encryptMarkdown, decryptMarkdown, generateSalt)
   email.ts           — Resend email sending
-  auth-helpers.ts     — getSessionUserId(), json helpers
-  api-key-guard.ts   — getUserDecryptedApiKey(), extractApiKey()
+  api-key-guard.ts   — getSystemApiKey(), isSystemApiKeyAvailable()
   ai/client.ts       — OpenAI SDK wrapper
   ai/prompts.ts      — System/user prompts
   storage.ts         — R2 S3 API

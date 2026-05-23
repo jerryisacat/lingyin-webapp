@@ -1,3 +1,27 @@
+## 2026-05-24 — Issue #104: V1 移除 BYOK（用户自带 API Key）功能
+
+### 删除 BYOK 全链路
+- 删除 `src/hooks/useApiKeys.ts` — 前端不再获取/保存/删除用户 API Key
+- 删除 `src/app/api/user/api-keys/route.ts` — 后端不再提供 API Key CRUD 接口
+- 删除 `src/lib/crypto.ts` — 仅含 `encryptApiKey`/`decryptApiKey`（BYOK 专属，E2EE 在 `client-crypto.ts`）
+- 删除 `src/lib/__tests__/crypto.test.ts` — 对应 crypto 测试
+
+### 后端 AI 调用统一走服务器 Key
+- `src/lib/api-key-guard.ts` — 精简为 `getSystemApiKey()` + `isSystemApiKeyAvailable()`，移除 `getUserDecryptedApiKey`/`getEffectiveApiKey`/`extractApiKey`/`requireApiKey`/`checkApiKey`
+- `src/app/api/ai/generate/route.ts` — `getEffectiveApiKey` → `getSystemApiKey`，不再 fallback 用户 Key
+- `src/app/api/ai/rewrite/route.ts` — 同上
+- `src/app/api/ai/test/route.ts` — 同上，且移除 `apiKey` body 字段（不再测试用户自定义 Key）
+
+### 前端清理
+- `src/app/settings/page.tsx` — 移除整个 API 密钥区块（provider 选择、Key 输入、测试/保存/删除按钮、"当前配置"卡片），移除 `useApiKeys` 及所有相关 state/handler/icon imports
+- `src/app/diary/page.tsx` — 移除 `useApiKeys` 和 Key 检查重定向逻辑，hardcode `provider="openrouter"`，页面改为纯同步渲染
+
+### 数据层
+- `prisma/schema.prisma` — 删除 `ApiKey` 模型及 User 中的 `apiKeys` 关联
+- `prisma/migrations/20260524000000_remove_byok_apikey` — `DROP TABLE IF EXISTS "ApiKey"`
+- `src/lib/validations.ts` — 删除 `saveApiKeySchema`，`aiTestSchema` 移除 `apiKey` 字段
+- `src/types/index.ts` — 保留 `ApiProvider` 类型（AI client/diary 仍需要）
+
 ## 2026-05-24 — Issue #96: 前端全量代码重构（一致性治理 + UI/UX 升级）
 
 ### 类型体系清理

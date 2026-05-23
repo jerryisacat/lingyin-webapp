@@ -1,5 +1,5 @@
 import { getSessionUserId as getUser, jsonError } from "@/lib/auth-helpers";
-import { getEffectiveApiKey } from "@/lib/api-key-guard";
+import { getSystemApiKey } from "@/lib/api-key-guard";
 import { generateStream } from "@/lib/ai/client";
 import { buildSystemPrompt } from "@/lib/ai/prompts";
 import type { WritingStyle } from "@/types";
@@ -57,9 +57,9 @@ export async function POST(request: NextRequest) {
     return jsonError("本月 Token 预算已用完，请升级套餐或等待下月重置", 403);
   }
 
-  const apiKey = await getEffectiveApiKey(user.id, provider);
+  const apiKey = getSystemApiKey(provider);
   if (!apiKey) {
-    return jsonError("API Key not configured — configure it in Settings", 400);
+    return jsonError("LLM API Key not configured on server", 500);
   }
 
   const dbUser = await prisma.user.findUnique({
