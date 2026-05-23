@@ -155,14 +155,13 @@ export async function checkStorageBudget(
   };
 }
 
-export function estimateTokensFromChars(
-  text: string,
-  isChinese: boolean = false
-): number {
+export function estimateTokensFromChars(text: string): number {
   if (!text) return 0;
-  // Heuristic: ~1.5 chars per token for Chinese, ~4 for English
-  const ratio = isChinese ? 1.5 : 3.5;
-  return Math.ceil(text.length / ratio);
+  // Heuristic: ~1.5 chars per token for Chinese, ~4 for other scripts
+  // Auto-detect: count non-ASCII characters (CJK, emoji, etc.)
+  const nonAsciiCount = (text.match(/[^\x00-\x7F]/g) ?? []).length;
+  const asciiCount = text.length - nonAsciiCount;
+  return Math.ceil(nonAsciiCount / 1.5 + asciiCount / 3.5);
 }
 
 export function estimateCost(

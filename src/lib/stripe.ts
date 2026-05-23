@@ -1,5 +1,6 @@
 import Stripe from "stripe";
 import { loadStripe } from "@stripe/stripe-js";
+import billingPricing from "../../config/billing-pricing.json";
 
 let stripeServer: Stripe | null = null;
 let stripeServerInitFailed = false;
@@ -76,10 +77,6 @@ export interface TopUpLineItem {
 }
 
 export function getTopUpLineItem(amountCny: number): TopUpLineItem | null {
-  const bundles = [
-    { price: 5, usd: 0.5 },
-    { price: 20, usd: 2.5 },
-    { price: 38, usd: 5.0 },
-  ];
+  const bundles = (billingPricing.topUp as { bundles: TopUpLineItem[] }).bundles;
   return bundles.find((b) => b.price === amountCny) ?? null;
 }

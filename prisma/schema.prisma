@@ -155,7 +155,7 @@ model TokenTopUp {
   userId                String
   amountUsd             Float
   priceCny              Int
-  stripePaymentIntentId String?
+  stripePaymentIntentId String?  @unique
   status                String   @default("pending")
   createdAt             DateTime @default(now())
 

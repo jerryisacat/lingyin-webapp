@@ -127,8 +127,8 @@ ${content}
 
         // Record estimated token usage
         if (fullContent.length > 0) {
-          const inputTokens = estimateTokensFromChars(systemPrompt + userPrompt, false);
-          const outputTokens = estimateTokensFromChars(fullContent, false);
+          const inputTokens = estimateTokensFromChars(systemPrompt + userPrompt);
+          const outputTokens = estimateTokensFromChars(fullContent);
           try {
             await recordTokenUsage({
               userId: user.id,

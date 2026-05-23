@@ -8,6 +8,7 @@ import {
   cancelUserSubscription,
 } from "@/lib/subscription-service";
 import { creditTopUpBalance, recordTopUpPurchase } from "@/lib/quota-service";
+import { prisma } from "@/lib/db";
 import type { SubscriptionPlan } from "@/types";
 import Stripe from "stripe";
 
@@ -40,10 +41,22 @@ async function handleCheckoutCompleted(obj: Record<string, unknown>): Promise<vo
     const userId = metadata?.userId ?? null;
     const amountUsdStr = metadata?.amountUsd ?? null;
     const amountCnyStr = metadata?.amountCny ?? null;
+    const paymentIntentId = obj.payment_intent as string | undefined;
 
     if (!userId || !amountUsdStr) {
       console.error("Webhook topup: missing userId or amountUsd in metadata");
       return;
+    }
+
+    // Idempotency guard: skip if this payment was already credited
+    if (paymentIntentId) {
+      const existing = await prisma.tokenTopUp.findUnique({
+        where: { stripePaymentIntentId: paymentIntentId },
+      });
+      if (existing && existing.status === "paid") {
+        console.log(`Webhook topup: already processed ${paymentIntentId}, skipping`);
+        return;
+      }
     }
 
     const amountUsd = parseFloat(amountUsdStr);
@@ -54,7 +67,7 @@ async function handleCheckoutCompleted(obj: Record<string, unknown>): Promise<vo
       userId,
       amountUsd,
       priceCny: amountCny,
-      stripePaymentIntentId: obj.payment_intent as string | undefined,
+      stripePaymentIntentId: paymentIntentId,
       status: "paid",
     });
 

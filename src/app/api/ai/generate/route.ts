@@ -112,8 +112,8 @@ export async function POST(request: NextRequest) {
 
         // Record estimated token usage after stream completes
         if (fullContent.length > 0) {
-          const outputTokens = estimateTokensFromChars(fullContent, false);
-          const inputTokens = estimateTokensFromChars(text, false) + (hasImages ? images.length * 500 : 0);
+          const outputTokens = estimateTokensFromChars(fullContent);
+          const inputTokens = estimateTokensFromChars(text) + (hasImages ? images.length * 500 : 0);
           try {
             await recordTokenUsage({
               userId: user.id,
