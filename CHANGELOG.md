@@ -7,7 +7,8 @@ Upstash Redis 环境变量 (`UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN
 
 ### 修复
 - `src/lib/rate-limit.ts`: `checkRateLimit()` 在 Redis 不可用时静默跳过速率限制（fail-open），所有环境行为统一
-- `.env`: 添加 `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` 占位符
+- `src/lib/rate-limit.ts`: `Redis.fromEnv()` → 显式 `new Redis({url, token})`，明确依赖 `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`
+- `.env` / `.env.example`: 更新注释，说明通过 Vercel Integrations → Upstash for Redis 配置
 
 ### 数据库连接验证
 - Prisma datasource 使用 `POSTGRES_PRISMA_URL` + `POSTGRES_URL_NON_POOLING`（Vercel Supabase 集成自动注入），健康检查 `/api/health` 确认连接正常
