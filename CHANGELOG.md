@@ -14,6 +14,21 @@
 ### 设计决策
 - 和风编辑感三原则：排版代替卡片、细横线分割、sakura 色克制点缀
 
+---
+
+## 2026-05-23 (App Icon 替换 — 动漫少女 × 铃铛 × 羽毛笔)
+
+### PWA 图标更新
+- **内容**: 用 FLUX.2 Pro 重新生成 App Icon，替换之前樱花元素的图标
+- **新图标设计**: 动漫少女（银粉色长发、闭眼恬静表情）× 金色铃铛发饰（"玲"字谐音意象）× 白色羽毛笔（日记书写）× 暖桃粉渐变背景
+- **触发原因**: 橘猫老师不喜欢原来的樱花主题，选择铃铛作为核心意象，并且希望在图标中加入动漫少女元素
+- **更新文件**:
+  - `public/icons/icon-192.png` — PWA 图标 192×192（FLUX.2 Pro 生成）
+  - `public/icons/icon-512.png` — PWA 图标 512×512（FLUX.2 Pro 生成）
+  - `public/icons/icon-original.png` — 原始高清版
+- **manifest.json**: 引用路径不变（`/icons/icon-*.png`），无需修改配置
+>>>>>>> 059204a (🎨 PWA 图标更新：动漫少女 × 铃铛 × 羽毛笔)
+
 ### 新增
 - `src/app/settings/page.tsx`: 页面底部新增「退出登录」危险按钮区域，红色卡片样式，点击调用 `signOut({ callbackUrl: "/" })` 跳回 Landing Page
 - `src/components/MobileTabBar.tsx`: 长按「设置」Tab（800ms）弹出退出登录确认浮层（桌面端 mouse 事件同样支持），含「取消」和「确认退出」两个按钮
