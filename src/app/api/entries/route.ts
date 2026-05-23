@@ -1,5 +1,5 @@
 import { getUser, jsonError, jsonOk } from "@/lib/api-helpers";
-import { getEntries, saveDiary } from "@/lib/diary";
+import { getEntries, getCalendarEntries, saveDiary } from "@/lib/diary";
 import type { Tone } from "@/types";
 import { NextRequest } from "next/server";
 
@@ -8,6 +8,20 @@ export async function GET(request: NextRequest) {
   if (!user) return jsonError("Unauthorized", 401);
 
   const { searchParams } = request.nextUrl;
+  const view = searchParams.get("view");
+
+  if (view === "calendar") {
+    const year = parseInt(searchParams.get("year") ?? "", 10);
+    const month = parseInt(searchParams.get("month") ?? "", 10);
+
+    if (isNaN(year) || isNaN(month) || month < 1 || month > 12) {
+      return jsonError("Invalid year or month");
+    }
+
+    const entries = await getCalendarEntries(user.id, year, month);
+    return jsonOk({ entries });
+  }
+
   const cursor = searchParams.get("cursor") ?? undefined;
   const limit = Math.min(parseInt(searchParams.get("limit") ?? "20", 10), 50);
 

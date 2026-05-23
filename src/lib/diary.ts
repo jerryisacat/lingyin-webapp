@@ -12,7 +12,7 @@ import {
   buildDiaryPrompt,
   VISION_PROMPT,
 } from "@/lib/ai/prompts";
-import type { ApiProvider, MediaFile, Tone, DiarySummary } from "@/types";
+import type { ApiProvider, MediaFile, Tone, DiarySummary, CalendarEntry } from "@/types";
 
 export async function* generateDiary(params: {
   text: string;
@@ -137,6 +137,29 @@ export async function getEntries(
     wordCount: entry.wordCount,
     tags: entry.tags ? JSON.parse(entry.tags) : [],
     createdAt: entry.createdAt.toISOString(),
+  }));
+}
+
+export async function getCalendarEntries(
+  userId: string,
+  year: number,
+  month: number
+): Promise<CalendarEntry[]> {
+  const startDate = new Date(year, month - 1, 1);
+  const endDate = new Date(year, month, 1);
+
+  const entries = await prisma.entry.findMany({
+    where: {
+      userId,
+      date: { gte: startDate, lt: endDate },
+    },
+    select: { id: true, date: true },
+    orderBy: { date: "asc" },
+  });
+
+  return entries.map((entry) => ({
+    id: entry.id,
+    date: entry.date.toISOString().slice(0, 10),
   }));
 }
 

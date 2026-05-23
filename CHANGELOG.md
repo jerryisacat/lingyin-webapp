@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## 2026-05-23 — 日历视图: Timeline 增加日历浏览模式 (#2)
+
+### 新增
+- `src/components/CalendarView.tsx`: 月历组件，渲染 7×6 网格，标注有日记的日期（sakura 圆点），支持骨架屏加载态和空月提示
+- `src/types/index.ts`: 新增 `CalendarEntry` 类型（`{ id, date }`）
+- `src/lib/diary.ts`: 新增 `getCalendarEntries()` 函数，按月查询日记（仅返回 id+date，不读 R2）
+
+### 变更
+- `src/app/api/entries/route.ts`: `GET` 增加 `?view=calendar&year=&month=` 查询模式，跳过游标分页，不触发 R2 读取
+- `src/app/timeline/page.tsx`: 增加列表/日历视图切换按钮（Lucide List/CalendarDays 图标），日历模式下月切换和日期点击跳转
+
 ## 2026-05-23 — 速率限制: 全量 API 端点添加速率限制
 
 **触发原因**: 修复审计发现 #60 — 所有 API 路由无速率限制（P0 安全漏洞）。
