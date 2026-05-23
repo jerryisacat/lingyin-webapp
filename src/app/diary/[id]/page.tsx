@@ -15,12 +15,16 @@ import {
   X,
   ImagePlus,
 } from "lucide-react";
-import MarkdownViewer from "@/components/MarkdownViewer";
-import PhotoUploader from "@/components/PhotoUploader";
+import { MarkdownViewer } from "@/components/MarkdownViewer";
+import { PhotoUploader } from "@/components/PhotoUploader";
+import { UnlockDiaryModal } from "@/components/UnlockDiaryModal";
+import { useEncryption } from "@/hooks/useEncryptionPassword";
+import { decryptMarkdown } from "@/lib/client-crypto";
 import type { DiarySummary, ApiResponse, MediaFile } from "@/types";
 
 interface EntryDetail {
   markdown: string;
+  isEncrypted: boolean;
   metadata: DiarySummary;
 }
 
@@ -87,6 +91,7 @@ export default function DiaryDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const entryId = params.id;
+  const { isUnlocked, session, unlock } = useEncryption();
 
   const [entry, setEntry] = useState<EntryDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -96,6 +101,10 @@ export default function DiaryDetailPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState("");
   const [editSaveStatus, setEditSaveStatus] = useState<"idle" | "saving" | "error">("idle");
+
+  const [showUnlock, setShowUnlock] = useState(false);
+  const [decryptedMarkdown, setDecryptedMarkdown] = useState<string | null>(null);
+  const [decrypting, setDecrypting] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [editImages, setEditImages] = useState<MediaFile[]>([]);
@@ -128,6 +137,24 @@ export default function DiaryDetailPage() {
 
         if (!cancelled) {
           setEntry(json.data);
+          if (json.data.isEncrypted && !isUnlocked) {
+            setShowUnlock(true);
+          } else if (json.data.isEncrypted && isUnlocked && session.password && session.salt) {
+            setDecrypting(true);
+            decryptMarkdown(json.data.markdown, session.password, session.salt)
+              .then((decrypted) => {
+                if (!cancelled) {
+                  setDecryptedMarkdown(decrypted);
+                  setDecrypting(false);
+                }
+              })
+              .catch(() => {
+                if (!cancelled) {
+                  setShowUnlock(true);
+                  setDecrypting(false);
+                }
+              });
+          }
         }
       } catch (e: unknown) {
         if (!cancelled) {
@@ -146,7 +173,7 @@ export default function DiaryDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [entryId]);
+  }, [entryId, isUnlocked, session.password, session.salt]);
 
   const handleDelete = useCallback(async () => {
     setIsDeleting(true);
@@ -272,6 +299,40 @@ export default function DiaryDetailPage() {
     setExistingImagePreviews([]);
   }, []);
 
+  const handleUnlock = useCallback(
+    async (password: string): Promise<boolean> => {
+      if (!entry) return false
+
+      try {
+        const res = await fetch("/api/user/encryption-password/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password }),
+        })
+
+        const json = await res.json()
+        if (!json.ok || !json.data?.valid) return false
+
+        const statusRes = await fetch("/api/user/encryption-password/status")
+        const statusJson = await statusRes.json()
+        const salt = statusJson.ok ? statusJson.data?.salt : null
+        if (!salt) return false
+
+        unlock(password, salt)
+
+        setDecrypting(true)
+        const decrypted = await decryptMarkdown(entry.markdown, password, salt)
+        setDecryptedMarkdown(decrypted)
+        setDecrypting(false)
+        setShowUnlock(false)
+        return true
+      } catch {
+        return false
+      }
+    },
+    [entry, unlock]
+  )
+
   if (isLoading) {
     return (
       <div className="max-w-2xl mx-auto py-20 flex flex-col items-center justify-center gap-3">
@@ -300,7 +361,8 @@ export default function DiaryDetailPage() {
 
   if (!entry) return null;
 
-  const { metadata, markdown } = entry;
+  const { metadata, markdown: rawMarkdown } = entry;
+  const markdown = decryptedMarkdown ?? rawMarkdown;
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -525,6 +587,22 @@ export default function DiaryDetailPage() {
                 )}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showUnlock && (
+        <UnlockDiaryModal
+          onUnlock={handleUnlock}
+          onClose={() => setShowUnlock(false)}
+        />
+      )}
+
+      {decrypting && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="flex flex-col items-center gap-3 text-white">
+            <Loader2 className="w-8 h-8 animate-spin" />
+            <span className="text-sm">解密中...</span>
           </div>
         </div>
       )}

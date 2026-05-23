@@ -3,7 +3,7 @@
 import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useApiKeys } from "@/hooks/useApiKeys";
-import DiaryEditor from "@/components/DiaryEditor";
+import { DiaryEditor } from "@/components/DiaryEditor";
 import type { ApiProvider } from "@/types";
 
 const PROVIDER_ORDER: ApiProvider[] = ["openrouter"];

@@ -39,3 +39,24 @@ export async function getUserDecryptedApiKey(
     return null;
   }
 }
+
+export function getSystemApiKey(provider: ApiProvider): string | null {
+  if (provider === "openrouter") {
+    return process.env.OPENROUTER_API_KEY ?? null;
+  }
+  return null;
+}
+
+export function isSystemApiKeyAvailable(provider: ApiProvider): boolean {
+  return getSystemApiKey(provider) !== null;
+}
+
+export async function getEffectiveApiKey(
+  userId: string,
+  provider: ApiProvider
+): Promise<string | null> {
+  const userKey = await getUserDecryptedApiKey(userId, provider);
+  if (userKey) return userKey;
+
+  return getSystemApiKey(provider);
+}

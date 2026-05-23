@@ -5,24 +5,23 @@ import {
   generateStream,
 } from "@/lib/ai/client";
 import {
-  WARM_SYSTEM_PROMPT,
-  GENKI_SYSTEM_PROMPT,
-  MINIMAL_SYSTEM_PROMPT,
-  LITERARY_SYSTEM_PROMPT,
+  buildSystemPrompt,
   buildDiaryPrompt,
   VISION_PROMPT,
 } from "@/lib/ai/prompts";
-import type { ApiProvider, MediaFile, Tone, DiarySummary, CalendarEntry } from "@/types";
+import { trackStorageUsage } from "@/lib/quota-service";
+import type { ApiProvider, MediaFile, WritingStyle, DiarySummary, CalendarEntry } from "@/types";
+import { DEFAULT_WRITING_STYLE } from "@/config/personas";
 
 export async function* generateDiary(params: {
   text: string;
   images: MediaFile[];
-  tone: Tone;
+  writingStyle?: WritingStyle;
   date: string;
   apiKey: string;
   provider: ApiProvider;
 }): AsyncGenerator<string> {
-  const { text, images, tone, date, apiKey, provider } = params;
+  const { text, images, writingStyle, date, apiKey, provider } = params;
 
   const imageUrls = images.map((img) => img.url);
   const imageDescriptions =
@@ -41,14 +40,7 @@ export async function* generateDiary(params: {
     description: imageDescriptions[i] ?? "",
   }));
 
-  const systemPrompt =
-    tone === "warm"
-      ? WARM_SYSTEM_PROMPT
-      : tone === "genki"
-        ? GENKI_SYSTEM_PROMPT
-        : tone === "minimal"
-          ? MINIMAL_SYSTEM_PROMPT
-          : LITERARY_SYSTEM_PROMPT;
+  const systemPrompt = buildSystemPrompt(writingStyle ?? DEFAULT_WRITING_STYLE)
   const userPrompt = buildDiaryPrompt({
     userText: text,
     imageDescriptions: imageData,
@@ -62,18 +54,28 @@ export async function saveDiary(params: {
   userId: string;
   date: string;
   markdown: string;
-  tone: Tone;
   imagePaths: string[];
+  encrypted?: boolean;
 }): Promise<DiarySummary> {
-  const { userId, date, markdown, tone } = params;
+  const { userId, date, markdown, encrypted = false } = params;
 
-  const markdownPath = await storage.saveMarkdown(userId, date, markdown);
+  const saved = await storage.saveMarkdown(userId, date, markdown, encrypted);
 
-  const preview = markdown.replace(/[#*!\[\]`>\-_\n]/g, " ").replace(/\s+/g, " ").trim().slice(0, 200);
-  const wordCount = markdown.replace(/[#*!\[\]`>\-_\n]/g, "").replace(/\s+/g, "").length;
-  const hasImages = markdown.includes("![");
-  const imageCount = (markdown.match(/!\[.*?\]\(.*?\)/g) ?? []).length;
-  const tagMatches = markdown.match(/#\S+/g) ?? [];
+  // Track markdown storage size
+  const contentSize = new TextEncoder().encode(markdown).length;
+  try {
+    await trackStorageUsage(userId, contentSize);
+  } catch {
+    console.error("[saveDiary] Failed to track storage usage");
+  }
+
+  const preview = encrypted
+    ? null
+    : markdown.replace(/[#*!\[\]`>\-_\n]/g, " ").replace(/\s+/g, " ").trim().slice(0, 200);
+  const wordCount = encrypted ? 0 : markdown.replace(/[#*!\[\]`>\-_\n]/g, "").replace(/\s+/g, "").length;
+  const hasImages = encrypted ? false : markdown.includes("![");
+  const imageCount = encrypted ? 0 : (markdown.match(/!\[.*?\]\(.*?\)/g) ?? []).length;
+  const tagMatches = encrypted ? [] : (markdown.match(/#\S+/g) ?? []);
   const tags = tagMatches.length > 0 ? JSON.stringify(tagMatches.slice(0, 10)) : null;
 
   const entry = await prisma.entry.upsert({
@@ -83,21 +85,19 @@ export async function saveDiary(params: {
     create: {
       userId,
       date: new Date(date),
-      tone,
       preview,
       wordCount,
       hasImages,
       imageCount,
-      markdownPath,
+      markdownPath: saved.path,
       tags,
     },
     update: {
-      tone,
       preview,
       wordCount,
       hasImages,
       imageCount,
-      markdownPath,
+      markdownPath: saved.path,
       tags,
     },
   });
@@ -166,7 +166,7 @@ export async function getCalendarEntries(
 export async function getEntry(
   userId: string,
   entryId: string
-): Promise<{ markdown: string; metadata: DiarySummary } | null> {
+): Promise<{ markdown: string; isEncrypted: boolean; metadata: DiarySummary } | null> {
   const entry = await prisma.entry.findFirst({
     where: { id: entryId, userId },
   });
@@ -174,10 +174,11 @@ export async function getEntry(
   if (!entry) return null;
 
   const dateStr = entry.date.toISOString().slice(0, 10);
-  const markdown = (await storage.readMarkdown(userId, dateStr)) ?? "";
+  const result = await storage.readMarkdown(userId, dateStr);
 
   return {
-    markdown,
+    markdown: result?.content ?? "",
+    isEncrypted: result?.encrypted ?? false,
     metadata: {
       id: entry.id,
       date: dateStr,

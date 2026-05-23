@@ -1,6 +1,6 @@
 {
   "framework": "nextjs",
   "regions": ["hkg1"],
-  "buildCommand": "npx prisma generate && next build",
+  "buildCommand": "npx prisma generate && npx tsc --noEmit && next build",
   "installCommand": "npm install"
 }

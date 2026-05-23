@@ -17,8 +17,12 @@ function createLimiter(maxRequests: number, window: Duration) {
   })
 }
 
+const MAX_FAILED_LOGIN_ATTEMPTS = 5
+const ACCOUNT_LOCK_MINUTES = "15 m"
+
 export const rateLimiters = {
   login: createLimiter(5, "1 m"),
+  loginAccount: createLimiter(MAX_FAILED_LOGIN_ATTEMPTS, ACCOUNT_LOCK_MINUTES),
   register: createLimiter(3, "15 m"),
   forgotPassword: createLimiter(2, "5 m"),
   resendVerification: createLimiter(2, "5 m"),
@@ -26,6 +30,16 @@ export const rateLimiters = {
   aiGenerate: createLimiter(5, "1 m"),
   aiRewrite: createLimiter(5, "1 m"),
   aiTest: createLimiter(3, "1 m"),
+  entriesRead: createLimiter(30, "1 m"),
+  entriesWrite: createLimiter(20, "1 m"),
+  userConfig: createLimiter(10, "1 m"),
+  encryptionPassword: createLimiter(5, "5 m"),
+  apiKeyWrite: createLimiter(5, "5 m"),
+  uploadImage: createLimiter(10, "1 m"),
+  imageProxy: createLimiter(30, "1 m"),
+  stats: createLimiter(10, "1 m"),
+  migrate: createLimiter(10, "1 m"),
+  verifyEmail: createLimiter(10, "1 m"),
 }
 
 export type RateLimitResult = {
@@ -47,7 +61,7 @@ export async function checkRateLimit(
       "[RateLimit] Redis error:",
       error instanceof Error ? error.message : error
     )
-    console.warn("[RateLimit] Redis unavailable — skipping rate limit")
+    console.error("[RateLimit] Redis unavailable — skipping rate limit")
     return { success: true, limit: 0, remaining: 0, reset: 0 }
   }
 }

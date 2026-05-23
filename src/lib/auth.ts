@@ -9,10 +9,7 @@ class RateLimitError extends CredentialsSignin {
 }
 
 if (!process.env.AUTH_SECRET) {
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("AUTH_SECRET environment variable is required")
-  }
-  console.warn("⚠ AUTH_SECRET not set — using random secret (sessions will be invalidated on restart)")
+  throw new Error("AUTH_SECRET environment variable is required (set it in .env.local)")
 }
 
 declare module "next-auth" {
@@ -37,8 +34,19 @@ const result = NextAuth({
         if (!email || !password) return null
 
         const ip = getClientIP(request)
-        const { success } = await checkRateLimit(rateLimiters.login, ip)
-        if (!success) throw new RateLimitError()
+        const { success: ipOk } = await checkRateLimit(rateLimiters.login, ip)
+        if (!ipOk) throw new RateLimitError()
+
+        const { success: accountOk, reset } = await checkRateLimit(
+          rateLimiters.loginAccount,
+          `login:account:${email.toLowerCase()}`
+        )
+        if (!accountOk) {
+          const minutes = Math.ceil((reset - Date.now()) / 1000 / 60)
+          throw new CredentialsSignin(
+            `Account temporarily locked — too many failed attempts. Try again in ${minutes} minutes.`
+          )
+        }
 
         const user = await prisma.user.findUnique({ where: { email } })
         if (!user || !user.emailVerified) return null

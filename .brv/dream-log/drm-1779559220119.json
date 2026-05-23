@@ -1,0 +1,165 @@
+{
+  "completedAt": 1779559369377,
+  "id": "drm-1779559220119",
+  "operations": [
+    {
+      "action": "CROSS_REFERENCE",
+      "inputFiles": [
+        "billing/quota/free_tier_quota_system.md",
+        "billing/quota/token_topup_and_unified_api_key.md",
+        "billing/stripe_subscription/stripe_subscription_implementation.md"
+      ],
+      "needsReview": false,
+      "previousTexts": {
+        "billing/quota/free_tier_quota_system.md": "---\ntitle: Free Tier Quota System\nsummary: 'Free tier quota system: TokenUsage model, quota-service.ts for token/storage/model checks, enforced on generate/rewrite/test endpoints, storage tracking in saveDiary, QuotaUsage dashboard component'\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-05-23T15:22:57.696Z'\nupdatedAt: '2026-05-23T15:22:57.696Z'\n---\n## Reason\nDocument Stream C Phase 2 (#11) free tier quota implementation\n\n## Raw Concept\n**Task:**\nImplement free tier quota system for Stream C Phase 2 (#11)\n\n**Changes:**\n- Added TokenUsage database model\n- Created quota-service.ts for Token budget, storage quota, model limit checks\n- Enforced quotas on 3 AI endpoints: generate/rewrite/test with pre-check and post-stream token recording\n- Added storage tracking in saveDiary to auto record markdown size\n- Integrated QuotaUsage frontend component with progress bar to dashboard\n\n**Files:**\n- src/lib/quota-service.ts\n- src/components/QuotaUsage.tsx\n\n**Flow:**\nRequest -> pre-check quota -> process -> record usage (tokens/size) -> update dashboard\n\n**Timestamp:** 2026-05-23\n\n## Narrative\n### Structure\nQuota enforcement layer between API routes and AI services; frontend progress visualization on dashboard\n\n### Dependencies\nPrisma TokenUsage model, dashboard integration\n\n### Highlights\nFree tier limits on tokens, storage, models; automatic tracking on diary save and AI streams\n",
+        "billing/quota/token_topup_and_unified_api_key.md": "---\ntitle: Token TopUp and Unified API Key\nsummary: Token top-up packages via Stripe, TokenTopUp model, topUpBalanceUsd, unified getEffectiveApiKey with user key priority, quota effective budget, AI endpoint migration, QuotaUsage UI updates\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-05-23T15:36:23.047Z'\nupdatedAt: '2026-05-23T15:36:23.047Z'\n---\n## Reason\nCurate RLM context about token top-up packages and API key unification\n\n## Raw Concept\n**Task:**\nImplement Token top-up packages and unified API Key system\n\n**Changes:**\n- 新增 TokenTopUp 模型\n- User.topUpBalanceUsd\n- POST /api/topup/checkout (Stripe ¥5/¥20/¥38)\n- Webhook top-up mode\n- quota-service 有效预算=套餐+加购余额\n- getEffectiveApiKey (用户Key优先→系统OPENROUTER_API_KEY)\n- AI端点全部迁移\n- QuotaUsage 加购按钮+系统Key状态提示\n\n**Flow:**\nTop-up checkout -> Stripe webhook -> update topUpBalance -> effective quota calc -> getEffectiveApiKey fallback\n\n## Narrative\n### Structure\nBilling extended with one-time Stripe top-ups for tokens; quota-service aggregates subscription + top-up; unified key selection prioritizes user-provided then system key\n\n### Highlights\nSupports ¥5/¥20/¥38 top-up tiers; seamless fallback to system OPENROUTER_API_KEY; all AI endpoints migrated\n",
+        "billing/stripe_subscription/stripe_subscription_implementation.md": "---\ntitle: Stripe Subscription Implementation\nsummary: Stripe SDK integration (v22, API 2026-04-22.dahlia) with Checkout, 5 webhook events, subscription-service DB ops, and SubscriptionPlans UI component\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-05-23T14:44:29.042Z'\nupdatedAt: '2026-05-23T14:44:29.042Z'\n---\n## Reason\nCurate Stripe subscription payment feature from provided context\n\n## Raw Concept\n**Task:**\nImplement Stripe subscription payments (#10 Subscription)\n\n**Changes:**\n- Stripe SDK v22 integration\n- Checkout API with userId+plan metadata\n- Webhook handling for 5 events\n- subscription-service.ts for DB operations\n\n**Files:**\n- src/lib/stripe.ts\n- src/lib/subscription-service.ts\n- src/app/api/subscription/webhook/route.ts\n- src/components/SubscriptionPlans.tsx\n- config/billing-pricing.json\n\n**Flow:**\nCheckout -> Webhook events -> upsertSubscription -> Prisma User/Subscription/Invoice updates\n\n**Timestamp:** 2026-05-23\n\n## Narrative\n### Structure\nServer Stripe init in src/lib/stripe.ts with env checks; subscription-service handles get/upsert/update/cancel/createInvoice using Prisma; webhook route processes checkout.session.completed, invoice.paid, etc.; UI in SubscriptionPlans with plan selection and redirect\n\n### Dependencies\nSTRIPE_SECRET_KEY, NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_BASIC_MONTHLY, STRIPE_PRICE_ADVANCED_MONTHLY env vars; Prisma models for User, Subscription, Invoice\n\n### Highlights\nSupports basic/advanced plans, current plan detection, payment failure handling, invoice creation in CNY; branch dev/v1\n\n### Rules\nWebhook only processes configured events; falls back to basic plan if invalid; requires all Stripe env vars for isStripeConfigured\n"
+      },
+      "reason": "Complementary billing topics: free-tier quotas, one-time Stripe top-ups extending quotas, and recurring Stripe subscriptions. Top-up explicitly builds on quota-service and shares Stripe patterns with subscriptions. No content overlap >50%.",
+      "type": "CONSOLIDATE"
+    },
+    {
+      "action": "MERGE",
+      "inputFiles": [
+        "ui/logout/logout_functionality.md",
+        "ui/logout/logout_functionality.abstract.md",
+        "ui/logout/logout_functionality.overview.md"
+      ],
+      "needsReview": true,
+      "outputFile": "ui/logout/logout_functionality.md",
+      "previousTexts": {
+        "ui/logout/logout_functionality.md": "---\ntitle: Logout Functionality\nsummary: Logout via red danger button in Settings, long-press (800ms) on mobile settings tab with confirmation modal, plus existing Header.tsx desktop/mobile logout buttons\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-05-23T10:42:48.715Z'\nupdatedAt: '2026-05-23T10:42:48.715Z'\n---\n## Reason\nDocument logout UI implementations in settings, mobile tab bar, and header\n\n## Raw Concept\n**Task:**\nImplement logout functionality across Settings page, MobileTabBar, and Header\n\n**Files:**\n- src/app/settings/page.tsx\n- src/components/MobileTabBar.tsx\n- src/components/Header.tsx\n\n**Flow:**\nSettings button -> signOut; Mobile long-press (800ms) -> confirmation modal (cancel/confirm); Header buttons -> signOut (desktop+mobile)\n\n## Narrative\n### Structure\nRed danger button at Settings page bottom calls signOut; MobileTabBar long-press on settings tab (800ms) shows logout confirmation overlay; Header.tsx already has logout buttons for both desktop and mobile\n\n### Highlights\nConsistent logout UX across desktop header, settings page, and mobile tab bar with confirmation for mobile\n",
+        "ui/logout/logout_functionality.abstract.md": "The document details logout functionality implemented via a red danger button in Settings, 800ms long-press with confirmation modal on the mobile tab bar, and existing Header.tsx buttons for desktop and mobile.",
+        "ui/logout/logout_functionality.overview.md": "- Key points: Logout implemented via red danger button in Settings page calling signOut; 800ms long-press on mobile settings tab triggers confirmation modal (cancel/confirm); Header.tsx provides existing logout buttons for both desktop and mobile; Consistent UX across Settings, MobileTabBar, and Header; Mobile flow requires explicit confirmation before signOut\n- Structure / sections summary: Document sections include Reason (documenting UI implementations), Raw Concept (task, files, flow), and Narrative (Structure describing button/modal behaviors, Highlights on cross-platform consistency)\n- Notable entities/patterns/decisions: Files involved are src/app/settings/page.tsx, src/components/MobileTabBar.tsx, src/components/Header.tsx; Decision to use long-press (800ms) + modal only for mobile tab bar; Pattern of reusing signOut across desktop/mobile entry points with added safety for mobile"
+      },
+      "reason": "Abstract and overview are derived summaries (>70% overlap) of the detailed main file; merge into richest source to eliminate redundancy while preserving all unique details.",
+      "type": "CONSOLIDATE"
+    },
+    {
+      "action": "MERGE",
+      "inputFiles": [
+        "ui/landing/landing_page_refactor.md",
+        "ui/landing/landing_page_refactor.abstract.md",
+        "ui/landing/landing_page_refactor.overview.md"
+      ],
+      "needsReview": true,
+      "outputFile": "ui/landing/landing_page_refactor.md",
+      "previousTexts": {
+        "ui/landing/landing_page_refactor.md": "---\ntitle: Landing Page Refactor\nsummary: 'Landing page refactor: fixed brand/copy, added OSS/GitHub info, new use-case blocks, sticky glass navbar, Header useMemo, AES-256-GCM privacy, AppShell migration'\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-05-23T10:37:15.680Z'\nupdatedAt: '2026-05-23T10:37:15.680Z'\n---\n## Reason\nDocument landing page UI/UX refactor changes\n\n## Raw Concept\n**Task:**\nLanding Page 重构\n\n**Changes:**\n- 修复品牌名和文案硬伤\n- Hero 加入开源/GitHub/Vibe Coding 信息\n- 新增四个用例场景区块(追演出/旅行/日常/生活)\n- 导航栏升级为 sticky top-4 毛玻璃悬浮卡片式\n- Header 使用 useMemo 优化\n- 禁用项处理(社交网络)\n- FEATURES 隐私描述改为 AES-256-GCM 加密说明\n- AppShell 从 NavBar 迁移到 Header\n\n**Flow:**\nrefactor -> UI updates -> component migration\n\n## Narrative\n### Structure\nUpdates to landing page hero, navbar (sticky frosted glass), use-case sections, privacy copy, Header/AppShell structure\n\n### Highlights\nImproved visual polish with glassmorphism, better UX scenarios, security clarification\n",
+        "ui/landing/landing_page_refactor.abstract.md": "The document details a landing page refactor that fixes branding/copy, adds OSS/GitHub info and four use-case blocks, upgrades the navbar to a sticky frosted-glass style, optimizes Header with useMemo, migrates AppShell, and clarifies privacy with AES-256-GCM encryption.",
+        "ui/landing/landing_page_refactor.overview.md": "- Key points: fixed brand/copy errors; added OSS/GitHub/Vibe Coding to Hero; introduced 4 use-case blocks (performance/travel/daily/life); upgraded navbar to sticky top-4 frosted-glass floating card; Header optimized via useMemo; switched FEATURES privacy text to AES-256-GCM; migrated AppShell from NavBar to Header\n- Structure/sections summary: Reason (document changes); Raw Concept (task + detailed changes + refactor flow); Narrative (Structure of hero/navbar/use-cases/privacy/Header updates + Highlights on glassmorphism/UX/security)\n- Notable entities/patterns/decisions: glassmorphism polish, component migration pattern, security clarification to AES-256-GCM, disabled social items, UI/UX refactor flow"
+      },
+      "reason": "Abstract and overview are derived summaries (>70% overlap) of the detailed main file; merge into richest source to eliminate redundancy while preserving all unique details.",
+      "type": "CONSOLIDATE"
+    },
+    {
+      "action": "MERGE",
+      "inputFiles": [
+        "ui/timeline/calendar_view_implementation.md",
+        "ui/timeline/calendar_view_implementation.abstract.md",
+        "ui/timeline/calendar_view_implementation.overview.md"
+      ],
+      "needsReview": true,
+      "outputFile": "ui/timeline/calendar_view_implementation.md",
+      "previousTexts": {
+        "ui/timeline/calendar_view_implementation.md": "---\ntitle: Calendar View Implementation\nsummary: CalendarView component with month grid, sakura indicators, API /api/entries?view=calendar, list/calendar toggle preserving state\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-05-23T08:37:01.985Z'\nupdatedAt: '2026-05-23T08:37:01.985Z'\n---\n## Reason\nCurate Issue #2 calendar view feature from source spec\n\n## Raw Concept\n**Task:**\nImplement calendar view toggle on timeline page with lightweight calendar entries API\n\n**Changes:**\n- Added CalendarView component rendering month grid with sakura dots\n- Extended GET /api/entries to support ?view=calendar&year=&month= returning {id,date}\n- Timeline page now toggles between list and calendar modes\n- Calendar navigation respects current date boundaries\n- List cursor state preserved across view switches\n\n**Files:**\n- src/components/CalendarView.tsx\n- src/app/api/entries/route.ts\n- src/app/timeline/page.tsx\n\n**Flow:**\nUser toggles view -> fetch calendar entries -> render grid with clickable days -> navigate to diary on click\n\n## Narrative\n### Structure\nCalendarView uses memoized grid calculation, entry map for fast lookup, skeleton loading, empty state with sakura icon. TimelinePage manages separate state for list vs calendar.\n\n### Dependencies\nUses lucide-react icons, existing DiarySummary/CalendarEntry types, getCalendarEntries from @/lib/diary\n\n### Highlights\nLightweight calendar API, cross-year month navigation disabled beyond today, sakura-themed dots for entries\n",
+        "ui/timeline/calendar_view_implementation.abstract.md": "The document describes implementing a CalendarView component with month grid and sakura indicators, extending the entries API for calendar mode, and adding list/calendar toggling on the timeline page while preserving state.",
+        "ui/timeline/calendar_view_implementation.overview.md": "- Key points: CalendarView component added for month grid rendering with sakura dots; GET /api/entries extended for ?view=calendar&year=&month= returning lightweight {id,date} entries; Timeline page supports list/calendar toggle with preserved cursor state; Memoized grid calc, entry map lookup, skeleton loading and empty sakura-icon state implemented; Cross-year navigation disabled beyond current date\n- Structure / sections summary: Document sections include Reason (curating Issue #2), Raw Concept (task/changes/files/flow), Narrative (Structure, Dependencies, Highlights)\n- Notable entities/patterns/decisions: Files touched are src/components/CalendarView.tsx, src/app/api/entries/route.ts, src/app/timeline/page.tsx; uses lucide-react icons, DiarySummary/CalendarEntry types and getCalendarEntries helper; decision for sakura-themed indicators and minimal API payload; separate list vs calendar state management in TimelinePage"
+      },
+      "reason": "Abstract and overview are derived summaries (>70% overlap) of the detailed main file; merge into richest source to eliminate redundancy while preserving all unique details.",
+      "type": "CONSOLIDATE"
+    },
+    {
+      "action": "CROSS_REFERENCE",
+      "inputFiles": [
+        "ui/landing/landing_page_refactor.md",
+        "ui/landing/landing_page_and_auth_routing.md"
+      ],
+      "needsReview": false,
+      "previousTexts": {
+        "ui/landing/landing_page_refactor.md": "---\ntitle: Landing Page Refactor\nsummary: 'Landing page refactor: fixed brand/copy, added OSS/GitHub info, new use-case blocks, sticky glass navbar, Header useMemo, AES-256-GCM privacy, AppShell migration'\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-05-23T10:37:15.680Z'\nupdatedAt: '2026-05-23T10:37:15.680Z'\n---\n## Reason\nDocument landing page UI/UX refactor changes\n\n## Raw Concept\n**Task:**\nLanding Page 重构\n\n**Changes:**\n- 修复品牌名和文案硬伤\n- Hero 加入开源/GitHub/Vibe Coding 信息\n- 新增四个用例场景区块(追演出/旅行/日常/生活)\n- 导航栏升级为 sticky top-4 毛玻璃悬浮卡片式\n- Header 使用 useMemo 优化\n- 禁用项处理(社交网络)\n- FEATURES 隐私描述改为 AES-256-GCM 加密说明\n- AppShell 从 NavBar 迁移到 Header\n\n**Flow:**\nrefactor -> UI updates -> component migration\n\n## Narrative\n### Structure\nUpdates to landing page hero, navbar (sticky frosted glass), use-case sections, privacy copy, Header/AppShell structure\n\n### Highlights\nImproved visual polish with glassmorphism, better UX scenarios, security clarification\n",
+        "ui/landing/landing_page_and_auth_routing.md": "---\ntitle: Landing Page and Auth Routing\nsummary: Landing page with hero/features/steps for guests; dashboard for users; middleware marks / as public; AppShell excludes / from nav shell\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-05-21T19:12:36.897Z'\nupdatedAt: '2026-05-21T19:12:36.897Z'\nconsolidated_at: '2026-05-22T06:04:35.543Z'\nconsolidated_from: [{date: '2026-05-22T06:04:35.543Z', path: ui/landing/landing_page_and_auth_routing.abstract.md, reason: 'All three files cover identical topic (dual-state landing page + auth routing) with substantial content overlap (>70%); abstract and overview are derived summaries of the main detailed file. Merge into the richest source to eliminate redundancy while preserving every unique detail, phrasing, and structured section.'}, {date: '2026-05-22T06:04:35.543Z', path: ui/landing/landing_page_and_auth_routing.overview.md, reason: 'All three files cover identical topic (dual-state landing page + auth routing) with substantial content overlap (>70%); abstract and overview are derived summaries of the main detailed file. Merge into the richest source to eliminate redundancy while preserving every unique detail, phrasing, and structured section.'}]\n---\n## Reason\nDocument home page dual-state rendering and public route handling\n\n## Raw Concept\n**Task:**\nImplement dual-state home page with public landing and private dashboard\n\n**Files:**\n- src/app/page.tsx\n- src/lib/supabase/middleware.ts\n- src/components/AppShell.tsx\n\n**Flow:**\nmiddleware: / in PUBLIC_ROUTES -> allow guest; AppShell: / in NO_SHELL_ROUTES -> no nav; page.tsx: if user show dashboard else full landing (Hero + 4 features + 3 steps + CTA + Footer)\n\n## Narrative\n### Structure\nUnauthenticated: Hero section with CTA to login, Features grid (AI generate, photo-to-text, privacy, PWA), Steps (record, AI polish, save), CTA, Footer. Authenticated: centered dashboard with greeting, Write Diary / Timeline buttons, tip card.\n\n### Highlights\nPWA installable, offline diary read, local API key only, photo analysis into diary, Markdown timeline\n\n---\n\n**Abstract Summary (consolidated):** This document describes implementing a dual-state root page that renders a public landing page with hero, features, steps and CTA for guests while showing a personalized dashboard for authenticated users, using middleware to mark / as public and excluding it from the AppShell navigation.\n\n**Overview Key Points (consolidated):** \n- Dual-state home page renders public landing for guests and dashboard for authenticated users; middleware treats / as PUBLIC_ROUTES to allow guests; AppShell excludes / via NO_SHELL_ROUTES to omit nav shell; page.tsx conditionally shows Hero/Features/Steps/CTA/Footer or centered dashboard; emphasizes PWA installability, offline diary access, local API keys, and photo-to-text analysis\n- Structure / sections summary: Frontmatter with title/summary/tags; Reason section; Raw Concept covering Task/Files/Flow; Narrative with Structure (unauth vs auth views) and Highlights (PWA/offline/Markdown features)\n- Notable entities/patterns/decisions: PUBLIC_ROUTES and NO_SHELL_ROUTES constants; files src/app/page.tsx, src/lib/supabase/middleware.ts, src/components/AppShell.tsx; decision for full landing (Hero + 4 features + 3 steps) vs minimal dashboard greeting/buttons/tip card; patterns include conditional rendering based on Supabase user session"
+      },
+      "reason": "Complementary: landing_page_and_auth_routing covers base dual-state landing + auth routing; landing_page_refactor covers subsequent UI/UX changes (glassmorphism, use-cases, privacy clarification). No content overlap >50% but same domain; add frontmatter relations.",
+      "type": "CONSOLIDATE"
+    },
+    {
+      "action": "MERGE",
+      "inputFiles": [
+        "structure/stats/dashboard_stats_module.md",
+        "structure/stats/dashboard_stats_module.abstract.md",
+        "structure/stats/dashboard_stats_module.overview.md"
+      ],
+      "needsReview": true,
+      "outputFile": "structure/stats/dashboard_stats_module.md",
+      "previousTexts": {
+        "structure/stats/dashboard_stats_module.md": "---\ntitle: Dashboard Stats Module\nsummary: 'Stats dashboard: src/lib/stats.ts aggregation, /api/stats GET, DashboardStats component with Tailwind chart and streak logic'\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-05-23T10:12:56.784Z'\nupdatedAt: '2026-05-23T10:12:56.784Z'\n---\n## Reason\nCurate stats dashboard implementation from context\n\n## Raw Concept\n**Task:**\nAdd stats dashboard module on home page (#18)\n\n**Changes:**\n- Created src/lib/stats.ts with prisma findMany + JS aggregation for totalWords, totalDays, streak, monthlyData, topTags\n- Created src/app/api/stats/route.ts GET endpoint\n- Created DashboardStats client component with 4 states and pure Tailwind bar chart\n\n**Files:**\n- src/lib/stats.ts\n- src/app/api/stats/route.ts\n- src/components/DashboardStats.tsx\n\n**Flow:**\nStats computed server-side via single prisma query + JS, mounted on authenticated home between CTAs and tip card\n\n**Timestamp:** 2026-05-23\n\n## Narrative\n### Structure\nAggregation in src/lib/stats.ts walks backward for streak from today/yesterday through date set; component handles loading/error/empty/data states\n\n### Highlights\nNo recharts dependency, pure Tailwind bar chart; streak algorithm efficient single-pass backward walk\n",
+        "structure/stats/dashboard_stats_module.abstract.md": "The dashboard stats module adds server-side Prisma aggregation in src/lib/stats.ts for totals, streaks and monthly data, served via GET /api/stats and rendered in a pure-Tailwind DashboardStats component without external charting libs.",
+        "structure/stats/dashboard_stats_module.overview.md": "- Key points: Stats dashboard aggregates via src/lib/stats.ts (Prisma + JS) for totalWords/totalDays/streak/monthlyData/topTags; exposes GET /api/stats; renders in DashboardStats component using pure Tailwind bar chart; mounted on authenticated home between CTAs and tip card; streak computed by single-pass backward walk from today/yesterday\n- Key points: Avoids recharts dependency; component manages four states (loading/error/empty/data); server-side computation from single Prisma query\n- Structure / sections summary: Document sections include Reason, Raw Concept (task/changes/files/flow), Narrative (Structure/Highlights); metadata frontmatter with title/summary/timestamps\n- Notable entities/patterns/decisions: Files: src/lib/stats.ts, src/app/api/stats/route.ts, src/components/DashboardStats.tsx; pattern of efficient JS aggregation + Tailwind-only viz; decision to compute streak server-side for performance"
+      },
+      "reason": "All three files cover identical topic (dashboard stats module) with high content overlap: main file contains full details, abstract and overview are condensed versions of the same changes and highlights.",
+      "type": "CONSOLIDATE"
+    },
+    {
+      "action": "MERGE",
+      "inputFiles": [
+        "structure/security/rate_limiting.md",
+        "structure/security/rate_limiting.abstract.md",
+        "structure/security/rate_limiting.overview.md"
+      ],
+      "needsReview": true,
+      "outputFile": "structure/security/rate_limiting.md",
+      "previousTexts": {
+        "structure/security/rate_limiting.md": "---\ntitle: Rate Limiting\nsummary: Upstash rate limiting with sliding window on 8 API endpoints, graceful Redis degradation (fail-open dev, fail-closed prod)\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-05-23T08:25:29.223Z'\nupdatedAt: '2026-05-23T08:25:29.223Z'\n---\n## Reason\nCurate rate limiting implementation from context\n\n## Raw Concept\n**Task:**\nAdd rate limiting to all API endpoints\n\n**Changes:**\n- Implemented @upstash/ratelimit + @upstash/redis sliding window\n- checkRateLimit() wrapper for graceful degradation\n- Added rate-limit.ts unified module\n\n**Files:**\n- src/lib/rate-limit.ts\n\n**Flow:**\nrequest -> checkRateLimit() -> allow/deny with Redis sliding window\n\n## Narrative\n### Structure\nCovers login, register, email, password reset, AI generate/rewrite/test endpoints (8 total)\n\n### Highlights\nFail-open in development, fail-closed in production when Redis unavailable\n\n## Facts\n- **rate_limiting**: 全量 API 端点添加速率限制 — 使用 @upstash/ratelimit + @upstash/redis 实现 sliding window 速率限制，覆盖登录、注册、邮件发送、密码重置、AI 生成/改写/测试 8 个端点。通过 checkRateLimit() 包装器实现 Redis 不可用时的优雅降级（开发环境 fail-open，生产环境 fail-closed）。新增 rate-limit.ts 统一模块。 [project]\n",
+        "structure/security/rate_limiting.abstract.md": "The document details Upstash rate limiting with sliding window applied to eight API endpoints and graceful Redis degradation that fails open in development and closed in production.",
+        "structure/security/rate_limiting.overview.md": "- Key points: Upstash rate limiting with sliding window on 8 API endpoints (login, register, email, password reset, AI generate/rewrite/test); @upstash/ratelimit + @upstash/redis implementation; checkRateLimit() wrapper for graceful Redis degradation; fail-open in dev, fail-closed in prod; unified rate-limit.ts module added\n- Structure / sections summary: Reason (curate implementation); Raw Concept (task, changes, files, flow); Narrative (Structure covering 8 endpoints, Highlights on degradation); Facts (Chinese/English summary of rate_limiting feature)\n- Notable entities/patterns/decisions: rate_limiting feature; checkRateLimit() function; src/lib/rate-limit.ts; request -> checkRateLimit() -> allow/deny flow; sliding window pattern; environment-based Redis failure handling"
+      },
+      "reason": "All three files cover identical topic (rate limiting) with high content overlap: main file contains full details, abstract and overview are condensed versions of the same changes and highlights.",
+      "type": "CONSOLIDATE"
+    },
+    {
+      "action": "CREATE",
+      "confidence": 0.92,
+      "needsReview": false,
+      "outputFile": "structure/openrouter-ai-client-centralization.md",
+      "sources": [
+        "api/_index.md",
+        "structure/_index.md"
+      ],
+      "type": "SYNTHESIZE"
+    },
+    {
+      "action": "CREATE",
+      "confidence": 0.88,
+      "needsReview": false,
+      "outputFile": "ui/auth-driven-conditional-rendering.md",
+      "sources": [
+        "structure/_index.md",
+        "ui/_index.md"
+      ],
+      "type": "SYNTHESIZE"
+    },
+    {
+      "action": "CREATE",
+      "confidence": 0.85,
+      "needsReview": false,
+      "outputFile": "structure/local-only-api-key-privacy-posture.md",
+      "sources": [
+        "structure/_index.md",
+        "ui/_index.md"
+      ],
+      "type": "SYNTHESIZE"
+    }
+  ],
+  "startedAt": 1779559220119,
+  "status": "completed",
+  "summary": {
+    "consolidated": 7,
+    "errors": 0,
+    "flaggedForReview": 5,
+    "pruned": 0,
+    "synthesized": 3
+  },
+  "taskId": "a5e6440f-3175-4d15-a81f-7ca5025a13d8",
+  "trigger": "agent-idle"
+}

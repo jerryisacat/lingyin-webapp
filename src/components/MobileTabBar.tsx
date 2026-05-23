@@ -21,7 +21,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Settings,
 };
 
-export default function MobileTabBar() {
+export function MobileTabBar() {
   const pathname = usePathname();
   const { status } = useSession();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -39,6 +39,14 @@ export default function MobileTabBar() {
       setShowLogoutConfirm(true);
     }, 800);
   }, [isAuthenticated]);
+
+  const handleSignOut = async () => {
+    if (typeof caches !== 'undefined') {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(key => caches.delete(key)));
+    }
+    await signOut({ callbackUrl: '/' });
+  };
 
   const handleSettingsTouchEnd = useCallback(() => {
     if (longPressTimer.current) {
@@ -113,7 +121,7 @@ export default function MobileTabBar() {
                 取消
               </button>
               <button
-                onClick={() => signOut({ callbackUrl: "/" })}
+                onClick={handleSignOut}
                 className="flex-1 rounded-lg bg-red-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-red-600 transition-colors"
               >
                 确认退出

@@ -44,6 +44,9 @@ export async function sendPasswordResetEmail(params: {
   baseUrl: string
 }): Promise<void> {
   const { to, token, baseUrl } = params
+  // NOTE: Token is passed via URL query param (industry standard). To reduce exposure:
+  // token expires in 1 hour, is single-use, and the reset-password page clears it
+  // from browser history via replaceState on load.
   const resetUrl = `${baseUrl}/reset-password?token=${token}`
 
   const resend = getResend()

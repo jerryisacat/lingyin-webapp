@@ -133,6 +133,8 @@ export async function resendVerification(email: string): Promise<ServiceResult> 
 
     const token = generateToken()
 
+    await prisma.verificationToken.deleteMany({ where: { userId: user.id } })
+
     await prisma.verificationToken.create({
       data: {
         userId: user.id,
@@ -167,6 +169,8 @@ export async function forgotPassword(email: string): Promise<ServiceResult> {
     }
 
     const token = generateToken()
+
+    await prisma.passwordResetToken.deleteMany({ where: { userId: user.id } })
 
     await prisma.passwordResetToken.create({
       data: {

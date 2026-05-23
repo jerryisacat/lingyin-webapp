@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server"
 import { forgotPassword } from "@/lib/auth-service"
 import { getClientIP, checkRateLimit, rateLimiters, rateLimitError } from "@/lib/rate-limit"
+import { jsonOk, jsonError } from "@/lib/auth-helpers"
+import { formatZodError, forgotPasswordSchema } from "@/lib/validations"
 
 export async function POST(request: Request) {
   const ip = getClientIP(request)
@@ -8,18 +9,20 @@ export async function POST(request: Request) {
   if (!success) return rateLimitError(reset)
 
   try {
-    const { email } = await request.json()
+    const body = await request.json()
+    const parseResult = forgotPasswordSchema.safeParse(body)
+    if (!parseResult.success) {
+      return jsonError(formatZodError(parseResult.error), 400)
+    }
+    const { email } = parseResult.data
     const result = await forgotPassword(email)
 
     if (result.ok) {
-      return NextResponse.json(result)
+      return jsonOk(result.data)
     }
 
-    return NextResponse.json(result, { status: 400 })
+    return jsonError(result.error, 400)
   } catch {
-    return NextResponse.json(
-      { ok: false, error: "发送失败，请稍后再试" },
-      { status: 500 }
-    )
+    return jsonError("发送失败，请稍后再试", 500)
   }
 }

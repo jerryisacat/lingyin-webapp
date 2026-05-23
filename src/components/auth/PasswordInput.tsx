@@ -7,7 +7,7 @@ interface PasswordInputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string
 }
 
-export default function PasswordInput({ label, className = "", id, ...props }: PasswordInputProps) {
+export function PasswordInput({ label, className = "", id, ...props }: PasswordInputProps) {
   const [show, setShow] = useState(false)
 
   return (

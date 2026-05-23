@@ -1,3 +1,353 @@
+## 2026-05-24 — Issue #96: 前端全量代码重构（一致性治理 + UI/UX 升级）
+
+### 类型体系清理
+- 删除 `Tone` 类型及 10 个文件中的所有残余引用，完全切换到 `WritingStyle` 体系
+- 删除 `src/lib/ai/prompts.ts` 中 4 个 legacy prompt 常量 (`WARM_SYSTEM_PROMPT` 等)
+- 移除 `validations.ts` 中 `VALID_TONES` 及各 schema 中的 `tone` 字段
+- 清理 `api/user/config/route.ts` — 从 `tone` 迁移到 `writingStyle`
+- 清理 `api/ai/generate/route.ts`, `api/entries/route.ts`, `api/entries/[id]/route.ts`, `api/export/route.ts` 中 tone 字段
+- 清理 `hooks/useStreamGenerate.ts`, `components/DiaryEditor.tsx` 中的 tone 引用
+
+### 组件规范统一
+- 统一 Props: 所有 23 个组件使用 `interface XProps` 格式，修复 `DashboardStats` 3 处内联 Props + `UserConfigContext`/`EncryptionProvider` Props
+- 统一导出: 页面 `export default`，共享组件 `export function`（named export），更新 27 个 import 语句
+- 删除死代码: `Header.tsx`, `NavBar.tsx`, `prisma-errors.ts`, `env.ts`（4 个未使用文件）
+
+### 全局状态层
+- 新建 `src/contexts/UserConfigContext.tsx` — 集中管理写作风格，提供 `useUserConfig()` hook
+- `DiaryEditor`, `WritingStyleConfig`, `SetupPage` 移除各自 `fetch("/api/user/style")` 调用
+
+### 布局架构重构
+- 新建 `src/components/Sidebar.tsx` — 桌面端固定左侧导航（读取 `navigation.json`，与 MobileTabBar 同源）
+- 重写 `src/components/AppShell.tsx` — 桌面侧边栏 + 移动端 mini 顶栏 + 底部 Tab Bar 双轨响应式
+- Sidebar 导航项从硬编码改为读取 `config/navigation.json`
+
+### 组件拆分
+- `DiaryEditor` 从 291 行拆分为 4 个文件：
+  - `DiaryEditor.tsx` — 状态管理 + 组合 (~120行)
+  - `DiaryEditorToolbar.tsx` — 日期 + 风格标识
+  - `DiaryEditorInput.tsx` — 输入区 + 图片 + 人格选择
+  - `DiaryEditorOutput.tsx` — 流式输出 + 编辑/预览 + 保存
+
+### API 响应统一
+- 新建 `src/lib/api-response.ts` — 集中管理 `jsonOk`/`jsonError`
+- 重构 `auth-helpers.ts` 从 `api-response.ts` 重导出
+- 替换 7 个 API 路由文件中 21 处 `NextResponse.json()` 为统一格式
+- 移除 5 个 auth 路由中不必要的 `NextResponse` import
+
+### 代码质量
+- 清理 `console.log` 11 处，替换为 `console.error` 或移除
+- 修复硬编码 hex 色值 `page.tsx` SVG → Tailwind `stroke-sakura`
+- AppShell 相对导入改为 `@/` 别名导入
+- `AGENTS.md` 文档纠正 `api-helpers.ts` → `auth-helpers.ts`
+- `npx tsc --noEmit` 零错误，`npm run lint` 零错误
+
+## 2026-05-23 — Issues #95: 首次登录引导 + 精细化语气风格配置
+
+### 首次登录引导流程
+- 新增 `src/app/setup/page.tsx` — 两步引导：叙事视角（第一/第二人称）→ 人格偏好（6选1）
+- 引导完成后保存配置并跳转到写日记页面
+- 提供"跳过"选项，使用默认值
+
+### 语气风格重构
+- `src/config/personas.ts` — 6 个人格定义（元气少女/成熟稳重/慵懒猫系/阳光犬系/简约直男/文艺青年），含 emoji + 描述 + prompt 指令
+- `src/components/WritingStyleConfig.tsx` — 公用组件，支持引导模式和嵌入模式（设置页复用）
+- `src/lib/ai/prompts.ts` — 重构为 `buildSystemPrompt(writingStyle)` 动态生成人格化 system prompt
+- `src/lib/diary.ts` — 使用动态 prompt 替代旧 TONE_PROMPTS 映射
+- `src/components/DiaryEditor.tsx` — 语气选择器替换为 6 人格卡片选择器
+- `src/hooks/useStreamGenerate.ts` — 传递 `writingStyle` 到 API
+- `src/app/api/ai/generate/route.ts` — 接受 `writingStyle` 参数
+- `src/app/api/ai/rewrite/route.ts` — 改用 `writingStyle` 替代旧 `tone` 字段
+
+### 数据模型
+- `prisma/schema.prisma` — User 表新增 `writingStyle Json` 字段，默认值 `{ perspective: "first_person", persona: "yuanshao" }`
+- `src/types/index.ts` — 新增 `WritingStyle` / `Persona` / `Perspective` / `PersonaDefinition` 类型
+- `src/lib/validations.ts` — 新增 `writingStyleSchema`（perspective + persona 校验）
+- `src/app/api/user/style/route.ts` — 新增风格配置 CRUD API（GET/PUT）
+
+### 设置页
+- `src/app/settings/page.tsx` — 新增「日记风格」区块，嵌入 `WritingStyleConfig` 组件
+
+## 2026-05-23 — Stream C 完善：Webhook 幂等修复 + Token 结转 + 账单记录 + 数据导出 + 管理面板
+
+### Webhook 幂等修复 (P0)
+- `subscription/webhook/route.ts`: 调整 top-up 处理顺序 — `recordTopUpPurchase` 先于 `creditTopUpBalance`，利用 `TokenTopUp.stripePaymentIntentId` 唯一约束作为幂等门
+- `quota-service.ts`: `recordTopUpPurchase` 捕获 P2002 唯一约束冲突并返回 `false`（幂等跳过），Webhook 仅在创建成功时调用 credit
+- `recordTopUpPurchase` 返回类型改为 `Promise<boolean>`
+
+### Token 余额结转 (Rollover)
+- `prisma/schema.prisma`: 新增 `User.tokenRolloverUsd` + `User.rolloverCalculated` 字段
+- `quota-service.ts`: 新增 `ensureRolloverCalculated` — 月初自动计算上月未用预算 × 套餐结转比例（Free 0%, Basic 25%, Advanced 50%）
+- `checkTokenBudget` / `getQuotaStatus`: 有效预算 = 套餐预算 + topUpBalance + rollover
+- `QuotaStatus` / `QuotaStatusData` 类型: 新增 `tokenBudget.rollover?` 字段
+- `QuotaUsage` 组件: 显示上月结转额度（绿色文字 + RefreshCw 图标）
+
+### 账单/发票记录
+- `GET /api/invoices`: 返回当前用户所有发票（按时间倒序）
+- `subscription/page.tsx`: 新增账单记录卡片（金额、日期、支付状态）
+- `InvoiceRecord` 类型: 定义 id/amount/currency/status/paidAt/createdAt
+
+### 加购体验优化
+- `GET /api/topup/bundles`: 读取 `config/billing-pricing.json` 中的加购套餐配置并返回
+- `QuotaUsage` 组件: 从 API 动态获取加购套餐，移除硬编码
+- `subscription/page.tsx`: 处理 `?topup=success` 和 `?topup=canceled` URL 参数，显示对应提示
+
+### 数据导出
+- `GET /api/export`: 读取所有日记 markdown 文件，导出为 JSON（含日期、语气、标签、内容），带 `Content-Disposition` 附件下载
+- `settings/page.tsx`: 新增"数据导出"卡片，一键下载所有日记为 JSON
+
+### 管理面板
+- `GET /api/admin/stats`: 聚合统计（用户数、日记数、活跃订阅、Token 总消耗、加购总收入），仅 `ADMIN_EMAIL` 用户可访问
+- `src/app/admin/page.tsx`: 管理面板页面 — 5 个统计卡片 + Token 用量/加购汇总详情
+- 仪表盘组件: Users, FileText, CreditCard, Coins, BarChart3 图标
+
+### 验证结果
+- `npx tsc --noEmit` — 零错误
+- `npx next build` — 构建成功（新增路由: /admin, /api/admin/stats, /api/invoices, /api/export, /api/topup/bundles）
+- `npx prisma db push` — Schema 已同步（新增 User.tokenRolloverUsd, User.rolloverCalculated）
+
+## 2026-05-23 — Token 加购包 + 统一 API Key (Stream C Phase 3a)
+
+### Token 加购包
+- `prisma/schema.prisma`: 新增 `TokenTopUp` 模型（userId, amountUsd, priceCny, stripePaymentIntentId, status）+ `User.topUpBalanceUsd` 字段
+- `POST /api/topup/checkout`: Stripe 一次性支付 checkout（¥5/+$0.5, ¥20/+$2.5, ¥38/+$5.0），使用 `price_data` 动态创建无需预设 Price ID
+- Webhook 更新：`checkout.session.completed` 新增 top-up 模式检测，成功后自动调用 `creditTopUpBalance` + `recordTopUpPurchase`
+- `quota-service.ts`: `checkTokenBudget` 有效预算 = 套餐预算 + topUpBalance；新增 `getTopUpBalance`, `creditTopUpBalance`, `recordTopUpPurchase`, `getTopUpBundles`
+- `stripe.ts`: 新增 `getTopUpLineItem` 辅助函数
+- `QuotaUsage` 组件：Token 用尽时显示加购按钮（3 个 ¥5/¥20/¥38 选项）+ 升级套餐入口
+
+### 统一 API Key（服务器代付）
+- `api-key-guard.ts`: 新增 `getEffectiveApiKey(userId, provider)` — 优先用户自带 Key，fallback 到 `OPENROUTER_API_KEY` 系统 Key
+- 新增 `getSystemApiKey(provider)`, `isSystemApiKeyAvailable(provider)` 公开函数
+- `generate/rewrite/test` 三个 AI 端点全部迁移至 `getEffectiveApiKey`
+- `quota-service.ts`: `getQuotaStatus` 新增 `systemKeyAvailable` 字段
+- `QuotaUsage` 组件：系统 Key 可用时显示绿色提示 "系统 API Key 已配置，无需自带 Key"
+- `.env.example`: 新增 `OPENROUTER_API_KEY` 配置项
+
+### 验证结果
+- `npx tsc --noEmit` — 零错误
+- `npx next build` — 构建成功
+- `npx prisma db push` — Schema 已同步到远程 Supabase DB
+
+## 2026-05-23 — #11 免费版配额系统 (Stream C Phase 2)
+
+### 数据库变更
+- 新增 `TokenUsage` 模型 — 记录每次 AI 调用的 Token 消耗（userId, model, inputTokens, outputTokens, costUsd）
+- `db push` 同步到 Supabase PostgreSQL
+
+### 配额服务
+- `src/lib/quota-service.ts`: 核心配额逻辑
+  - `getUserTier()` / `getUserPlan()` — 获取用户套餐配置
+  - `isModelAllowed()` / `checkModelAccess()` — 模型权限检查（免费版仅 deepseek-v4-flash）
+  - `getMonthlyTokenCost()` / `getMonthlyTokenUsage()` — 当月 Token 统计（PostgreSQL 聚合查询）
+  - `checkTokenBudget()` — Token 预算预检（返回 allowed/used/limit/remaining）
+  - `checkStorageBudget()` — 存储配额预检
+  - `estimateTokensFromChars()` — 字符转 Token 估算（中文 ~1.5x, 英文 ~3.5x）
+  - `estimateCost()` — 按模型定价计算 USD 成本
+  - `recordTokenUsage()` — 记录 Token 消耗到 TokenUsage 表
+  - `trackStorageUsage()` / `releaseStorageUsage()` — 存储字节追踪
+  - `getQuotaStatus()` — 聚合配额状态（Token + 存储 + 模型限制）
+
+### API Routes
+- `GET /api/quota/status` — 返回当前用户配额使用情况
+
+### AI 端点强制配额
+- `POST /api/ai/generate`: 新增预检（模型权限 + Token 预算）→ 流式生成后记录 Token 消耗
+- `POST /api/ai/rewrite`: 同上（模型权限 + Token 预算预检 + 流后记录）
+- `POST /api/ai/test`: 新增模型权限检查
+- 超限返回 403 错误信息（中文提示）
+
+### 存储追踪
+- `src/lib/diary.ts` saveDiary: 保存日记后自动追踪 markdown 文件大小到 User.storageBytes
+
+### 类型定义
+- `src/types/index.ts`: 新增 `QuotaStatusData` 接口
+
+### UI 组件
+- `src/components/QuotaUsage.tsx`: 配额使用仪表板组件（Token 预算 + 存储空间进度条，超过 80% 黄色警告，100% 红色告警）
+- `src/app/page.tsx`: 集成 QuotaUsage 到仪表盘 DashboardStats 下方
+
+### 验证结果
+- `npx tsc --noEmit` — 零错误
+- `npx next build` — 构建成功
+- `npx prisma db push` — Schema 已同步到远程 Supabase DB
+
+## 2026-05-23 — #10 订阅支付 Stripe 集成 (Stream C Phase 1)
+
+### 依赖
+- 新增 `stripe ^22.1.1` — Stripe 服务端 SDK（API 版本 2026-04-22.dahlia）
+- 新增 `@stripe/stripe-js` — Stripe 客户端 SDK
+
+### Stripe 基础设施
+- `src/lib/stripe.ts`: 服务端/客户端实例管理 + 环境变量获取 + 配置状态检查
+- `src/lib/subscription-service.ts`: DB 操作层 — upsertSubscription, getUserSubscription, createInvoice, cancelUserSubscription
+
+### API Routes
+- `POST /api/subscription/checkout` — 创建 Stripe Checkout Session（支持 card + alipay），metadata 传 userId+plan
+- `POST /api/subscription/webhook` — 处理 5 种 Stripe 事件（checkout.completed, invoice.paid, invoice.payment_failed, subscription.updated, subscription.deleted）
+- `GET /api/subscription/status` — 返回当前用户订阅状态 + stripeConfigured
+- `POST /api/subscription/portal` — 跳转 Stripe Customer Portal
+- `GET /api/pricing` — 返回 config/billing-pricing.json 套餐定义（含当前方案标记）
+
+### 类型定义
+- `src/types/index.ts`: 新增 SubscriptionPlan, SubscriptionStatus, SubscriptionData, PriceInfo, PricingData
+
+### UI 组件
+- `src/components/SubscriptionPlans.tsx`: 套餐选择组件（三卡对比，当前方案高亮，Stripe Checkout 跳转）
+- `src/app/subscription/page.tsx`: 订阅管理页面（支付成功/取消提示 + Customer Portal 入口）
+- `src/app/settings/page.tsx`: 新增「订阅方案」区块
+
+### 环境变量
+- `.env.example`: 新增 STRIPE_SECRET_KEY, NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_BASIC_MONTHLY, STRIPE_PRICE_ADVANCED_MONTHLY
+
+### 设计决策
+- Stripe API 版本: 2026-04-22.dahlia
+- Stripe v22 类型系统重大变更（取消 namespace 类型），Webhook 路由使用 Record<string, unknown> 运行时访问
+- 取消订阅后 User.subscription 自动降级为 free
+- Stripe 环境变量非必需，未配置时返回 503
+
+### 验证结果
+- `npx tsc --noEmit` — 零错误
+- `npx next build` — 构建成功
+
+## 2026-05-23 — P1 安全加固: API 限流全覆盖 + CSP + Magic Bytes + SSE 超时
+
+### P1-1: API 限流全覆盖
+- `src/lib/rate-limit.ts`: 新增 9 个 limiter（entriesRead/Write, userConfig, encryptionPassword, apiKeyWrite, uploadImage, imageProxy, stats, migrate, verifyEmail）
+- 9 个 API Route 添加速率限制校验：
+  - `src/app/api/entries/route.ts` — GET (IP, 30/min) / POST (userId, 20/min)
+  - `src/app/api/user/config/route.ts` — PUT (userId, 10/min)
+  - `src/app/api/user/encryption-password/route.ts` — POST/PUT (userId, 5/5min)
+  - `src/app/api/user/api-keys/route.ts` — POST/DELETE (userId, 5/5min)
+  - `src/app/api/upload/route.ts` — POST (IP, 10/min)
+  - `src/app/api/image/route.ts` — GET (IP, 30/min)
+  - `src/app/api/stats/route.ts` — GET (userId, 10/min)
+  - `src/app/api/diary/migrate-encrypt/route.ts` — GET/POST (userId, 10/min)
+  - `src/app/api/diary/migrate-status/route.ts` — GET (userId, 10/min)
+  - `src/app/api/auth/verify-email/route.ts` — GET (IP, 10/min)
+
+### P1-2: CSP Header
+- `next.config.mjs`: 新增 `Content-Security-Policy` 响应头，限制 script/style/img/connect/font 来源
+
+### P1-3: 图片 Magic Bytes 校验
+- `src/app/api/upload/route.ts`: 新增 `MAGIC_BYTES` 常量表（JPG/Png/WebP）和 `validateMagicBytes()` 函数，上传完成后校验文件头字节
+
+### P1-4: Tone Schema 修复
+- `src/lib/validations.ts`: `VALID_TONES` 从 `["warm"]` 扩展为 `["warm", "genki", "minimal", "literary"]`，修复 3 种风格 API 不可用问题
+
+### P1-5: AI Rewrite Tone 修复
+- `src/app/api/ai/rewrite/route.ts`: 不再硬编码 `WARM_SYSTEM_PROMPT`，改为从 DB 读取用户 `tone` 设置 → 选择对应 system prompt（Map 查找）
+
+### P1-6: SSE 流超时与客户端断开处理
+- `src/app/api/ai/generate/route.ts`: ReadableStream 添加 `AbortSignal` 监听（客户端断开时停止）和 8s 超时（Vercel Hobby 10s limit - 2s buffer）
+- `src/app/api/ai/rewrite/route.ts`: 同上
+
+### P1-7: verify-email 速率限制
+- `src/app/api/auth/verify-email/route.ts`: 添加 IP 级限流（10/min），防止暴力枚举验证 Token
+
+### P1-8: Presigned URL 有效期缩短
+- `src/lib/storage.ts`: `getPresignedUrl` 默认有效期 3600s → 300s（5 分钟）
+- `src/app/api/image/route.ts`: 调用不再显式传递过期时间，使用新默认值
+
+## 2026-05-23 — P0 安全加固: 代码审计关键修复
+
+### P0-1: Next.js 升级修复 CVE
+- `package.json`: `next` 从 `^14.2.0` 升级到 `^14.2.35`（14.x 最新稳定版），修复 4 个 known CVEs
+- `npm audit` 漏洞数：6 → 2（剩余 2 个为 next 工具链传递依赖）
+
+### P0-2: 全局错误边界与骨架屏
+- `src/app/error.tsx`: 新建全局错误边界（含开发/生产环境差异化错误信息 + 重试按钮）
+- `src/app/not-found.tsx`: 新建 404 页面
+- `src/app/loading.tsx`: 新建根级别 loading 骨架屏（spinner）
+- `src/app/diary/[id]/loading.tsx`: 新建日记详情页 loading（spinner）
+- `src/app/timeline/loading.tsx`: 新建时间线页 loading（3 张骨架卡片）
+
+### P0-3: 关键路径测试
+- `vitest.config.ts`: 新建 Vitest 配置（jsdom + @ alias）
+- `src/lib/__tests__/crypto.test.ts`: 加密模块测试（加解密往返、IV 唯一性、缺失 key 异常）
+- `src/lib/__tests__/auth-service.test.ts`: 认证服务测试（密码长度/不一致/邮箱格式校验、注册成功）
+- `package.json`: 新增 `test` / `test:watch` 脚本
+- 新增 devDeps: `vitest`, `jsdom`, `@vitejs/plugin-react`, `@testing-library/react`, `@testing-library/jest-dom`
+
+### P0-4: AUTH_SECRET 生产环境校验加固
+- `src/lib/auth.ts`: 移除 `console.warn` 降级逻辑，所有环境均强制抛错（防止 Vercel 冷启动时随机密钥导致全部 session 失效）
+
+## 2026-05-23 — Phase 2 (Stream B): 端到端加密基础设施 (#53, #54, #55, #56, #57, #58)
+
+### #53 新增: DB 加密密码字段
+- `prisma/schema.prisma`: `User` 表新增 `encryptionPasswordHash` (TEXT?) 和 `encryptionSalt` (TEXT?) 字段
+- `encryptionPasswordHash` 存储 bcrypt hash（服务端验证用），`encryptionSalt` 存储 PBKDF2 salt（客户端密钥派生用）
+- 两个字段均为可选，已有用户不强制设置
+
+### #54 新增: 客户端 AES-256-GCM + PBKDF2 加密模块
+- `src/lib/client-crypto.ts`: 使用 Web Crypto API (SubtleCrypto) 实现
+  - `encryptMarkdown(plaintext, password, salt)`: AES-256-GCM 加密，输出 `iv:authTag:ciphertext` (base64)
+  - `decryptMarkdown(encoded, password, salt)`: AES-256-GCM 解密
+  - `generateSalt()`: 生成 32 bytes 随机 salt
+- PBKDF2 100,000 轮迭代，SHA-256 哈希，12 bytes 随机 IV
+
+### #55 新增: R2 存储加密适配
+- `src/lib/storage.ts`: 
+  - `saveMarkdown(userId, date, content, encrypted?)` → 返回 `{ path, encrypted }` 封装，支持 `.enc.md` 路径 + S3 metadata
+  - `readMarkdown(userId, date)` → 自动检测加密文件（优先 `.enc.md`，回退 `.md`），返回 `{ content, encrypted }`
+  - `readMarkdownByPath(path)` / `deleteMarkdownByPath(path)`: 显式路径读写
+  - `deleteEntry`: 同时清理 `.md` 和 `.enc.md`
+  - 新增 `buildEncryptedMarkdownPath`, `isEncryptedPath`, `listEntriesByPrefix`
+
+### #56 新增: 加密密码 API
+- `POST /api/user/encryption-password`: 设置加密密码（bcrypt 12 轮）→ 返回 `salt`
+- `PUT /api/user/encryption-password`: 修改加密密码（生成新 salt，旧加密日记无法用新密码解密）
+- `POST /api/user/encryption-password/verify`: 验证加密密码 → `{ valid: boolean }`
+- `GET /api/user/encryption-password/status`: 查询是否已设置 + 返回 salt
+- `src/lib/validations.ts`: 新增 `encryptionPasswordSchema`（≥8 位，含字母+数字）和 `verifyEncryptionPasswordSchema`
+
+### #57 新增: 明文日记批量加密迁移
+- `GET /api/diary/migrate-encrypt`: 列出所有明文日记（支持 ?dryRun）
+- `POST /api/diary/migrate-encrypt`: 接收客户端加密后的密文，上传 R2，更新 DB，删除旧明文
+- `GET /api/diary/migrate-status`: 返回 `{ plainEntries, encryptedEntries, needsMigration }`
+- `src/components/EncryptionSettings.tsx`: 集成迁移 UI（进度条、错误处理、逐篇迁移）
+
+### #58 新增: 加密 UI 组件
+- `src/hooks/useEncryptionPassword.tsx`: `EncryptionProvider` + `useEncryption` hook，内存缓存密码（刷新清除）
+- `src/components/EncryptionSettings.tsx`: 设置页加密区块（未设置/已激活/迁移三种状态）
+- `src/components/SetEncryptionPasswordModal.tsx`: 设置/修改密码弹窗（风险提醒 checkbox + 双输入确认）
+- `src/components/UnlockDiaryModal.tsx`: 日记解锁弹窗（5 次锁定 5 分钟 + 密码强度提示）
+- `src/app/forgot-encryption-password/page.tsx`: 忘记加密密码提示页
+- `src/components/AppShell.tsx`: 接入 `EncryptionProvider`
+- `src/app/settings/page.tsx`: 集成加密设置区块 + 弹窗
+- `src/app/diary/[id]/page.tsx`: 加密日记查看解锁流程（自动弹窗 + 客户端解密 + loading 态）
+
+### 基础设施变更
+- `src/lib/diary.ts`: `saveDiary` 新增 `encrypted?` 参数，加密时 preview/wordCount 置空；`getEntry` 返回 `isEncrypted`
+- `src/lib/validations.ts`: `createEntrySchema` / `updateEntrySchema` 新增 `encrypted` 字段
+- `src/app/api/entries/route.ts` / `src/app/api/entries/[id]/route.ts`: 透传 `encrypted` 参数
+
+## 2026-05-23 — Phase 1 安全加固 + Bug 修复（7 Issues）(#59, #61, #65, #71, #73, #84, #93)
+
+### #59 修复: API Key localStorage 明文泄露
+- `src/app/settings/page.tsx`: 移除 `localStorage.setItem` 和 `localStorage.removeItem` 调用，API Key 仅服务端加密存储，不再写入浏览器 localStorage
+
+### #61 修复: health 端点信息泄露
+- `src/app/api/health/route.ts`: 移除 checks.env 块，错误详情不再外泄，响应精简为 `{ ok: true/false }`，新增可选 `HEALTH_SECRET` token 鉴权
+
+### #84 验证: Security Headers
+- `next.config.mjs`: 已配置 `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`（无需改动）
+
+### #65 新增: Zod 输入校验
+- `src/lib/validations.ts`: 新建 12 个 Zod Schema（register, forgot/reset-password, entries CRUD, AI generate/rewrite/test, api-keys, user config）
+- 11 个 API Route 文件统一接入 Zod 校验，错误消息中文化
+
+### #71 修复: 密码重置 Token URL 暴露
+- `src/app/reset-password/page.tsx`: 页面加载后 `history.replaceState` 清除 URL 中的 token
+- `src/lib/email.ts`: 添加注释说明 token 传递的多层防护（1h 过期 + 单次使用 + replaceState 清除）
+
+### #73 修复: Service Worker 跨用户缓存
+- `src/sw.ts`: `/api/entries` 策略从 `NetworkFirst` 改为 `NetworkOnly`
+- `src/components/Header.tsx`, `src/app/settings/page.tsx`, `src/components/MobileTabBar.tsx`: 登出前清除所有 SW 缓存
+
+### #93 修复: AI 打字机动画闪烁
+- `src/components/TypewriterText.tsx`: 流式动画 effect 不再依赖 `text`，使用 `displayedIndexRef` 跨渲染保持进度
+
 ## 2026-05-23 — 设计: Landing Page 和风编辑感重构 (#91)
 
 ### 修改
@@ -294,9 +644,55 @@ Upstash Redis 环境变量 (`UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN
 - `docs/05-数据模型.md`: 更新 — 完整 Prisma Schema、类型定义
 - `AGENTS.md`: 更新 — Auth、API Key、设计决策、项目结构
 
+## 2026-05-23 — P2+P3 审计修复: 安全加固 + 代码质量 + 基础设施
+
+### P2-1: 加密密码变更添加旧密码验证
+- `src/app/api/user/encryption-password/route.ts`: PUT handler 新增 `changeEncryptionPasswordSchema`（含 oldPassword/newPassword），变更前验证旧密码 bcrypt 匹配
+- `src/lib/validations.ts`: 新增 `changeEncryptionPasswordSchema` Zod schema
+
+### P2-2: 忘记加密密码页面完善
+- `src/app/forgot-encryption-password/page.tsx`: 移除 TODO 占位按钮，改为"前往设置"导航按钮
+
+### P2-3: 账号级登录失败锁定
+- `src/lib/rate-limit.ts`: 新增 `loginAccount` limiter（5 次 / 15 分钟），按邮箱账号维度限流
+- `src/lib/auth.ts`: `authorize()` 新增账号级速率限制，超额时抛出 `CredentialsSignin` 含剩余分钟数提示
+
+### P2-4: AppShell 认证逻辑优化
+- `src/components/AppShell.tsx`: `useEffect` 从 `[pathname]` 依赖改为 `[]`（仅挂载时验证一次），使用 `useRef` 防止重复 fetch
+
+### P2-5: 死代码清理
+- 删除 `src/lib/api-helpers.ts`，9 个 API Route import 改为 `@/lib/auth-helpers` 直接 import
+- `src/types/index.ts`: 删除 5 个未使用类型（UserConfig, DiaryEntry, AIGenerateRequest, AIGenerateResponse, LocalApiKeyStore）
+
+### P2-6: API 校验模板函数
+- `src/lib/auth-helpers.ts`: 新增 `validateBody<T>()` 通用函数，Zod schema → JSON parse → 校验 → 返回 data 或 400 错误
+
+### P2-7: 删除旧验证 Token
+- `src/lib/auth-service.ts`: `resendVerification()` 和 `forgotPassword()` 创建新 token 前调用 `deleteMany` 清理旧 token
+
+### P3-1: ESLint 配置
+- 新增 `.eslintrc.json`（`next/core-web-vitals`），安装 `eslint`、`eslint-config-next`
+- `package.json`: `lint`/`lint:fix` 脚本已就绪，零 error
+
+### P3-2: 嵌套三元 → Map 查找
+- `src/lib/diary.ts`: `TONE_PROMPTS` 常量替代嵌套三元表达式，`systemPrompt = TONE_PROMPTS[tone]`
+
+### P3-3: noUncheckedIndexedAccess 评估
+- 评估后放弃启用：现存代码 25+ 类型错误，修复成本过高（与审计"exactOptionalPropertyTypes: false"决策一致）
+
+### P3-4: 全局环境变量校验
+- 新建 `src/lib/env.ts`: `env` 对象使用 getter 懒加载，10 个环境变量统一校验（AUTH_SECRET, R2_*, RESEND_*, KV_* 等）
+
+### P3-5: Prisma 错误处理中间件
+- 新建 `src/lib/prisma-errors.ts`: `handlePrismaError()` 统一处理 Prisma 错误码（P2002→409, P2025→404, P2003→400）
+
+### P3-6: vercel.json 构建校验
+- `vercel.json`: `buildCommand` 添加 `npx tsc --noEmit` 前置校验
+
+### 验证结果
+- `npx tsc --noEmit` — 零错误
+- `npm test` — 7/7 通过
+- `npm run lint` — 零 error（3 warnings 均为预存）
+
 ### 决策记录
-- **Auth.js v5 over Supabase Auth**: Credentials + JWT + Resend 替代 Magic Link，完全自建
-- **API Routes over Server Actions**: 注册/验证/重置改用 API Routes，便于独立测试和中间件透传
-- **API Key 服务端加密**: localStorage → PostgreSQL AES-256-GCM，鉴权走 Auth.js session，降低泄露风险
-- **bcrypt 12 rounds**: 平衡安全性和登录延迟 (~300ms)
-- **Token 生成**: `crypto.randomUUID()`，验证 24h 过期，重置 1h 过期
+

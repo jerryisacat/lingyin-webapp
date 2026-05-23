@@ -18,8 +18,9 @@ import {
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
-import SakuraParticles from "@/components/SakuraParticles";
-import DashboardStats from "@/components/DashboardStats";
+import { SakuraParticles } from "@/components/SakuraParticles";
+import { DashboardStats } from "@/components/DashboardStats";
+import { QuotaUsage } from "@/components/QuotaUsage";
 
 const FEATURES = [
   {
@@ -155,6 +156,7 @@ export default function Home() {
 
         <div className="w-full max-w-2xl">
           <DashboardStats />
+          <QuotaUsage />
         </div>
 
         <div className="flex max-w-sm flex-col gap-3 rounded-xl bg-sakura/5 border border-sakura/20 px-6 py-4 text-left">
@@ -417,7 +419,7 @@ export default function Home() {
               <svg className="w-full h-6" fill="none" preserveAspectRatio="none">
                 <path
                   d="M 0,6 C 100,20 160,-8 260,6 S 420,20 520,6"
-                  stroke="#f0a8b0"
+                   className="stroke-sakura"
                   strokeWidth="1.5"
                   strokeDasharray="4,6"
                   opacity="0.25"

@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 
 const PARTICLE_COUNT = 18;
 
-export default function SakuraParticles() {
+export function SakuraParticles() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

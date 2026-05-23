@@ -22,6 +22,15 @@ model User {
   subscribedAt     DateTime?
   subscriptionEnds DateTime?
 
+  topUpBalanceUsd    Float  @default(0)
+  tokenRolloverUsd   Float  @default(0)
+  rolloverCalculated String?
+
+  encryptionPasswordHash String?
+  encryptionSalt         String?
+
+  writingStyle Json @default("{\"perspective\": \"first_person\", \"persona\": \"yuanshao\"}")
+
   dailyEntryCount Int      @default(0)
   dailyEntryDate  DateTime?
   totalEntries    Int      @default(0)
@@ -33,6 +42,8 @@ model User {
 
   entries             Entry[]
   apiKeys             ApiKey[]
+  tokenUsages         TokenUsage[]
+  tokenTopUps         TokenTopUp[]
   verificationTokens  VerificationToken[]
   passwordResetTokens PasswordResetToken[]
 }
@@ -127,4 +138,32 @@ model Invoice {
   createdAt      DateTime @default(now())
 
   @@index([userId])
+}
+
+model TokenUsage {
+  id           String   @id @default(cuid())
+  userId       String
+  model        String
+  inputTokens  Int      @default(0)
+  outputTokens Int      @default(0)
+  costUsd      Float    @default(0)
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model TokenTopUp {
+  id                    String   @id @default(cuid())
+  userId                String
+  amountUsd             Float
+  priceCny              Int
+  stripePaymentIntentId String?  @unique
+  status                String   @default("pending")
+  createdAt             DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }

@@ -1,26 +1,9 @@
 {
-  "curationsSinceDream": 4,
-  "lastDreamAt": "2026-05-23T05:46:43.447Z",
-  "lastDreamLogId": "drm-1779515102271",
+  "curationsSinceDream": 0,
+  "lastDreamAt": "2026-05-23T18:02:49.379Z",
+  "lastDreamLogId": "drm-1779559220119",
   "pendingMerges": [],
-  "staleSummaryPaths": [
-    {
-      "enqueuedAt": 1779524731446,
-      "path": "structure/security/rate_limiting.md"
-    },
-    {
-      "enqueuedAt": 1779525425037,
-      "path": "ui/timeline/calendar_view_implementation.md"
-    },
-    {
-      "enqueuedAt": 1779531178316,
-      "path": "structure/stats/dashboard_stats_module.md"
-    },
-    {
-      "enqueuedAt": 1779532970749,
-      "path": "ui/logout/logout_functionality.md"
-    }
-  ],
-  "totalDreams": 2,
+  "staleSummaryPaths": [],
+  "totalDreams": 3,
   "version": 1
 }

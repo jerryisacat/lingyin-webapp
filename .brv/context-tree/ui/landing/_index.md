@@ -1,43 +1,30 @@
 ---
-children_hash: b8b6c862d8032c1981d385ce1f435f15dd28e3c620d66b943186e13bb23e4915
-compression_ratio: 0.345926800472255
+children_hash: 400a16bbb92f76fa0ffc05f924423c279081b73303ff4e9e109850371c759d8b
+compression_ratio: 0.25509533201840895
 condensation_order: 1
-covers: [landing_page_and_auth_routing.md]
-covers_token_total: 847
+covers: [landing_page_and_auth_routing.md, landing_page_refactor.md]
+covers_token_total: 1521
 summary_level: d1
-token_count: 293
+token_count: 388
 type: summary
 ---
-# Landing Page and Auth Routing
+# UI/Landing Domain Overview
 
-**Source:** `landing_page_and_auth_routing.md`
+## Core Architecture
+- **Dual-state root page** (`src/app/page.tsx`): renders full public landing (Hero + 4 features + 3 steps + CTA + Footer) for guests; shows centered dashboard (greeting + Write Diary/Timeline buttons + tip card) for authenticated users.
+- **Auth routing**: `src/lib/supabase/middleware.ts` marks `/` in `PUBLIC_ROUTES` to allow guests; `src/components/AppShell.tsx` excludes `/` via `NO_SHELL_ROUTES` to omit navigation shell.
+- **Related entry**: `landing_page_and_auth_routing.md` (consolidated from abstract/overview).
 
-## Purpose
-Documents dual-state root page rendering: public landing for guests, personalized dashboard for authenticated users. Middleware marks `/` as public; AppShell excludes it from navigation shell.
+## Landing Page Refactor (2026-05-23)
+- **Branding & content fixes**: corrected brand/copy errors; added OSS/GitHub/Vibe Coding to Hero.
+- **New sections**: four use-case blocks (performance/travel/daily/life).
+- **UI upgrades**: sticky top-4 frosted-glass floating navbar; Header optimized with `useMemo`; AppShell migrated from NavBar to Header.
+- **Privacy clarification**: FEATURES section updated to AES-256-GCM encryption.
+- **Disabled items**: social network features marked.
+- **Related entry**: `landing_page_refactor.md` (consolidated from abstract/overview); cross-references `landing_page_and_auth_routing.md`.
 
-## Core Files
-- `src/app/page.tsx` — conditional rendering logic
-- `src/lib/supabase/middleware.ts` — route protection
-- `src/components/AppShell.tsx` — shell exclusion
-
-## Architectural Decisions
-- Constants: `PUBLIC_ROUTES` (middleware allows guests on `/`) and `NO_SHELL_ROUTES` (AppShell omits nav for `/`)
-- Conditional rendering driven by Supabase user session
-- Full landing for unauthenticated users; minimal dashboard for authenticated users
-
-## Unauthenticated View (Landing)
-- Hero section + CTA to login
-- Features grid: AI generate, photo-to-text, privacy, PWA
-- Steps: record → AI polish → save
-- CTA + Footer
-
-## Authenticated View (Dashboard)
-- Centered greeting
-- Primary actions: Write Diary / Timeline buttons
-- Tip card
-
-## Key Highlights
-- PWA installable with offline diary read
-- Local API key only
-- Photo analysis into diary entries
-- Markdown timeline support
+## Key Patterns & Decisions
+- Conditional rendering based on Supabase user session.
+- Glassmorphism polish and component migration for improved UX.
+- Emphasis on PWA installability, offline diary access, local API keys, photo-to-text analysis, and Markdown timeline.
+- All changes preserve dual-state behavior while enhancing visual and security details.

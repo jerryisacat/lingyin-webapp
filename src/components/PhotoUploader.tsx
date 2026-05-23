@@ -26,7 +26,7 @@ interface PhotoUploaderProps {
   onImagesChange: (images: MediaFile[]) => void;
 }
 
-export default function PhotoUploader({ images, onImagesChange }: PhotoUploaderProps) {
+export function PhotoUploader({ images, onImagesChange }: PhotoUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [slots, setSlots] = useState<UploadSlot[]>([]);
   const [dragIndex, setDragIndex] = useState<number | null>(null);

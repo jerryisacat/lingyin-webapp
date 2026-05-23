@@ -20,12 +20,29 @@ const s3 = new S3Client({
 
 const BUCKET = process.env.R2_BUCKET!;
 
+function isNoSuchKey(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "name" in error &&
+    (error as { name: string }).name === "NoSuchKey"
+  );
+}
+
 export function buildMarkdownPath(userId: string, date: string): string {
   const d = new Date(date);
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
-  return `users/${userId}/entries/${year}/${month}/${year}-${String(month).padStart(2, "0")}-${day}.md`;
+  return `users/${userId}/entries/${year}/${month}/${year}-${month}-${day}.md`;
+}
+
+export function buildEncryptedMarkdownPath(userId: string, date: string): string {
+  return buildMarkdownPath(userId, date).replace(/\.md$/, ".enc.md");
+}
+
+export function isEncryptedPath(path: string): boolean {
+  return path.endsWith(".enc.md");
 }
 
 export function buildAssetPath(
@@ -39,7 +56,7 @@ export function buildAssetPath(
   return `users/${userId}/entries/${year}/${month}/assets/${filename}`;
 }
 
-export async function getPresignedUrl(key: string, expiresIn = 3600): Promise<string> {
+export async function getPresignedUrl(key: string, expiresIn = 300): Promise<string> {
   return getSignedUrl(
     s3,
     new GetObjectCommand({ Bucket: BUCKET, Key: key }),
@@ -47,42 +64,77 @@ export async function getPresignedUrl(key: string, expiresIn = 3600): Promise<st
   );
 }
 
+export interface SaveResult {
+  path: string;
+  encrypted: boolean;
+}
+
 export async function saveMarkdown(
   userId: string,
   date: string,
-  content: string
-): Promise<string> {
-  const key = buildMarkdownPath(userId, date);
+  content: string,
+  encrypted = false
+): Promise<SaveResult> {
+  const key = encrypted
+    ? buildEncryptedMarkdownPath(userId, date)
+    : buildMarkdownPath(userId, date);
+
   await s3.send(
     new PutObjectCommand({
       Bucket: BUCKET,
       Key: key,
       Body: content,
-      ContentType: "text/markdown; charset=utf-8",
+      ContentType: encrypted
+        ? "application/octet-stream"
+        : "text/markdown; charset=utf-8",
+      Metadata: encrypted ? { encrypted: "true" } : undefined,
     })
   );
-  return key;
+
+  return { path: key, encrypted };
+}
+
+export interface ReadResult {
+  content: string;
+  encrypted: boolean;
 }
 
 export async function readMarkdown(
   userId: string,
   date: string
-): Promise<string | null> {
+): Promise<ReadResult | null> {
+  const encKey = buildEncryptedMarkdownPath(userId, date);
+  try {
+    const { Body } = await s3.send(
+      new GetObjectCommand({ Bucket: BUCKET, Key: encKey })
+    );
+    const content = (await Body?.transformToString("utf-8")) ?? "";
+    return { content, encrypted: true };
+  } catch (error: unknown) {
+    if (!isNoSuchKey(error)) throw error;
+  }
+
   const key = buildMarkdownPath(userId, date);
   try {
     const { Body } = await s3.send(
       new GetObjectCommand({ Bucket: BUCKET, Key: key })
     );
+    const content = (await Body?.transformToString("utf-8")) ?? "";
+    return { content, encrypted: false };
+  } catch (error: unknown) {
+    if (isNoSuchKey(error)) return null;
+    throw error;
+  }
+}
+
+export async function readMarkdownByPath(path: string): Promise<string | null> {
+  try {
+    const { Body } = await s3.send(
+      new GetObjectCommand({ Bucket: BUCKET, Key: path })
+    );
     return (await Body?.transformToString("utf-8")) ?? null;
   } catch (error: unknown) {
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "name" in error &&
-      (error as { name: string }).name === "NoSuchKey"
-    ) {
-      return null;
-    }
+    if (isNoSuchKey(error)) return null;
     throw error;
   }
 }
@@ -121,10 +173,24 @@ export async function deleteEntry(
   userId: string,
   date: string
 ): Promise<void> {
-  const key = buildMarkdownPath(userId, date);
-  await s3.send(
-    new DeleteObjectCommand({ Bucket: BUCKET, Key: key })
-  );
+  const encKey = buildEncryptedMarkdownPath(userId, date);
+  const plainKey = buildMarkdownPath(userId, date);
+
+  try {
+    await s3.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: encKey }));
+  } catch (error: unknown) {
+    if (!isNoSuchKey(error)) throw error;
+  }
+
+  try {
+    await s3.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: plainKey }));
+  } catch (error: unknown) {
+    if (!isNoSuchKey(error)) throw error;
+  }
+}
+
+export async function deleteMarkdownByPath(path: string): Promise<void> {
+  await s3.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: path }));
 }
 
 export async function deleteImage(key: string): Promise<void> {
@@ -164,4 +230,20 @@ export async function deleteDirectory(prefix: string): Promise<number> {
   }
 
   return deleted;
+}
+
+export async function listEntriesByPrefix(
+  prefix: string
+): Promise<{ key: string }[]> {
+  const result = await s3.send(
+    new ListObjectsV2Command({
+      Bucket: BUCKET,
+      Prefix: prefix,
+      MaxKeys: 1000,
+    })
+  );
+
+  return (result.Contents ?? [])
+    .filter((obj) => obj.Key !== undefined)
+    .map((obj) => ({ key: obj.Key! }));
 }
