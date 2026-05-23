@@ -9,10 +9,7 @@ class RateLimitError extends CredentialsSignin {
 }
 
 if (!process.env.AUTH_SECRET) {
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("AUTH_SECRET environment variable is required")
-  }
-  console.warn("⚠ AUTH_SECRET not set — using random secret (sessions will be invalidated on restart)")
+  throw new Error("AUTH_SECRET environment variable is required (set it in .env.local)")
 }
 
 declare module "next-auth" {

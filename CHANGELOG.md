@@ -1,3 +1,26 @@
+## 2026-05-23 — P0 安全加固: 代码审计关键修复
+
+### P0-1: Next.js 升级修复 CVE
+- `package.json`: `next` 从 `^14.2.0` 升级到 `^14.2.35`（14.x 最新稳定版），修复 4 个 known CVEs
+- `npm audit` 漏洞数：6 → 2（剩余 2 个为 next 工具链传递依赖）
+
+### P0-2: 全局错误边界与骨架屏
+- `src/app/error.tsx`: 新建全局错误边界（含开发/生产环境差异化错误信息 + 重试按钮）
+- `src/app/not-found.tsx`: 新建 404 页面
+- `src/app/loading.tsx`: 新建根级别 loading 骨架屏（spinner）
+- `src/app/diary/[id]/loading.tsx`: 新建日记详情页 loading（spinner）
+- `src/app/timeline/loading.tsx`: 新建时间线页 loading（3 张骨架卡片）
+
+### P0-3: 关键路径测试
+- `vitest.config.ts`: 新建 Vitest 配置（jsdom + @ alias）
+- `src/lib/__tests__/crypto.test.ts`: 加密模块测试（加解密往返、IV 唯一性、缺失 key 异常）
+- `src/lib/__tests__/auth-service.test.ts`: 认证服务测试（密码长度/不一致/邮箱格式校验、注册成功）
+- `package.json`: 新增 `test` / `test:watch` 脚本
+- 新增 devDeps: `vitest`, `jsdom`, `@vitejs/plugin-react`, `@testing-library/react`, `@testing-library/jest-dom`
+
+### P0-4: AUTH_SECRET 生产环境校验加固
+- `src/lib/auth.ts`: 移除 `console.warn` 降级逻辑，所有环境均强制抛错（防止 Vercel 冷启动时随机密钥导致全部 session 失效）
+
 ## 2026-05-23 — Phase 2 (Stream B): 端到端加密基础设施 (#53, #54, #55, #56, #57, #58)
 
 ### #53 新增: DB 加密密码字段
