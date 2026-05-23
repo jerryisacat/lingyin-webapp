@@ -49,3 +49,7 @@ memory/
 # Vercel env dump (contains tokens)
 .env.vercel
 .env*
+
+# Serwist / PWA (generated build artifacts)
+public/sw.js
+public/sw.js.map
