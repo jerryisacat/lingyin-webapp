@@ -121,24 +121,23 @@ export default function Home() {
     const displayName = user.email ? user.email.split("@")[0] : "朋友";
 
     return (
-      <div className="flex min-h-[80vh] flex-col items-center gap-10 text-center pt-12">
-        <div className="flex flex-col items-center gap-4">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-sakura/10">
-            <BookOpen className="h-10 w-10 text-sakura" strokeWidth={1.5} />
+      <div className="flex flex-col gap-8">
+        {/* Header */}
+        <div className="flex flex-col items-center gap-3 text-center py-4">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-sakura/10">
+            <BookOpen className="h-8 w-8 text-sakura" strokeWidth={1.5} />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-ink">
-            玲音日记
-          </h1>
-          <p className="text-lg text-ink-light">
+          <h1 className="text-2xl font-bold tracking-tight text-ink">
             你好，{displayName}
-          </p>
+          </h1>
           <p className="text-sm text-ink-light">今天想记录些什么呢？</p>
         </div>
 
-        <div className="grid w-full max-w-sm gap-4">
+        {/* Action buttons */}
+        <div className="grid w-full gap-3 sm:grid-cols-2">
           <Link
             href="/diary"
-            className="btn-primary flex items-center justify-center gap-2 text-lg py-4"
+            className="btn-primary flex items-center justify-center gap-2 py-3"
           >
             <PenLine className="h-5 w-5" strokeWidth={1.5} />
             开始写日记
@@ -147,19 +146,21 @@ export default function Home() {
 
           <Link
             href="/timeline"
-            className="btn-secondary flex items-center justify-center gap-2 py-4"
+            className="btn-secondary flex items-center justify-center gap-2 py-3"
           >
             <Clock className="h-5 w-5" strokeWidth={1.5} />
             浏览时间线
           </Link>
         </div>
 
-        <div className="w-full max-w-2xl">
+        {/* Stats & usage */}
+        <div className="flex flex-col gap-6">
           <DashboardStats />
           <QuotaUsage />
         </div>
 
-        <div className="flex max-w-sm flex-col gap-3 rounded-xl bg-sakura/5 border border-sakura/20 px-6 py-4 text-left">
+        {/* Tip card */}
+        <div className="flex flex-col gap-3 rounded-xl bg-sakura/5 border border-sakura/20 px-5 py-4">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-sakura" strokeWidth={1.5} />
             <span className="text-sm font-medium text-ink">玲音小贴士</span>

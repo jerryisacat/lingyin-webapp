@@ -1,59 +1,59 @@
 ---
-children_hash: ebe5b8cb6b3903385c6a7507644a3d8f83ed75a6d9e5058886e3b94bc96ea06d
-compression_ratio: 0.4171251719394773
+children_hash: fc718d31d83b3bf2f18c542c6444911b944fdd099270b9d20275e2b7723ab9e2
+compression_ratio: 0.3539852645679839
 condensation_order: 3
 covers: [api/_index.md, billing/_index.md, project/_index.md, structure/_index.md, ui/_index.md]
-covers_token_total: 2908
+covers_token_total: 2986
 summary_level: d3
-token_count: 1213
+token_count: 1057
 type: summary
 ---
-# Context Tree Structural Overview (d3)
-
-The `.brv/context-tree/` organizes project knowledge across five domains: `api`, `billing`, `project`, `structure`, and `ui`. Each domain maintains d2 `_index.md` summaries that aggregate d1 entries. Core architectural pattern: centralized services (quota, subscription, AI client, storage) enforce privacy, auth-driven rendering, and unified key resolution. All domains cross-reference `src/app`, `src/lib`, and config files.
+# Knowledge Structure Overview (d3)
 
 ## api Domain
-Covers AI integration only.  
-- `ai_integration/_index.md` consolidates `api_test_endpoint_and_openrouter_client.md`: OpenRouter-only client (`src/lib/ai/client.ts`), 10s preflight to `/models`, `HTTP-Referer` fallback, structured error logging (`logConnectionError`), `POST /api/ai/test` restricted to `openrouter` provider.  
-- Dependencies: `getUserDecryptedApiKey`, 15s timeout, Vercel `hkg1` guidance.  
-Drill-down: `api/ai_integration/api_test_endpoint_and_openrouter_client.md`.
+Covers AI integration testing and OpenRouter client configuration.  
+- `api/_index.md` (d2) summarizes `ai_integration/_index.md` and `api_test_endpoint_and_openrouter_client.md`.  
+- Key elements: 10s preflight to `/models`, `logConnectionError` for network codes, `HTTP-Referer` fallback, POST restricted to `openrouter` provider, 15s timeout on `chat.completions.create`.  
+- Files: `src/app/api/ai/test/route.ts`, `src/lib/ai/client.ts`.  
+- Relationships: Depends on `billing/quota` for unified key resolution; feeds `structure` AI client centralization.
 
 ## billing Domain
-Manages subscriptions, quotas, and unified API keys.  
-- `quota/_index.md` covers `free_tier_quota_system.md` and `token_topup_and_unified_api_key.md`: `src/lib/quota-service.ts` (effective budget = subscription + top-up), `TokenUsage`/`TokenTopUp` models, pre/post checks on AI endpoints, `getEffectiveApiKey` (user key priority → `OPENROUTER_API_KEY`), Stripe top-up webhooks (¥5/¥20/¥38).  
-- `stripe_subscription/_index.md` covers `stripe_subscription_implementation.md`: Stripe SDK v22, 5 webhook events, `src/lib/subscription-service.ts` (upsert/cancel), `config/billing-pricing.json`, fallback to basic plan.  
-Relationships: Quota layer sits between routes and AI services; cross-references `structure/security`.  
-Drill-down: `billing/quota/*.md`, `billing/stripe_subscription/*.md`.
+Manages pricing, quotas, and Stripe subscriptions.  
+- `billing/_index.md` (d2) aggregates `pricing/`, `quota/`, `stripe_subscription/`.  
+- Pricing (`subscription_pricing_refactor.md`): token budgets reduced (basic 4.0→2.3 USD, advanced 20.0→12.0 USD), `FEATURES_MAP` multipliers, `config/billing-pricing.json` source.  
+- Quota (`free_tier_quota_system.md`, `token_topup_and_unified_api_key.md`): `TokenUsage`/`TokenTopUp` models, `quota-service.ts`, `getEffectiveApiKey`, pre/post checks on AI endpoints, Stripe top-up webhooks.  
+- Stripe (`stripe_subscription_implementation.md`): v22 SDK, webhook handlers for 5 events, `subscription-service.ts`, `SubscriptionPlans.tsx`.  
+- Cross-relationships: Quota layer mediates API routes ↔ AI services; shared config with `structure` and `ui/QuotaUsage.tsx`.
 
 ## project Domain
-Captures curation workflows.  
-- `context_curation/_index.md` covers `rlm_context_curation.md`: single-pass `context → extract → UPSERT` (787-char RLM variable, no chunking), 2026-05-22 timestamp.  
-Drill-down: `project/context_curation/rlm_context_curation.md`.
+Tracks context curation workflows.  
+- `project/_index.md` (d2) covers `context_curation/_index.md` and `rlm_context_curation.md`.  
+- Workflow: single-pass `context → extract → UPSERT` on 787-char RLM variables (2026-05-22).  
+- Highlights: auto-detected single-pass mode, no chunking required.
 
 ## structure Domain
-Defines core architecture, privacy, and services.  
-- `local-only-api-key-privacy-posture.md`: client-only keys, owner-verified R2 presigned URLs (`/api/image` + `getUser()`), full `deleteDirectory` on diary removal.  
-- `openrouter-ai-client-centralization.md`: sole provider OpenRouter (`baseURL: https://openrouter.ai/api/v1`), `ProviderConfig` + `PROVIDER_CONFIGS` map, `createOpenAIClient`/`generateStream`/`describeImage`.  
-- `security/_index.md` (covers `rate_limiting.md`, `security_hardening.md`): Upstash sliding-window on 8 endpoints, `checkRateLimit()` (fail-open dev), generic AI errors, removed preflight (2026-05-23).  
-- `src_app/_index.md` (covers `application_source.md`): Next.js flows (auth → diary → timeline), `ApiProvider` union, tone types (`warm|genki|minimal|literary`).  
-- `stats/_index.md` (covers `dashboard_stats_module.md`): `src/lib/stats.ts` single `findMany` aggregation (`totalWords`, `streak`, `monthlyData`), `GET /api/stats`, `DashboardStats.tsx`.  
-- `storage/_index.md` (covers `r2_privacy_and_asset_management.md`): S3Client path `users/{userId}/entries/{year}/{month}`, 3600s presigned, `NetworkOnly` SW, no `R2_PUBLIC_URL`.  
-Relationships: Privacy invariants enforced across storage, auth, and landing.  
-Drill-down: individual `.md` files under each subtopic.
+Defines core architecture, security, storage, and application modules.  
+- `structure/_index.md` (d2) spans privacy, AI, storage, and app core entries.  
+- Privacy: local-only keys, owner-only R2 presigned URLs (`local-only-api-key-privacy-posture.md`).  
+- Security: Upstash rate limiting (8 endpoints, `checkRateLimit`), response headers (2026-05-23), multi-layer guards on AI endpoints (`multi-layer-ai-endpoint-protection.md`).  
+- AI: OpenRouter-only client (`openrouter-ai-client-centralization.md`), `ProviderConfig`, `createOpenAIClient`, parallel `describeImages`.  
+- Storage: R2 path builders, `deleteDirectory`, owner checks on `/api/image` (`storage/_index.md`).  
+- Core: `src_app/_index.md`, `src_config/_index.md`, `stats/_index.md` (Prisma aggregates, streak walk, `DashboardStats.tsx`).  
+- Relationships: Centralizes guards used by `api` and `billing`; referenced by `ui` for auth-driven rendering.
 
 ## ui Domain
-Consolidates rendering, design, and interaction patterns.  
-- `auth-driven-conditional-rendering.md`: Supabase session as source of truth; `PUBLIC_ROUTES` + `NO_SHELL_ROUTES`; middleware + `AppShell.tsx` branching.  
-- `landing/_index.md` (covers `landing_page_and_auth_routing.md`, `landing_page_refactor.md`): dual-state `src/app/page.tsx`, 2026-05-23 glassmorphism refactor, OSS mentions, sticky navbar.  
-- `epic_30/_index.md` (from `docs/issue-30-spec.md`): 9-module PWA spec (tokens `#f0a8b0`/`#faf3e8`, FOUC script, sakura, LCP < 2s, WCAG AA); source `globals.css`/`tailwind.config.ts`.  
-- `demo/_index.md`: `public/demo.html` (Tailwind CDN, 18 GPU particles, zero-FOUC toggle).  
-- `logout/_index.md`: unified `signOut` (settings, Header, 800ms long-press on `MobileTabBar.tsx`).  
-- `timeline/_index.md` (covers `calendar_view_implementation.md`): `CalendarView.tsx` month grid + sakura dots, `?view=calendar` API, list/calendar toggle.  
-Relationships: Auth session drives all conditional UI; design tokens unify epic/demo/landing.  
-Drill-down: `ui/*/*.md` and referenced component files.
+Captures navigation, conditional rendering, timeline, and design system.  
+- `ui/_index.md` (d2) covers auth, landing, nav, logout, timeline, and specs.  
+- Auth: session-driven branching via `PUBLIC_ROUTES`, `NO_SHELL_ROUTES`, middleware, `AppShell` (`auth-driven-conditional-rendering.md`).  
+- Landing: dual-state root page with Hero/features for guests vs. dashboard for users (`landing/_index.md`).  
+- Navigation: unified `GlassNavBar.tsx` + `config/navigation.json`, framer-motion indicators (`glass_nav_bar/_index.md`).  
+- Logout: consistent `signOut` with 800 ms long-press on mobile (`logout/_index.md`).  
+- Timeline: `CalendarView.tsx`, `/api/entries?view=calendar`, cursor preservation (`timeline/_index.md`).  
+- Design: v2.0 spec (sakura `#f0a8b0`, glassmorphism, LCP < 2 s) in `epic_30/_index.md`; interactive demo (`demo/_index.md`).  
+- Cross-relationships: Session state links to `structure` security and `billing` quota display; all reference concrete `src/app` and `src/components` paths.
 
 ## Cross-Domain Patterns
-- Auth (Supabase) and privacy (local keys, owner-only R2) are foundational.  
-- AI access centralized via OpenRouter + quota-service.  
-- No external libs beyond Tailwind/lucide-react; performance (LCP/CLS) and accessibility emphasized.  
-- All entries reference `src/app`, `src/lib`, and config files for traceability.
+- Session/Supabase state drives auth, quota, and rendering across `ui`, `structure`, `billing`.  
+- Unified key resolution (`billing/quota`) and rate-limiting (`structure/security`) protect all AI endpoints (`api`).  
+- Central config files (`config/billing-pricing.json`, `config/navigation.json`) and shared components (`QuotaUsage.tsx`, `GlassNavBar.tsx`) recur as integration points.  
+- All domains reference concrete file paths and API signatures for drill-down into d2/d1 entries.

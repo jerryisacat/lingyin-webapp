@@ -3,7 +3,7 @@
     {
       "order": 3,
       "path": "_index.md",
-      "tokens": 1213,
+      "tokens": 1057,
       "type": "summary"
     },
     {
@@ -14,14 +14,14 @@
     },
     {
       "order": 2,
-      "path": "project/_index.md",
-      "tokens": 150,
+      "path": "billing/_index.md",
+      "tokens": 601,
       "type": "summary"
     },
     {
       "order": 1,
-      "path": "api/ai_integration/_index.md",
-      "tokens": 301,
+      "path": "structure/src_config/_index.md",
+      "tokens": 54,
       "type": "summary"
     },
     {
@@ -35,7 +35,7 @@
     {
       "importance": 50,
       "path": "billing/pricing/subscription_pricing_refactor.md",
-      "tokens": 339,
+      "tokens": 787,
       "type": "context"
     },
     {
@@ -78,6 +78,12 @@
     },
     {
       "importance": 50,
+      "path": "structure/multi-layer-ai-endpoint-protection.md",
+      "tokens": 327,
+      "type": "context"
+    },
+    {
+      "importance": 50,
       "path": "structure/openrouter-ai-client-centralization.md",
       "tokens": 294,
       "type": "context"
@@ -92,12 +98,6 @@
       "importance": 50,
       "path": "structure/security/security_hardening.md",
       "tokens": 587,
-      "type": "context"
-    },
-    {
-      "importance": 50,
-      "path": "structure/src_app/application_source.md",
-      "tokens": 1086,
       "type": "context"
     },
     {
@@ -131,13 +131,13 @@
       "type": "context"
     }
   ],
-  "generated_at": "2026-05-23T19:44:33.446Z",
+  "generated_at": "2026-05-24T08:56:14.107Z",
   "lane_tokens": {
-    "contexts": 3921,
+    "contexts": 3610,
     "stubs": 0,
-    "summaries": 1922
+    "summaries": 1970
   },
-  "source_fingerprint": "cb56bd5a3706b4280e451379352195ddf2209e67caf771f21891804c906577e5",
-  "total_tokens": 5843,
+  "source_fingerprint": "fa46e345aa59283da0f8748e908d73ac4ab2b236aa580e70a7e0c1e627f5c729",
+  "total_tokens": 5580,
   "version": 1
 }
