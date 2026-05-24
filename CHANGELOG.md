@@ -1,3 +1,22 @@
+## 2026-05-24 — Issue #101: iOS 风格毛玻璃导航栏 + 首页布局统一
+
+### 新建组件
+- `src/components/GlassNavBar.tsx` — 统一导航栏组件，桌面端顶部固定 + 移动端底部固定，iOS 风格毛玻璃效果（`backdrop-filter: blur` + 半透明背景）
+  - 桌面端：水平排列导航项 + logo + 用户头像下拉菜单（替代 Sidebar 中的邮箱显示 + 退出登录按钮）
+  - 移动端：4 tab 导航，保留设置长按弹出退出确认交互
+  - 滚动检测：向下滚动时玻璃不透明度逐渐增加（`bg-warm-white/80` → `bg-warm-white/95`）
+  - 活跃导航项指示器动效（`framer-motion` layoutId spring 动画）
+  - 用户菜单展开/收起过渡动效（`AnimatePresence` + scale/opacity 动画）
+  - 深色模式适配
+
+### 删除旧组件
+- 移除 `src/components/Sidebar.tsx` — 桌面端左侧导航栏
+- 移除 `src/components/MobileTabBar.tsx` — 移动端底部 tab 栏
+
+### 布局迁移
+- `src/components/AppShell.tsx` — 移除 `md:pl-56` 内容区左偏移，移除移动端 mini header，改用 `GlassNavBar` + 统一内容容器（`max-w-3xl mx-auto`）
+- `src/app/page.tsx` — 已登录首页布局调整，使用与其他页面统一的容器和间距，移除冗余的居中偏移
+
 ## 2026-05-24 — Issue #102 & #105: 订阅方案文案修正 + 用量模块百分比显示
 
 ### Issue #102 — 订阅方案文案及定价调整

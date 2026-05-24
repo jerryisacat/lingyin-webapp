@@ -1,0 +1,79 @@
+{
+  "completedAt": 1779612974107,
+  "id": "drm-1779612893016",
+  "operations": [
+    {
+      "action": "MERGE",
+      "inputFiles": [
+        "ui/glass_nav_bar/glassnavbar_unified_navigation.md",
+        "ui/glass_nav_bar/glassnavbar_unified_navigation.abstract.md",
+        "ui/glass_nav_bar/glassnavbar_unified_navigation.overview.md"
+      ],
+      "needsReview": true,
+      "outputFile": "ui/glass_nav_bar/glassnavbar_unified_navigation.md",
+      "previousTexts": {
+        "ui/glass_nav_bar/glassnavbar_unified_navigation.md": "---\ntitle: GlassNavBar Unified Navigation\nsummary: 'Unified GlassNavBar: desktop top frosted nav with user menu, mobile bottom tabs with long-press logout, scroll opacity, framer-motion active indicators. AppShell uses max-w-3xl container.'\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-05-24T08:39:48.274Z'\nupdatedAt: '2026-05-24T08:39:48.274Z'\n---\n## Reason\nDocument Issue #101 GlassNavBar refactor replacing Sidebar/MobileTabBar\n\n## Raw Concept\n**Task:**\nIssue #101: Replace Sidebar.tsx + MobileTabBar.tsx with GlassNavBar.tsx unified component\n\n**Changes:**\n- Desktop: top fixed nav bar with frosted glass effect, user dropdown menu\n- Mobile: bottom tab bar with frosted glass, settings long-press logout\n- AppShell.tsx: removed md:pl-56 offset, removed mobile mini header, uses max-w-3xl mx-auto container\n- Scroll-based glass opacity effect, active nav indicator animation with framer-motion layoutId\n\n**Files:**\n- src/components/GlassNavBar.tsx\n- src/components/AppShell.tsx\n- config/navigation.json\n\n**Flow:**\nnavConfig -> filter items -> render desktop/mobile -> handle scroll/auth/logout\n\n**Timestamp:** 2026-05-24\n\n## Narrative\n### Structure\nGlassNavBar renders desktop top bar (fixed, 64px) and mobile bottom tab bar. Uses navConfig for items. Active state via pathname + framer-motion layoutId. User menu with logout clears caches.\n\n### Dependencies\nnext-auth/react, framer-motion, lucide-react, config/navigation.json\n\n### Highlights\nFrosted glass (bg-warm-white/80 + backdrop-blur), scroll opacity transition, long-press (800ms) on settings for mobile logout confirm popup\n\n### Rules\nDesktop items: authenticated or always, not disabled, has href. Mobile uses mobileItems from config.\n",
+        "ui/glass_nav_bar/glassnavbar_unified_navigation.abstract.md": "The GlassNavBar unified navigation replaces separate Sidebar/MobileTabBar components with a single frosted-glass top nav for desktop and bottom tabs for mobile, adding scroll opacity, framer-motion active indicators, long-press logout, and max-w-3xl AppShell layout.",
+        "ui/glass_nav_bar/glassnavbar_unified_navigation.overview.md": "- Key points: Replaces Sidebar.tsx + MobileTabBar.tsx with single GlassNavBar.tsx per Issue #101; desktop uses fixed 64px top frosted-glass nav with user dropdown; mobile uses bottom tab bar with 800ms long-press on settings for logout; scroll-driven opacity + framer-motion layoutId active indicators; AppShell drops md:pl-56 offset and adopts max-w-3xl mx-auto container; navConfig-driven filtering for auth/desktop/mobile items\n- Structure / sections summary: Document sections include Reason, Raw Concept (task/changes/files/flow), Narrative (Structure, Dependencies, Highlights, Rules); flow described as navConfig → filter → render desktop/mobile → handle scroll/auth/logout\n- Notable entities/patterns/decisions: Entities: GlassNavBar.tsx, AppShell.tsx, config/navigation.json, next-auth/react, framer-motion, lucide-react; patterns: frosted glass (bg-warm-white/80 + backdrop-blur), unified responsive nav, cache-clearing logout; decisions: mobileItems subset from config, authenticated-or-always rule for desktop items, removal of mini header"
+      },
+      "reason": "All three files cover the identical topic (GlassNavBar unified navigation refactor) with >90% overlapping content; abstract and overview are direct condensations of the main file with no unique facts, diagrams, or details to preserve.",
+      "type": "CONSOLIDATE"
+    },
+    {
+      "action": "MERGE",
+      "inputFiles": [
+        "billing/pricing/subscription_pricing_refactor.md",
+        "billing/pricing/subscription_pricing_refactor.abstract.md",
+        "billing/pricing/subscription_pricing_refactor.overview.md"
+      ],
+      "needsReview": true,
+      "outputFile": "billing/pricing/subscription_pricing_refactor.md",
+      "previousTexts": {
+        "billing/pricing/subscription_pricing_refactor.md": "---\ntitle: Subscription Pricing Refactor\nsummary: Updated token budgets (basic 2.3, advanced 12.0), FEATURES_MAP to multipliers, QuotaUsage to percentages, top-up bundles 0.3/1.7/3.3 USD\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-05-23T19:44:29.764Z'\nupdatedAt: '2026-05-23T19:44:29.764Z'\n---\n## Reason\nCurate pricing changes from issues #102 & #105\n\n## Raw Concept\n**Task:**\nRefactor subscription pricing and copy for issues #102 & #105\n\n**Changes:**\n- basic tokenBudgetUsd: 4.0 → 2.3\n- advanced tokenBudgetUsd: 20.0 → 12.0 (35% margin)\n- topUp bundles: 0.3/1.7/3.3 USD\n- FEATURES_MAP: removed USD amounts, use multipliers (2.3x, 12x)\n- Telegram: \"通知\" → \"管理（Coming Soon）\"\n- QuotaUsage: token display from formatUsd to percentages (used/remaining/rollover)\n\n**Files:**\n- config/billing-pricing.json\n- src/app/api/pricing/route.ts\n- src/components/QuotaUsage.tsx\n\n**Flow:**\npricing config → api/pricing endpoint → QuotaUsage display\n\n**Timestamp:** 2026-05-22\n\n**Author:** issues #102 #105\n\n## Narrative\n### Structure\nbilling-pricing.json defines tiers (free/basic/advanced), models, topUp bundles; api/pricing serves plans with FEATURES_MAP; QuotaUsage shows progress bars with %\n\n### Highlights\nPreserved 35% margin on advanced; all models allowed on paid; rollover 25%/50%\n\n### Rules\nFEATURES_MAP uses relative multipliers instead of absolute USD\n",
+        "billing/pricing/subscription_pricing_refactor.abstract.md": "The subscription pricing refactor updates token budgets to 2.3/12.0, converts FEATURES_MAP to multipliers, adds top-up bundles at 0.3/1.7/3.3 USD, and switches QuotaUsage displays to percentages while preserving margins.",
+        "billing/pricing/subscription_pricing_refactor.overview.md": "- Key points: Updated token budgets (basic: 4.0→2.3 USD, advanced: 20.0→12.0 USD with 35% margin); switched FEATURES_MAP to relative multipliers (2.3x, 12x); changed QuotaUsage display from USD to percentages (used/remaining/rollover); introduced top-up bundles at 0.3/1.7/3.3 USD; updated Telegram label from \"通知\" to \"管理（Coming Soon）\"\n- Key points: Refactor driven by issues #102 and #105; all models allowed on paid tiers; rollover rates preserved at 25%/50%\n- Structure / sections summary: Document contains frontmatter metadata, Reason section, Raw Concept (task/changes/files/flow/timestamp/author), and Narrative (Structure/Highlights/Rules subsections)\n- Notable entities/patterns/decisions: Core files are config/billing-pricing.json, src/app/api/pricing/route.ts, src/components/QuotaUsage.tsx; data flow is pricing config → api/pricing endpoint → QuotaUsage display; decision to replace absolute USD values with multipliers in FEATURES_MAP"
+      },
+      "reason": "All three files cover the identical topic (subscription pricing refactor from issues #102/#105) with high content overlap; abstract and overview are direct summaries/derivatives of the main document's Raw Concept and Narrative sections. Merge into the richest source file to eliminate redundancy.",
+      "type": "CONSOLIDATE"
+    },
+    {
+      "action": "CROSS_REFERENCE",
+      "inputFiles": [
+        "structure/src_config/configuration_module.md",
+        "structure/src_config/configuration_module.abstract.md",
+        "structure/src_config/configuration_module.overview.md"
+      ],
+      "needsReview": false,
+      "previousTexts": {
+        "structure/src_config/configuration_module.md": "---\ntitle: Configuration Module\nsummary: Configuration handling in src/config for the application\ntags: []\nrelated: []\nkeywords: []\ncreatedAt: '2026-05-23T19:34:49.601Z'\nupdatedAt: '2026-05-23T19:34:49.601Z'\n---\n## Reason\nCurate src/config knowledge from RLM context\n\n## Raw Concept\n**Task:**\nDocument src/config module\n\n**Flow:**\nConfig loading and usage patterns\n\n## Narrative\n### Structure\nContains configuration details from context\n\n### Highlights\nActively curated module\n",
+        "structure/src_config/configuration_module.abstract.md": "The configuration module curates src/config knowledge covering structure, loading patterns, and usage for the application.",
+        "structure/src_config/configuration_module.overview.md": "- Key points: Configuration handling focused on src/config module; task is to document the module; emphasis on config loading and usage patterns; contains curated configuration details from RLM context; actively maintained/curated module\n- Structure / sections summary: Frontmatter with title/summary/metadata; Reason section; Raw Concept with Task and Flow; Narrative with Structure and Highlights subsections\n- Notable entities/patterns/decisions: src/config as primary module; RLM context as source; decision to curate and document configuration knowledge"
+      },
+      "reason": "Files are complementary: main detailed knowledge file + derived abstract summary + derived overview summary for the same configuration_module topic. They serve distinct roles and should reference each other without merging or content changes.",
+      "type": "CONSOLIDATE"
+    },
+    {
+      "action": "CREATE",
+      "confidence": 0.92,
+      "needsReview": false,
+      "outputFile": "structure/multi-layer-ai-endpoint-protection.md",
+      "sources": [
+        "structure/_index.md",
+        "billing/_index.md",
+        "api/_index.md"
+      ],
+      "type": "SYNTHESIZE"
+    }
+  ],
+  "startedAt": 1779612893016,
+  "status": "completed",
+  "summary": {
+    "consolidated": 3,
+    "errors": 0,
+    "flaggedForReview": 2,
+    "pruned": 0,
+    "synthesized": 1
+  },
+  "taskId": "d72dd9c6-4888-4ce8-8d5f-a6e6baf4e603",
+  "trigger": "agent-idle"
+}

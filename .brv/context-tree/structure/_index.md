@@ -1,25 +1,29 @@
 ---
-children_hash: 3932817da11f8037c5f68837fa14c301896d4737e9010d6a519d25eb65e5b2e6
-compression_ratio: 0.2941747572815534
+children_hash: 8c1351313dede427ecd4d8d3bf1a58091755dc057b7d6bc7687f37cab45b1d1f
+compression_ratio: 0.3079073482428115
 condensation_order: 2
-covers: [local-only-api-key-privacy-posture.md, openrouter-ai-client-centralization.md, security/_index.md, src_app/_index.md, stats/_index.md, storage/_index.md]
-covers_token_total: 2060
+covers: [local-only-api-key-privacy-posture.md, multi-layer-ai-endpoint-protection.md, openrouter-ai-client-centralization.md, security/_index.md, src_app/_index.md, src_config/_index.md, stats/_index.md, storage/_index.md]
+covers_token_total: 2504
 summary_level: d2
-token_count: 606
+token_count: 771
 type: summary
 ---
-**structure/**
+structure
 
-- **local-only-api-key-privacy-posture.md**: API keys stored exclusively client-side; no server-side management. R2 assets accessed only via owner-verified presigned URLs (`/api/image` + `getUser()` check); full asset deletion on diary removal (`deleteDirectory` + `deleteEntry`). Enforced in storage layer and landing/auth UI.
+### Privacy & Security Posture
+- **Local-Only API Key & Privacy Posture** (`local-only-api-key-privacy-posture.md`): API keys and assets stored/accessed exclusively client-side or via owner-only presigned URLs; no server-side key management. Enforced in storage (owner verification on `/api/image`, asset deletion on diary removal) and UI (landing/auth highlights).
+- **Multi-Layer AI Endpoint Protection** (`multi-layer-ai-endpoint-protection.md`): Sequential guards on `/api/generate`, `/api/rewrite`, `/api/test`, `/api/ai/test`: (1) auth + rate limiting (structure), (2) quota pre-checks + unified key resolution (billing), (3) OpenRouter client execution (api). Fail-closed in prod; generic client errors + server logging only.
+- **Security** (`security/_index.md`): 
+  - Rate Limiting (`rate_limiting.md`): Upstash sliding-window via `@upstash/ratelimit` + Redis on 8 endpoints (login/register/email/password/AI); unified `checkRateLimit()` in `src/lib/rate-limit.ts` (fail-open dev, fail-closed prod).
+  - Security Hardening (`security_hardening.md`): Response headers in `next.config.mjs`; timestamped 2026-05-23.
 
-- **openrouter-ai-client-centralization.md**: Sole LLM provider is OpenRouter (`baseURL: https://openrouter.ai/api/v1`). Shared `ProviderConfig` interface, `createOpenAIClient`, `generateStream`, `describeImage`/`describeImages` in `src_app`. Test endpoint (`POST /api/ai/test`) restricted to `['openrouter']`, performs 10-15s preflight `/models`, uses `HTTP-Referer` + `X-Title` headers; extensibility via `PROVIDER_CONFIGS` map.
+### AI Integration
+- **OpenRouter AI Client Centralization** (`openrouter-ai-client-centralization.md`): Sole supported provider. `api`: POST `/api/ai/test` validates `openrouter` only, 10s preflight GET `/models`, 15s `chat.completions.create`, `HTTP-Referer` fallback to `NEXT_PUBLIC_*_URL`, `logConnectionError` for network/TLS cases. `structure`: `ProviderConfig` interface, `createOpenAIClient`, `generateStream`, `describeImage`/`describeImages` (parallel `Promise.allSettled`); `PROVIDER_CONFIGS` map + `ApiProvider` union for extensibility; baseURL `https://openrouter.ai/api/v1`; default model `openai/gpt-4o-mini`.
 
-- **security/_index.md** (covers `rate_limiting.md`, `security_hardening.md`):
-  - Upstash sliding-window rate limiting (`@upstash/ratelimit` + Redis) on 8 endpoints (auth + AI); unified `checkRateLimit()` in `src/lib/rate-limit.ts` (fail-open dev, fail-closed prod).
-  - Hardening: response headers in `next.config.mjs`; AI endpoints return generic errors + server logging only; removed OpenRouter preflight from test route (2026-05-23).
+### Storage & Assets
+- **R2 Privacy and Asset Management** (`storage/_index.md`): Privacy hardening for Cloudflare R2 (Issue #23). `src/lib/storage.ts`: S3Client, path builders under `users/{userId}/entries/{year}/{month}/`, `getPresignedUrl` (3600s TTL), new `deleteDirectory` (prefix batch via `ListObjectsV2` + `DeleteObjectsCommand`). `/api/image` (`src/app/api/image/route.ts`): `getUser()` + owner check (404 on mismatch). `src/lib/diary.ts`: `deleteDiary` calls storage cleanup before Prisma. SW (`src/sw.ts`): `/api/image` → `NetworkOnly`. Removed `R2_PUBLIC_URL` and remote domains from `next.config`.
 
-- **src_app/_index.md** (covers `application_source.md`): Core Next.js `src/app` flows (auth → diary CRUD → timeline → settings). Integrates Prisma, local API keys, OpenRouter LLM client. `ApiProvider` union + `PROVIDER_CONFIGS` for extensibility. Tone types: `warm | genki | minimal | literary`.
-
-- **stats/_index.md** (covers `dashboard_stats_module.md`): Server-side aggregation (`src/lib/stats.ts`: single Prisma `findMany` + JS) for `totalWords`, `totalDays`, `streak`, `monthlyData`, `topTags`. Exposed via `GET /api/stats`; rendered by `DashboardStats.tsx` (Tailwind bar chart, four states). Mounted on authenticated home; streak via single-pass backward walk.
-
-- **storage/_index.md** (covers `r2_privacy_and_asset_management.md`): R2 via S3Client (`src/lib/storage.ts`); path builders under `users/{userId}/entries/{year}/{month}/`; always presigned URLs (3600s); `deleteDirectory` for batch cleanup. `GET /api/image` enforces owner verification (404 on mismatch). Diary lifecycle (`deleteDiary`) coordinates storage + Prisma. SW uses `NetworkOnly` for `/api/image`; removed `R2_PUBLIC_URL` and remote domains from config. Privacy invariants: no public URLs, owner-only access, full asset cleanup.
+### Application Core
+- **Application Source** (`src_app/_index.md`): Next.js `src/app` handles auth, diary CRUD, timeline, settings. Core: `layout.tsx`, `page.tsx`. Integrates Prisma, local API keys, UI upgrades. Tone union: `warm | genki | minimal | literary`.
+- **Configuration Module** (`src_config/_index.md`): Central config loading/usage in `src/config`.
+- **Dashboard Stats Module** (`stats/_index.md`): Server-side aggregates (`src/lib/stats.ts`: single Prisma `findMany` + JS → `totalWords`, `totalDays`, `streak`, `monthlyData`, `topTags`); `GET /api/stats`; `DashboardStats.tsx` (Tailwind bar chart, four states). Streak: single-pass backward walk. Mounted on authenticated home; minimal dependencies.

@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { usePathname } from "next/navigation"
-import { Sidebar } from "@/components/Sidebar"
-import { MobileTabBar } from "@/components/MobileTabBar"
+import { GlassNavBar } from "@/components/GlassNavBar"
 import { EncryptionProvider } from "@/hooks/useEncryptionPassword"
 
 const AUTH_PAGES = ["/login", "/register", "/forgot-password", "/reset-password", "/verify-email"]
@@ -44,31 +43,26 @@ export function AppShell({ children, authenticated: ssrAuth }: AppShellProps) {
     return <>{children}</>
   }
 
-  // Public landing page — no shell
+  // Public landing page — glass nav bar + full-width content
   if (pathname === "/" && !authenticated) {
-    return <>{children}</>
+    return (
+      <div className="flex min-h-screen flex-col">
+        <GlassNavBar />
+        <main className="flex-1 w-full pt-6 pb-24 md:pt-[104px] md:pb-10">
+          {children}
+        </main>
+      </div>
+    )
   }
 
-  // Authenticated pages — desktop sidebar + mobile top bar + mobile bottom tabs
+  // Authenticated pages — glass nav bar + unified content container
   return (
     <EncryptionProvider>
-      <div className="flex min-h-screen">
-        <Sidebar />
-        <div className="flex flex-col flex-1 md:pl-56">
-          {/* Mobile mini header */}
-          <div className="md:hidden sticky top-0 z-30 bg-warm-white/90 backdrop-blur-sm border-b border-surface-border px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-sakura to-sakura-light">
-                <span className="text-white text-xs">🌸</span>
-              </div>
-              <span className="text-sm font-bold text-ink">玲音日记</span>
-            </div>
-          </div>
-          <main className="flex-1 px-4 py-6 md:px-10 md:py-10 pb-24 md:pb-10 max-w-3xl w-full mx-auto">
-            {children}
-          </main>
-        </div>
-        <MobileTabBar />
+      <div className="flex min-h-screen flex-col">
+        <GlassNavBar />
+        <main className="flex-1 w-full mx-auto px-4 md:px-10 max-w-3xl pt-6 pb-24 md:pt-[104px] md:pb-10">
+          {children}
+        </main>
       </div>
     </EncryptionProvider>
   )
