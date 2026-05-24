@@ -8,16 +8,16 @@ import { useUserConfig } from "@/contexts/UserConfigContext"
 
 export default function SetupPage() {
   const router = useRouter()
-  const { writingStyle, isLoading } = useUserConfig()
+  const { writingStyle, isLoading, hasCompletedSetup } = useUserConfig()
   const [hasExistingStyle, setHasExistingStyle] = useState<boolean | null>(null)
 
   useEffect(() => {
     if (!isLoading) {
       const isDefault =
         writingStyle.perspective === "first_person" && writingStyle.persona === "yuanshao"
-      setHasExistingStyle(!isDefault)
+      setHasExistingStyle(hasCompletedSetup || !isDefault)
     }
-  }, [isLoading, writingStyle])
+  }, [isLoading, writingStyle, hasCompletedSetup])
 
   const handleComplete = useCallback(() => {
     router.push("/diary")

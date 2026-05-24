@@ -31,6 +31,8 @@ model User {
 
   writingStyle Json @default("{\"perspective\": \"first_person\", \"persona\": \"yuanshao\"}")
 
+  hasCompletedSetup Boolean @default(false)
+
   dailyEntryCount Int      @default(0)
   dailyEntryDate  DateTime?
   totalEntries    Int      @default(0)

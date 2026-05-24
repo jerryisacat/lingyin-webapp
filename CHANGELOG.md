@@ -1,3 +1,21 @@
+## 2026-05-24 — Issue #103: 首次登录引导流程 — 自动跳转 /setup
+
+### 问题
+新用户注册登录后直接进入首页，不知道有 `/setup` 风格配置引导。Issue #95 Phase 2 未完整实现。
+
+### 数据层
+- `prisma/schema.prisma` — User 模型新增 `hasCompletedSetup Boolean @default(false)`，区分"未完成引导"和"选择了默认值"
+- `prisma/migrations/20260524000000_add_has_completed_setup` — ALTER TABLE 加列 + 存量用户批量设为 true
+
+### API
+- `src/app/api/user/style/route.ts` — GET 返回新增 `hasCompletedSetup` 字段；PUT 保存风格时同时设 `hasCompletedSetup = true`
+
+### 前端
+- `src/contexts/UserConfigContext.tsx` — 新增 `hasCompletedSetup` state，fetch 时读取 API 返回，setWritingStyle 成功时同步设为 true
+- `src/components/AppShell.tsx` — 消费 `useUserConfig()`，已登录且 `!hasCompletedSetup` 且不在 `/setup` → `router.replace("/setup")`；UserConfig 加载期间显示 spinner 避免目标页内容闪烁
+- `src/app/login/page.tsx` — `signIn` 成功后检查 `hasCompletedSetup`，未完成直接跳 `/setup` 避免 AppShell 中转闪烁
+- `src/app/setup/page.tsx` — 改用 `hasCompletedSetup` 判断而非仅检查 style 是否为默认值，已完成引导的用户看到"调整配置"视图而非空白 wizard
+
 ## 2026-05-24 — Issue #101: iOS 风格毛玻璃导航栏 + 首页布局统一
 
 ### 新建组件
