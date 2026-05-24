@@ -36,8 +36,16 @@ export default function LoginPage() {
         if (result?.error) {
           setError("邮箱或密码错误，或邮箱未验证")
         } else if (result?.ok) {
-          router.push("/")
-          router.refresh()
+          try {
+            const res = await fetch("/api/user/style")
+            const json = await res.json()
+            const needsSetup = json.ok && json.data && !json.data.hasCompletedSetup
+            router.push(needsSetup ? "/setup" : "/")
+            router.refresh()
+          } catch {
+            router.push("/")
+            router.refresh()
+          }
         }
       } catch {
         setError("登录失败，请稍后再试")

@@ -9,6 +9,7 @@ interface UserConfigContextValue {
   setWritingStyle: (style: WritingStyle) => void
   isLoading: boolean
   error: string | null
+  hasCompletedSetup: boolean
 }
 
 const UserConfigContext = createContext<UserConfigContextValue | null>(null)
@@ -21,6 +22,7 @@ export function UserConfigProvider({ children }: UserConfigProviderProps) {
   const [writingStyle, setWritingStyleState] = useState<WritingStyle>(DEFAULT_WRITING_STYLE)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [hasCompletedSetup, setHasCompletedSetup] = useState(false)
 
   const fetchStyle = useCallback(async () => {
     try {
@@ -30,6 +32,9 @@ export function UserConfigProvider({ children }: UserConfigProviderProps) {
       const json = await res.json()
       if (json.ok && json.data?.writingStyle) {
         setWritingStyleState(json.data.writingStyle)
+      }
+      if (json.ok && json.data) {
+        setHasCompletedSetup(json.data.hasCompletedSetup ?? false)
       }
     } catch {
       setError("Failed to load writing style")
@@ -55,6 +60,8 @@ export function UserConfigProvider({ children }: UserConfigProviderProps) {
         if (!json.ok) {
           setWritingStyleState(writingStyle)
           setError(json.error ?? "Failed to save writing style")
+        } else {
+          setHasCompletedSetup(true)
         }
       } catch {
         setError("Network error saving style")
@@ -64,7 +71,7 @@ export function UserConfigProvider({ children }: UserConfigProviderProps) {
   )
 
   return (
-    <UserConfigContext.Provider value={{ writingStyle, setWritingStyle, isLoading, error }}>
+    <UserConfigContext.Provider value={{ writingStyle, setWritingStyle, isLoading, error, hasCompletedSetup }}>
       {children}
     </UserConfigContext.Provider>
   )

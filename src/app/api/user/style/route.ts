@@ -12,12 +12,12 @@ export async function GET() {
 
   const dbUser = await prisma.user.findUnique({
     where: { id: user.id },
-    select: { writingStyle: true },
+    select: { writingStyle: true, hasCompletedSetup: true },
   })
 
   const style: WritingStyle = (dbUser?.writingStyle as WritingStyle | null) ?? DEFAULT_WRITING_STYLE
 
-  return jsonOk({ writingStyle: style })
+  return jsonOk({ writingStyle: style, hasCompletedSetup: dbUser?.hasCompletedSetup ?? false })
 }
 
 export async function PUT(request: NextRequest) {
@@ -43,7 +43,7 @@ export async function PUT(request: NextRequest) {
 
   await prisma.user.update({
     where: { id: user.id },
-    data: { writingStyle },
+    data: { writingStyle, hasCompletedSetup: true },
   })
 
   return jsonOk({ writingStyle })
