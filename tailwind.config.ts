@@ -32,7 +32,7 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ["Noto Sans SC", "Inter", ...defaultTheme.fontFamily.sans],
+        sans: ["var(--font-noto-sans-sc)", ...defaultTheme.fontFamily.sans],
       },
       fontSize: {
         "2xs": ["0.625rem", { lineHeight: "1rem" }],

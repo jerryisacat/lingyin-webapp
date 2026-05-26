@@ -8,7 +8,7 @@ import { UserConfigProvider } from "@/contexts/UserConfigContext";
 import "./globals.css";
 
 const notoSansSC = Noto_Sans_SC({
-  subsets: ["latin"],
+  subsets: ["latin", "chinese-simplified"],
   weight: ["300", "400", "500", "700"],
   variable: "--font-noto-sans-sc",
   display: "swap",
