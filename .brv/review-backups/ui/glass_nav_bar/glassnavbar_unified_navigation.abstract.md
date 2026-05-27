@@ -1,1 +1,0 @@
-The GlassNavBar unified navigation replaces separate Sidebar/MobileTabBar components with a single frosted-glass top nav for desktop and bottom tabs for mobile, adding scroll opacity, framer-motion active indicators, long-press logout, and max-w-3xl AppShell layout.

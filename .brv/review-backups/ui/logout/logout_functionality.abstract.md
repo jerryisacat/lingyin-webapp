@@ -1,1 +1,0 @@
-The document details logout functionality implemented via a red danger button in Settings, 800ms long-press with confirmation modal on the mobile tab bar, and existing Header.tsx buttons for desktop and mobile.

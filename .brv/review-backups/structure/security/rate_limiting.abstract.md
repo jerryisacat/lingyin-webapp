@@ -1,1 +1,0 @@
-The document details Upstash rate limiting with sliding window applied to eight API endpoints and graceful Redis degradation that fails open in development and closed in production.

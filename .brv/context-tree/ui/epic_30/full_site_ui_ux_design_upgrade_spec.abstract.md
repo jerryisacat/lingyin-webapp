@@ -1,1 +1,0 @@
-This spec outlines a full UI/UX upgrade for the 玲音日记 PWA, defining design tokens, sakura animations, dark-mode FOUC fixes, immersive editor, glassmorphic nav, and lightweight micro-interactions while enforcing performance and accessibility rules.

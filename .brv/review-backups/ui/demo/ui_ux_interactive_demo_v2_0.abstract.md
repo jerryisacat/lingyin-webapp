@@ -1,1 +1,0 @@
-This document specifies the UI/UX v2.0 interactive demo for 玲音日记, highlighting additions like sakura particles, dark mode, animations, and a PWA mobile preview in a single-file Tailwind implementation.

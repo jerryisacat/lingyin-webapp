@@ -1,1 +1,0 @@
-The document describes implementing a CalendarView component with month grid and sakura indicators, extending the entries API for calendar mode, and adding list/calendar toggling on the timeline page while preserving state.

@@ -1,1 +1,0 @@
-The document describes enhancements to the AI API test endpoint and OpenRouter client, adding a 10s preflight connectivity check, detailed error logging with cause codes, and HTTP-Referer fallbacks for improved diagnostics.

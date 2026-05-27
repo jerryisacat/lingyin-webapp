@@ -1,1 +1,0 @@
-This document details the first-time setup flow controlled by the hasCompletedSetup flag, covering AppShell redirects, login jumps, UserConfigContext state, and setup page UI variants with automatic flag updates on style save.

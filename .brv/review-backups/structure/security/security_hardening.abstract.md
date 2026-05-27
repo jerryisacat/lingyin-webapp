@@ -1,1 +1,0 @@
-Security hardening for a Next.js app added response headers, replaced AI endpoint error leakage with generic client messages plus server logs, and removed OpenRouter preflight checks.

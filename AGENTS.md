@@ -148,13 +148,10 @@ Issue 应包含:
 
 ### 开发前：检索已有知识
 1. Pull latest code from main.
-2. 使用 `brv search <关键词>` 检索 `.brv/context-tree/` 中已有的项目知识。
 
 ### 开发后（git commit 之前）
 1. 更新 `CHANGELOG.md`
-2. `brv curate "..."` 整理知识树
-3. `git -C .brv/context-tree add -A && git -C .brv/context-tree commit -m "..."`
-4. `git add` + `git commit` + `git push`
+2. `git add` + `git commit` + `git push`
 
 ## Vibe Coding Workflow — Issue-Driven Development
 
@@ -164,7 +161,6 @@ Issue 应包含:
 ### 开发完成后
 1. `npx tsc --noEmit` 确保 TypeScript 零错误
 2. 更新 `CHANGELOG.md`
-3. `brv curate "..."` 整理知识树
-4. `git add` + `git commit` + `git push origin develop/issue-N`
-5. 使用 `gh issue comment <N> --body "..."` 通知用户并 Close Issues
-6. 使用 `gh pr create` 创建 PR (base: main, head: develop/issue-N)
+3. `git add` + `git commit` + `git push origin develop/issue-N`
+4. 使用 `gh issue comment <N> --body "..."` 通知用户并 Close Issues
+5. 使用 `gh pr create` 创建 PR (base: main, head: develop/issue-N)

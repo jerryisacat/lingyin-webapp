@@ -1,1 +1,0 @@
-This document details Stripe token top-up packages via the TokenTopUp model and a unified getEffectiveApiKey system that prioritizes user keys with fallback to OPENROUTER_API_KEY while aggregating subscription plus top-up quotas.

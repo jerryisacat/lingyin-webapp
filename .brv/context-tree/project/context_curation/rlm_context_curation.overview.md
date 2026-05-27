@@ -1,3 +1,0 @@
-- Key points: Single-pass curation of 787-char RLM context into knowledge base; flow is context → extract → UPSERT; suggested mode is single-pass with 1 chunk; processes content from RLM variable; timestamp recorded as 2026-05-22
-- Structure / sections summary: Document contains frontmatter (title, summary, tags, dates), Reason section, Raw Concept (Task/Changes/Flow), and Narrative (Structure + Highlights subsections)
-- Notable entities/patterns/decisions: Decision to use single-pass processing; pattern of direct UPSERT after extraction; entity "RLM variable" as source; emphasis on minimal chunking (1 chunk)

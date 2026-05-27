@@ -1,1 +1,0 @@
-The document details the src/app structure in a Next.js app, covering auth flows, diary CRUD, timeline views, and an extensible OpenRouter LLM provider setup with Prisma DB and AI utilities for streaming and image description.

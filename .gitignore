@@ -46,6 +46,9 @@ node_modules/.prisma/
 memory/
 .vercel
 
+# ByteRover (deprecated)
+.brv/
+
 # Vercel env dump (contains tokens)
 .env.vercel
 .env*

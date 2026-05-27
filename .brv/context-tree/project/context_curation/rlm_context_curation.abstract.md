@@ -1,1 +1,0 @@
-The document describes single-pass curation of RLM context from a variable into a knowledge base via extraction and UPSERT operations.

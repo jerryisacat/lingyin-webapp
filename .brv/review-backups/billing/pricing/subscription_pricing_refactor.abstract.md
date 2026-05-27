@@ -1,1 +1,0 @@
-The subscription pricing refactor updates token budgets to 2.3/12.0, converts FEATURES_MAP to multipliers, adds top-up bundles at 0.3/1.7/3.3 USD, and switches QuotaUsage displays to percentages while preserving margins.

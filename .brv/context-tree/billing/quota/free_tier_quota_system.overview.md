@@ -1,4 +1,0 @@
-- Key points: TokenUsage Prisma model added for tracking; quota-service.ts implements token/storage/model checks; enforcement on generate/rewrite/test endpoints via pre-check + post-stream recording; storage auto-tracked in saveDiary; QuotaUsage React component with progress bars added to dashboard
-- Key points: Request flow is pre-check quota → AI processing → record usage (tokens or markdown size) → dashboard update; free-tier limits applied to tokens, storage, and allowed models
-- Structure/sections summary: Document sections cover Reason (Stream C Phase 2 task), Raw Concept (task/changes/files/flow), and Narrative (structure as enforcement layer, Prisma dependencies, free-tier highlights)
-- Notable entities/patterns/decisions: Entities include src/lib/quota-service.ts, src/components/QuotaUsage.tsx, TokenUsage model; pattern is quota layer between API routes and AI services; decision to auto-record usage on diary saves and streams for seamless free-tier control

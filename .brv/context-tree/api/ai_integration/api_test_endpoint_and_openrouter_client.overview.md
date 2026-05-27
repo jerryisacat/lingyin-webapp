@@ -1,7 +1,0 @@
-- Added 10s preflight fetch to https://openrouter.ai/api/v1/models before client creation
-- Implemented logConnectionError() that extracts cause codes (ENOTFOUND/ECONNREFUSED/TLS) from APIConnectionError
-- Returns actionable detail field and network status diagnostics to Settings UI
-- client.ts HTTP-Referer header now falls back to NEXT_PUBLIC_APP_URL or NEXT_PUBLIC_SITE_URL
-- POST handler authenticates user, restricts to openrouter provider only, retrieves decrypted key, then runs preflight + 15s chat.completions.create
-- Flow: preflight reachability check → create OpenAI client → minimal completion request → catch and log detailed errors
-- Notable entities: src/app/api/ai/test/route.ts, src/lib/ai/client.ts, getUserDecryptedApiKey, @/lib/ai/client; decisions include Vercel hkg1 guidance and abort/timeout support

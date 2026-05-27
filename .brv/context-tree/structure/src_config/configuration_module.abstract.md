@@ -1,1 +1,0 @@
-The configuration module curates src/config knowledge covering structure, loading patterns, and usage for the application.

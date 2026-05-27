@@ -1,1 +1,0 @@
-The free tier quota system adds TokenUsage models, quota-service checks, endpoint enforcement, and storage tracking with a QuotaUsage dashboard component for monitoring token, storage, and model limits.

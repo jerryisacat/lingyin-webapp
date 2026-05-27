@@ -1,4 +1,0 @@
-- Key points: Implement one-time Stripe token top-up packages (¥5/¥20/¥38 tiers); add TokenTopUp model and User.topUpBalanceUsd; POST /api/topup/checkout + webhook flow; quota-service aggregates subscription + top-up for effective budget; getEffectiveApiKey prioritizes user key then falls back to OPENROUTER_API_KEY; migrate all AI endpoints; update QuotaUsage UI with top-up button and key status
-- Structure / sections summary: Document contains Reason, Raw Concept (Task/Changes/Flow), and Narrative (Structure/Highlights) sections describing billing extension and key unification
-- Notable entities: TokenTopUp model, topUpBalanceUsd, getEffectiveApiKey, OPENROUTER_API_KEY, QuotaUsage UI, Stripe webhook
-- Notable patterns/decisions: User-provided key always takes priority over system key; quota calculation combines recurring subscription with one-time top-ups; decision to migrate every AI endpoint to unified key logic

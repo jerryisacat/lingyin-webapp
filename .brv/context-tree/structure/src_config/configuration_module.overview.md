@@ -1,3 +1,0 @@
-- Key points: Configuration handling focused on src/config module; task is to document the module; emphasis on config loading and usage patterns; contains curated configuration details from RLM context; actively maintained/curated module
-- Structure / sections summary: Frontmatter with title/summary/metadata; Reason section; Raw Concept with Task and Flow; Narrative with Structure and Highlights subsections
-- Notable entities/patterns/decisions: src/config as primary module; RLM context as source; decision to curate and document configuration knowledge
