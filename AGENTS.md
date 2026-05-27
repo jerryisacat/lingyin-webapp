@@ -148,10 +148,12 @@ Issue 应包含:
 
 ### 开发前：检索已有知识
 1. Pull latest code from main.
+2. 阅读 `docs/03-代码架构图.md` — 了解当前路由映射、lib 依赖关系和数据流。
 
 ### 开发后（git commit 之前）
 1. 更新 `CHANGELOG.md`
-2. `git add` + `git commit` + `git push`
+2. 如果改动涉及路由、lib 依赖、数据模型或新增文件，同步更新 `docs/03-代码架构图.md`
+3. `git add` + `git commit` + `git push`
 
 ## Vibe Coding Workflow — Issue-Driven Development
 
