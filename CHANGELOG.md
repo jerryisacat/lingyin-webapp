@@ -1,3 +1,15 @@
+## 2026-05-27 — Issue #94: 编辑状态下支持「铃英继续修改」
+
+### 概述
+编辑状态下新增「铃英继续修改」功能，用户可用自然语言指令让 AI 对现有日记内容进行局部修改、扩写、精简或润色。
+
+### Hook 层
+- `src/hooks/useStreamGenerate.ts` — 提取公共 `streamRequest()` 函数，复用 SSE 解析、abort、错误处理逻辑；新增 `rewrite(instruction, content)` 方法调用 `/api/ai/rewrite`
+
+### 前端
+- `src/components/DiaryEditor.tsx` — 新增 `rewriting` 状态 + `pendingRewriteResult` 状态；新增 `handleRewrite`（发起修改）、`handleRewriteReplace`（替换原文）、`handleRewriteAppend`（追加到末尾）、`handleRewriteCancel`（取消并返回编辑）回调；`handleStop` 区分 rewriting 和 generating 上下文；错误页面根据状态显示不同文案
+- `src/components/DiaryEditorOutput.tsx` — 新增铃英继续修改按钮（展开指令输入框）；`rewriting` 状态下展示 TypewriterText 流式效果 + 停止按钮；流式结束后展示「替换原文」/「追加到末尾」选项；不影响现有重新生成/保存按钮布局
+
 ## 2026-05-24 — Issue #103: 首次登录引导流程 — 自动跳转 /setup
 
 ### 问题

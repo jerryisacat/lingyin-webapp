@@ -16,6 +16,7 @@ interface UseStreamGenerateReturn {
   isStreaming: boolean;
   error: string | null;
   generate: () => Promise<void>;
+  rewrite: (instruction: string, content: string) => Promise<void>;
   stop: () => void;
   reset: () => void;
 }
@@ -42,82 +43,105 @@ export function useStreamGenerate(
     setError(null);
   }, [stop]);
 
-  const generate = useCallback(async () => {
-    setError(null);
-    setOutput("");
-    setIsStreaming(true);
+  const streamRequest = useCallback(
+    async (url: string, body: unknown) => {
+      setError(null);
+      setOutput("");
+      setIsStreaming(true);
 
-    const controller = new AbortController();
-    abortRef.current = controller;
+      const controller = new AbortController();
+      abortRef.current = controller;
 
-    try {
-      const res = await fetch("/api/ai/generate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ text, images, date, writingStyle, provider }),
-        signal: controller.signal,
-      });
+      try {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(body),
+          signal: controller.signal,
+        });
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error ?? `Request failed (${res.status})`);
-      }
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error ?? `Request failed (${res.status})`);
+        }
 
-      const reader = res.body?.getReader();
-      if (!reader) throw new Error("No response body");
+        const reader = res.body?.getReader();
+        if (!reader) throw new Error("No response body");
 
-      const decoder = new TextDecoder();
-      let buffer = "";
+        const decoder = new TextDecoder();
+        let buffer = "";
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() ?? "";
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() ?? "";
 
-        for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
-          const data = line.slice(6).trim();
-          if (data === "[DONE]") {
-            setIsStreaming(false);
-            abortRef.current = null;
-            return;
-          }
-
-          try {
-            const parsed = JSON.parse(data);
-            if (parsed.error) {
-              throw new Error(parsed.error);
+          for (const line of lines) {
+            if (!line.startsWith("data: ")) continue;
+            const data = line.slice(6).trim();
+            if (data === "[DONE]") {
+              setIsStreaming(false);
+              abortRef.current = null;
+              return;
             }
-            if (parsed.content) {
-              setOutput((prev) => prev + parsed.content);
+
+            try {
+              const parsed = JSON.parse(data);
+              if (parsed.error) {
+                throw new Error(parsed.error);
+              }
+              if (parsed.content) {
+                setOutput((prev) => prev + parsed.content);
+              }
+            } catch (e) {
+              if (e instanceof SyntaxError) continue;
+              throw e;
             }
-          } catch (e) {
-            if (e instanceof SyntaxError) continue;
-            throw e;
           }
         }
-      }
 
-      setIsStreaming(false);
-      abortRef.current = null;
-    } catch (e: unknown) {
-      if (e instanceof DOMException && e.name === "AbortError") {
         setIsStreaming(false);
         abortRef.current = null;
-        return;
+      } catch (e: unknown) {
+        if (e instanceof DOMException && e.name === "AbortError") {
+          setIsStreaming(false);
+          abortRef.current = null;
+          return;
+        }
+        const message = e instanceof Error ? e.message : "Generation failed";
+        setError(message);
+        setIsStreaming(false);
+        abortRef.current = null;
       }
-      const message =
-        e instanceof Error ? e.message : "Generation failed";
-      setError(message);
-      setIsStreaming(false);
-      abortRef.current = null;
-    }
-  }, [text, images, date, provider, writingStyle]);
+    },
+    []
+  );
 
-  return { text: output, isStreaming, error, generate, stop, reset };
+  const generate = useCallback(async () => {
+    await streamRequest("/api/ai/generate", {
+      text,
+      images,
+      date,
+      writingStyle,
+      provider,
+    });
+  }, [text, images, date, provider, writingStyle, streamRequest]);
+
+  const rewrite = useCallback(
+    async (instruction: string, content: string) => {
+      await streamRequest("/api/ai/rewrite", {
+        content,
+        instruction,
+        provider,
+      });
+    },
+    [provider, streamRequest]
+  );
+
+  return { text: output, isStreaming, error, generate, rewrite, stop, reset };
 }
