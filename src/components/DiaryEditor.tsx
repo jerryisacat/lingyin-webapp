@@ -10,7 +10,7 @@ import { DiaryEditorInput } from "@/components/DiaryEditorInput"
 import { DiaryEditorOutput } from "@/components/DiaryEditorOutput"
 import type { ApiProvider, MediaFile, WritingStyle } from "@/types"
 
-type EditorState = "input" | "generating" | "editing"
+type EditorState = "input" | "generating" | "editing" | "rewriting"
 
 interface DiaryEditorProps {
   date: string
@@ -27,12 +27,13 @@ export function DiaryEditor({ date, provider }: DiaryEditorProps) {
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
   const [saveError, setSaveError] = useState<string | null>(null)
   const [writingStyle, setWritingStyle] = useState<WritingStyle>(savedStyle)
+  const [pendingRewriteResult, setPendingRewriteResult] = useState("")
 
   useEffect(() => {
     setWritingStyle(savedStyle)
   }, [savedStyle])
 
-  const { text: streamedText, isStreaming, error: streamError, generate, stop, reset } =
+  const { text: streamedText, isStreaming, error: streamError, generate, rewrite, stop, reset } =
     useStreamGenerate({
       text: inputText,
       images,
@@ -46,6 +47,9 @@ export function DiaryEditor({ date, provider }: DiaryEditorProps) {
       setMarkdown(streamedText)
       setEditorState("editing")
     }
+    if (!isStreaming && editorState === "rewriting" && streamedText) {
+      setPendingRewriteResult(streamedText)
+    }
   }, [isStreaming, editorState, streamedText])
 
   const handleGenerate = useCallback(() => {
@@ -56,13 +60,19 @@ export function DiaryEditor({ date, provider }: DiaryEditorProps) {
 
   const handleStop = useCallback(() => {
     stop()
-    if (streamedText) {
+    if (editorState === "rewriting") {
+      if (streamedText) {
+        setPendingRewriteResult(streamedText)
+      } else {
+        setEditorState("editing")
+      }
+    } else if (streamedText) {
       setMarkdown(streamedText)
       setEditorState("editing")
     } else {
       setEditorState("input")
     }
-  }, [stop, streamedText])
+  }, [stop, streamedText, editorState])
 
   const handleReset = useCallback(() => {
     reset()
@@ -108,7 +118,38 @@ export function DiaryEditor({ date, provider }: DiaryEditorProps) {
     generate()
   }, [reset, generate])
 
-  if (streamError && editorState === "generating") {
+  const handleRewrite = useCallback(
+    (instruction: string) => {
+      reset()
+      setPendingRewriteResult("")
+      setEditorState("rewriting")
+      rewrite(instruction, markdown)
+    },
+    [reset, rewrite, markdown]
+  )
+
+  const handleRewriteReplace = useCallback(() => {
+    if (pendingRewriteResult) {
+      setMarkdown(pendingRewriteResult)
+    }
+    setPendingRewriteResult("")
+    setEditorState("editing")
+  }, [pendingRewriteResult])
+
+  const handleRewriteAppend = useCallback(() => {
+    if (pendingRewriteResult) {
+      setMarkdown((prev) => prev + "\n\n" + pendingRewriteResult)
+    }
+    setPendingRewriteResult("")
+    setEditorState("editing")
+  }, [pendingRewriteResult])
+
+  const handleRewriteCancel = useCallback(() => {
+    setPendingRewriteResult("")
+    setEditorState("editing")
+  }, [])
+
+  if (streamError && (editorState === "generating" || editorState === "rewriting")) {
     return (
       <div className="w-full max-w-xl mx-auto">
         <button
@@ -120,14 +161,20 @@ export function DiaryEditor({ date, provider }: DiaryEditorProps) {
           返回
         </button>
         <div className="rounded-xl border border-surface-border bg-white p-8 shadow-soft text-center space-y-4">
-          <p className="text-red-400 font-medium">生成失败</p>
+          <p className="text-red-400 font-medium">
+            {editorState === "rewriting" ? "修改失败" : "生成失败"}
+          </p>
           <p className="text-sm text-ink-light">{streamError}</p>
           <div className="flex items-center justify-center gap-3">
             <button type="button" onClick={handleRegenerate} className="btn-secondary text-sm">
               重试
             </button>
-            <button type="button" onClick={handleReset} className="btn-ghost text-sm">
-              修改输入
+            <button
+              type="button"
+              onClick={editorState === "rewriting" ? () => setEditorState("editing") : handleReset}
+              className="btn-ghost text-sm"
+            >
+              {editorState === "rewriting" ? "返回编辑" : "修改输入"}
             </button>
           </div>
         </div>
@@ -151,7 +198,7 @@ export function DiaryEditor({ date, provider }: DiaryEditorProps) {
         />
       )}
 
-      {(editorState === "generating" || editorState === "editing") && (
+      {(editorState === "generating" || editorState === "editing" || editorState === "rewriting") && (
         <DiaryEditorOutput
           editorState={editorState}
           streamedText={streamedText}
@@ -160,9 +207,14 @@ export function DiaryEditor({ date, provider }: DiaryEditorProps) {
           onMarkdownChange={setMarkdown}
           saveStatus={saveStatus}
           saveError={saveError}
+          pendingRewriteResult={pendingRewriteResult}
           onStop={handleStop}
           onSave={handleSave}
           onRegenerate={handleRegenerate}
+          onRewrite={handleRewrite}
+          onRewriteReplace={handleRewriteReplace}
+          onRewriteAppend={handleRewriteAppend}
+          onRewriteCancel={handleRewriteCancel}
         />
       )}
     </div>
