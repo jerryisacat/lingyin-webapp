@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
+import Link from "next/link";
 import { Loader2, PackageOpen } from "lucide-react";
 import { DiaryCard } from "@/components/DiaryCard";
 import type { DiarySummary } from "@/types";
@@ -120,8 +121,14 @@ export function TimelineList({
         <p className="text-ink-light text-base mb-6 leading-relaxed">
           还没有日记哦～
           <br />
-          点击「写日记」开始你的第一篇吧！🌸
+          点击下方按钮开始你的第一篇吧！
         </p>
+        <Link
+          href="/diary"
+          className="rounded-lg bg-sakura px-6 py-2.5 text-sm font-medium text-white transition hover:bg-sakura-dark"
+        >
+          开始写日记
+        </Link>
       </div>
     );
   }

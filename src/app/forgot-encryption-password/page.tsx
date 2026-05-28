@@ -19,10 +19,14 @@ export default function ForgotEncryptionPasswordPage() {
         </p>
 
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 space-y-2">
-          <p className="text-sm font-medium text-amber-800">如果确定忘记了密码：</p>
+          <p className="text-sm font-medium text-amber-800">为什么无法恢复密码？</p>
+          <p className="text-sm text-amber-700 leading-relaxed">
+            玲音日记采用端到端加密设计，加密密钥仅由你的密码在本地生成，服务器从未接触到密码或密钥。因此我们无法解密你的日记，也无法帮你重置密码。
+          </p>
+          <p className="text-sm font-medium text-amber-800 mt-2">重要提醒：</p>
           <ul className="text-sm text-amber-700 space-y-1 list-disc list-inside">
-            <li>可以选择「重置加密」，但所有已有加密日记将永久无法恢复</li>
-            <li>重置前我们会要求你验证邮箱</li>
+            <li>所有已加密的日记在忘记密码后将永久无法恢复</li>
+            <li>建议将密码保存在安全的密码管理器中</li>
           </ul>
         </div>
 

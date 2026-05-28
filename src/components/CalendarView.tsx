@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import Link from "next/link";
 import { ChevronLeft, ChevronRight, PackageOpen } from "lucide-react";
 import type { CalendarEntry } from "@/types";
 
@@ -206,9 +207,15 @@ export function CalendarView({
           <div className="w-16 h-16 rounded-full bg-sakura/10 flex items-center justify-center mb-3">
             <PackageOpen className="w-8 h-8 text-sakura/50" strokeWidth={1.5} />
           </div>
-          <p className="text-ink-light text-sm leading-relaxed">
-            这个月还没有日记哦～🌸
+        <p className="text-ink-light text-sm leading-relaxed mb-4">
+            这个月还没有日记哦～
           </p>
+          <Link
+            href="/diary"
+            className="rounded-lg bg-sakura px-6 py-2.5 text-sm font-medium text-white transition hover:bg-sakura-dark"
+          >
+            开始写日记
+          </Link>
         </div>
       )}
     </div>

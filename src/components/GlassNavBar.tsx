@@ -213,7 +213,7 @@ export function GlassNavBar() {
                   <div className="truncate text-sm font-medium text-ink dark:text-gray-200">
                     {email}
                   </div>
-                  <div className="text-xs text-ink-light/60 dark:text-gray-400 mt-0.5">免费版</div>
+                  <div className="text-xs text-ink-light/60 dark:text-gray-400 mt-0.5">玲音日记</div>
                 </div>
 
                 {/* Logout */}

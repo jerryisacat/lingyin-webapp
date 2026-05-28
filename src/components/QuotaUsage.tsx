@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Zap, HardDrive, AlertTriangle, Plus, CheckCircle2, RefreshCw } from "lucide-react";
+import { Zap, HardDrive, AlertTriangle, Plus, RefreshCw } from "lucide-react";
 import type { QuotaStatusData } from "@/types";
 
 interface TopUpBundle {
@@ -251,14 +251,6 @@ export function QuotaUsage() {
             </div>
           )}
 
-        {data.systemKeyAvailable && (
-          <div className="flex items-center gap-1.5 mt-4 pt-3 border-t border-green-100">
-            <CheckCircle2 className="h-3 w-3 text-green-500" strokeWidth={1.5} />
-            <span className="text-xs text-green-600">
-              系统 API Key 已配置，无需自带 Key 即可使用
-            </span>
-          </div>
-        )}
       </div>
     </div>
   );

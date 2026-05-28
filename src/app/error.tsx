@@ -21,12 +21,20 @@ export default function GlobalError({
           ? error.message
           : "页面遇到了意外错误，请稍后重试"}
       </p>
-      <button
-        onClick={reset}
-        className="rounded-lg bg-sakura px-6 py-2 text-sm text-white transition hover:opacity-90"
-      >
-        重试
-      </button>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={reset}
+          className="rounded-lg bg-sakura px-6 py-2 text-sm text-white transition hover:opacity-90"
+        >
+          重试
+        </button>
+        <a
+          href="/"
+          className="rounded-lg border border-sakura/30 px-6 py-2 text-sm text-ink-light transition hover:bg-sakura/5"
+        >
+          返回首页
+        </a>
+      </div>
     </div>
   )
 }

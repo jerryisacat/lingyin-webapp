@@ -28,7 +28,7 @@ export interface DiarySummary {
   id: string;
   date: string;
   title?: string;
-  preview: string;
+  preview: string | null;
   hasImages: boolean;
   wordCount: number;
   tags: string[];
