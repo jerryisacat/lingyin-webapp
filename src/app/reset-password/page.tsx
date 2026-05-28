@@ -13,20 +13,41 @@ interface FormState {
 export default function ResetPasswordPage({
   searchParams,
 }: {
-  searchParams: { token?: string }
+  searchParams: Promise<{ token?: string }>
 }) {
-  const token = searchParams.token
+  return <ResetPasswordInner searchParams={searchParams} />
+}
+
+function ResetPasswordInner({
+  searchParams,
+}: {
+  searchParams: Promise<{ token?: string }>
+}) {
+  const [token, setToken] = useState<string | null | undefined>(undefined)
 
   useEffect(() => {
-    if (token) {
-      window.history.replaceState(null, "", "/reset-password")
-    }
-  }, [token])
+    searchParams.then((params) => {
+      if (params.token) {
+        setToken(params.token)
+        window.history.replaceState(null, "", "/reset-password")
+      } else {
+        setToken(null)
+      }
+    })
+  }, [searchParams])
 
   const [isPending, startTransition] = useTransition()
   const [state, setState] = useState<FormState | null>(null)
 
-  if (!token) {
+  if (token === undefined) {
+    return (
+      <div className="flex min-h-[80vh] items-center justify-center">
+        <div className="w-6 h-6 border-2 border-sakura border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  if (token === null) {
     return (
       <div className="flex min-h-[80vh] flex-col items-center justify-center gap-6">
         <h1 className="text-xl font-bold text-ink">无效的重置链接</h1>

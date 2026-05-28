@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ImageIcon, Tag } from "lucide-react";
+import { ImageIcon, Tag, Lock } from "lucide-react";
 import type { DiarySummary } from "@/types";
 
 const WEEKDAYS = ["日", "一", "二", "三", "四", "五", "六"];
@@ -19,7 +19,8 @@ function formatDate(dateStr: string): {
   return { day, weekday, full: `${year}年${month}月${day}日 星期${weekday}` };
 }
 
-function extractTitleFromPreview(preview: string): string | null {
+function extractTitleFromPreview(preview: string | null): string | null {
+  if (!preview) return null;
   const lines = preview.split("\n").filter((l) => l.trim());
   if (lines.length === 0) return null;
   const firstLine = lines[0].replace(/^#+\s*/, "").trim();
@@ -34,10 +35,11 @@ interface DiaryCardProps {
 export function DiaryCard({ entry }: DiaryCardProps) {
   const { day, weekday, full } = formatDate(entry.date);
   const title = extractTitleFromPreview(entry.preview);
-  const previewText =
-    entry.preview.length > 150
+  const previewText = entry.preview
+    ? entry.preview.length > 150
       ? entry.preview.slice(0, 150) + "..."
-      : entry.preview;
+      : entry.preview
+    : null;
 
   return (
     <Link
@@ -81,11 +83,16 @@ export function DiaryCard({ entry }: DiaryCardProps) {
             </div>
           </div>
 
-          {previewText && (
+          {previewText ? (
             <p className="text-sm text-ink-light leading-relaxed line-clamp-3 mt-1">
               {previewText}
             </p>
-          )}
+          ) : entry.preview === null ? (
+            <p className="text-sm text-ink-light/50 leading-relaxed mt-1 flex items-center gap-1.5">
+              <Lock className="w-3.5 h-3.5" strokeWidth={1.5} />
+              已加密日记
+            </p>
+          ) : null}
 
           {entry.tags.length > 0 && (
             <div className="flex items-center gap-1.5 mt-2 flex-wrap">

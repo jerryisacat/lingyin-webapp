@@ -30,6 +30,15 @@ export default function SubscriptionPage() {
   const topUpSuccess = searchParams.get("topup") === "success"
   const topUpCanceled = searchParams.get("topup") === "canceled"
 
+  useEffect(() => {
+    if (success || canceled || topUpSuccess || topUpCanceled) {
+      const timeout = setTimeout(() => {
+        router.replace("/subscription", { scroll: false })
+      }, 3000)
+      return () => clearTimeout(timeout)
+    }
+  }, [success, canceled, topUpSuccess, topUpCanceled, router])
+
   const fetchData = useCallback(async () => {
     try {
       const [pricingRes, statusRes, invoicesRes] = await Promise.all([

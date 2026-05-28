@@ -1,3 +1,31 @@
+## 2026-05-28 — 上线前体验性问题修复（12 项）
+
+### 概述
+修复 12 个影响用户体验的问题，涵盖运行时崩溃、PWA 功能缺失、页面导航缺陷及过时文案。
+
+### P0 — 运行时崩溃 / 功能缺失
+- `src/types/index.ts` — `DiarySummary.preview` 类型从 `string` 改为 `string | null`，修复加密日记在时间线中导致的 null crash
+- `src/components/DiaryCard.tsx` — 增加 `preview` null 守卫，加密日记条目显示 🔒 已加密标记而非崩溃
+- `public/manifest.json` — 新建 Web App Manifest，修复 PWA 无法安装的问题（使用已有 `icons/icon-192.png` 和 `icons/icon-512.png`）
+- `src/app/reset-password/page.tsx` — `searchParams` 改为 `Promise<{ token?: string }>` 以匹配 Next.js 14 规范，拆分外层为同步组件+内层异步客户端组件，增加 token 解析中的 loading 状态
+
+### P1 — 用户可见的 UX 缺陷
+- `src/app/not-found.tsx` — 添加"返回首页"链接
+- `src/app/error.tsx` — 添加"返回首页"链接，避免出错后用户被困
+- `src/components/GlassNavBar.tsx` — 移除硬编码的"免费版"文案，改为中性文本"玲音日记"
+- `src/components/TimelineList.tsx` — 空状态添加"开始写日记"CTA 按钮（Link 到 `/diary`）
+- `src/components/CalendarView.tsx` — 空状态添加"去写日记"CTA 按钮
+- `src/app/forgot-encryption-password/page.tsx` — 修正误导性文案，移除不存在的"重置加密"选项描述，改为明确说明端到端加密设计和密码重要性
+
+### P2 — 过时文案
+- `src/app/page.tsx` — Landing page"隐私优先"描述从过时的 BYOK API 密钥描述更新为端到端加密日记的实际特性
+- `src/components/QuotaUsage.tsx` — 移除过时的"系统 API Key 已配置，无需自带 Key 即可使用"指示器，清理未使用的 `CheckCircle2` import
+- `src/app/subscription/page.tsx` — 添加 `useEffect` 在 3 秒后自动清理 URL 查询参数（`?success=`/`?canceled=`），防止刷新后消息重复显示
+
+### Code Review 修复
+- `src/app/reset-password/page.tsx` — 修复 tri-state token bug：`setToken(undefined)` 导致 React 不触发重新渲染，用户看到永久 loading spinner。改用 `useState<string | null | undefined>(undefined)` 三态模式：`undefined` = loading，`null` = 无 token，`string` = 有效 token
+- `src/components/CalendarView.tsx` — CTA 按钮样式和文案统一为 `px-6 py-2.5` 和"开始写日记"，与 `TimelineList.tsx` 保持一致
+
 ## 2026-05-27 — Issue #94: 编辑状态下支持「铃英继续修改」
 
 ### 概述

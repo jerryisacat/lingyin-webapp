@@ -36,7 +36,7 @@ const FEATURES = [
   {
     icon: Lock,
     title: "隐私优先",
-    desc: "你的 API 密钥在服务端通过 AES-256-GCM 加密存储，仅在需要时解密使用，确保安全。",
+    desc: "支持端到端加密，日记内容和密码仅在你的设备上处理，服务器无法读取你的私密文字。",
   },
   {
     icon: Smartphone,
