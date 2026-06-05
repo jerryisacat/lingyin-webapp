@@ -100,6 +100,19 @@ export interface PricingData {
   plans: PriceInfo[];
 }
 
+export interface ImageInfo {
+  key: string;
+  filename: string;
+  size: number;
+  uploadedAt: string;
+  entryDate: string | null;
+}
+
+export interface ImageStats {
+  totalCount: number;
+  totalSize: number;
+}
+
 export interface QuotaStatusData {
   tokenBudget: {
     used: number;

@@ -247,3 +247,67 @@ export async function listEntriesByPrefix(
     .filter((obj) => obj.Key !== undefined)
     .map((obj) => ({ key: obj.Key! }));
 }
+
+export interface UserImageObject {
+  key: string;
+  size: number;
+  lastModified: Date;
+}
+
+export async function listUserImages(
+  userId: string
+): Promise<UserImageObject[]> {
+  const prefix = `users/${userId}/`;
+  const images: UserImageObject[] = [];
+  let continuationToken: string | undefined;
+
+  while (true) {
+    const result = await s3.send(
+      new ListObjectsV2Command({
+        Bucket: BUCKET,
+        Prefix: prefix,
+        MaxKeys: 1000,
+        ContinuationToken: continuationToken,
+      })
+    );
+
+    for (const obj of result.Contents ?? []) {
+      if (
+        obj.Key &&
+        obj.Key.includes("/assets/") &&
+        obj.Size !== undefined &&
+        obj.LastModified !== undefined
+      ) {
+        images.push({
+          key: obj.Key,
+          size: obj.Size,
+          lastModified: obj.LastModified,
+        });
+      }
+    }
+
+    if (!result.IsTruncated) break;
+    continuationToken = result.NextContinuationToken;
+    if (!continuationToken) break;
+  }
+
+  return images;
+}
+
+export async function batchDeleteImages(keys: string[]): Promise<number> {
+  if (keys.length === 0) return 0;
+
+  let deleted = 0;
+  for (let i = 0; i < keys.length; i += 1000) {
+    const batch = keys.slice(i, i + 1000);
+    await s3.send(
+      new DeleteObjectsCommand({
+        Bucket: BUCKET,
+        Delete: { Objects: batch.map((Key) => ({ Key })) },
+      })
+    );
+    deleted += batch.length;
+  }
+
+  return deleted;
+}

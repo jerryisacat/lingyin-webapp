@@ -1,3 +1,28 @@
+## 2026-06-05 — Issue #110: 图片管理 — 删除同步与后台管理中心
+
+### 概述
+新增图片生命周期管理和集中管理功能：编辑日记时自动清理被移除的图片引用，并在设置页新增图片管理中心。
+
+### Part 1 — 图片删除同步
+
+- `src/lib/diary.ts` — 新增 `extractImageKeys()` 从 markdown 中提取 R2 图片 key；新增 `cleanupOrphanedImages()` 对比编辑前后 markdown，识别被移除的图片，检查是否存在于其他日记引用中（避免误删），安全删除孤立的图片
+- `src/lib/storage.ts` — 新增 `batchDeleteImages()` 支持批量删除 R2 对象（分 1000 个一批）
+- `src/app/api/entries/[id]/route.ts` — PUT 方法在 `saveDiary()` 之后异步调用 `cleanupOrphanedImages()`，仅在非加密日记编辑时执行，失败时记录日志但不影响保存响应
+
+### Part 2 — 图片管理后台 API
+
+- `src/lib/storage.ts` — 新增 `listUserImages()` 遍历用户所有 R2 文件，筛选 `/assets/` 路径，返回 key、size、lastModified；新增 `UserImageObject` 接口
+- `src/lib/validations.ts` — 新增 `imageListSchema`（cursor + limit 分页参数）、`imageDeleteSchema`（keys 数组校验）
+- `src/lib/rate-limit.ts` — 新增 `imageManage` 限流器（10 次/分钟）
+- `src/app/api/user/images/route.ts` — GET 列出用户所有图片（按上传时间倒序 + 分页），返回 presigned 缩略图 URL；DELETE 批量删除指定 keys（含用户归属校验）
+- `src/app/api/user/images/stats/route.ts` — GET 返回图片总数和总大小
+- `src/types/index.ts` — 新增 `ImageInfo`、`ImageStats` 接口
+
+### Part 3 — 图片管理中前端
+
+- `src/components/ImageManagement.tsx` — 全新图片管理组件，包含：缩略图网格（3/4 列自适应）、hover 显示图片信息（文件名/大小/所属日期）、单张删除按钮、批量选择模式（全选/多选）、删除确认弹窗、分页加载、空状态提示
+- `src/app/settings/page.tsx` — 在写作风格和数据导出之间插入 `ImageManagement` 组件
+
 ## 2026-05-28 — 上线前体验性问题修复（12 项）
 
 ### 概述

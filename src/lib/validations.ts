@@ -105,6 +105,15 @@ export const verifyEncryptionPasswordSchema = z.object({
   password: z.string().min(1, "密码不能为空"),
 });
 
+export const imageListSchema = z.object({
+  cursor: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional().default(40),
+});
+
+export const imageDeleteSchema = z.object({
+  keys: z.array(z.string().min(1)).min(1).max(100),
+});
+
 export function formatZodError(error: z.ZodError): string {
   return error.errors.map(e => {
     const path = e.path.join(".");

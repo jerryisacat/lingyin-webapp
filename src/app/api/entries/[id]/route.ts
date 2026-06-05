@@ -1,5 +1,5 @@
 import { getSessionUserId as getUser, jsonError, jsonOk } from "@/lib/auth-helpers";
-import { getEntry, deleteDiary, saveDiary } from "@/lib/diary";
+import { getEntry, deleteDiary, saveDiary, cleanupOrphanedImages } from "@/lib/diary";
 import { NextRequest } from "next/server";
 import { formatZodError, updateEntrySchema } from "@/lib/validations";
 
@@ -47,6 +47,15 @@ export async function PUT(
     imagePaths,
     encrypted,
   });
+
+  if (!existing.isEncrypted && !encrypted) {
+    cleanupOrphanedImages(user.id, params.id, existing.markdown, markdown).catch(
+      (err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error(`[cleanupOrphanedImages] Entry ${params.id}: ${msg}`);
+      }
+    );
+  }
 
   return jsonOk(updated);
 }

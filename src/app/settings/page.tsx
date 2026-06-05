@@ -8,6 +8,7 @@ import { EncryptionSettings } from "@/components/EncryptionSettings"
 import { SetEncryptionPasswordModal } from "@/components/SetEncryptionPasswordModal"
 import type { SubscriptionData } from "@/types"
 import { WritingStyleConfig } from "@/components/WritingStyleConfig"
+import { ImageManagement } from "@/components/ImageManagement"
 import {
   LogOut,
   Sparkles,
@@ -85,6 +86,8 @@ export default function SettingsPage() {
       />
 
       <WritingStyleConfig embedded />
+
+      <ImageManagement />
 
       <div className="card space-y-3">
         <div className="flex items-center gap-2">
