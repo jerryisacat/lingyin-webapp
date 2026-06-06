@@ -36,6 +36,7 @@ export const rateLimiters = {
   encryptionPassword: createLimiter(5, "5 m"),
   uploadImage: createLimiter(10, "1 m"),
   imageProxy: createLimiter(30, "1 m"),
+  imageManage: createLimiter(10, "1 m"),
   stats: createLimiter(10, "1 m"),
   migrate: createLimiter(10, "1 m"),
   verifyEmail: createLimiter(10, "1 m"),

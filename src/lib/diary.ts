@@ -211,3 +211,58 @@ export async function deleteDiary(
   await storage.deleteDirectory(assetsPrefix);
   await prisma.entry.delete({ where: { id: entryId } });
 }
+
+const IMAGE_KEY_REGEX = /users\/[^/]+\/entries\/\d{4}\/\d{2}\/assets\/[^?\s)]+/g;
+
+export function extractImageKeys(markdown: string): string[] {
+  const matches = markdown.match(IMAGE_KEY_REGEX);
+  if (!matches) return [];
+  return [...new Set(matches)];
+}
+
+async function getImageKeysFromOtherEntries(
+  userId: string,
+  excludeEntryId: string
+): Promise<Set<string>> {
+  const otherEntries = await prisma.entry.findMany({
+    where: { userId, hasImages: true, id: { not: excludeEntryId } },
+    select: { date: true, markdownPath: true },
+  });
+
+  const keys = new Set<string>();
+
+  for (const entry of otherEntries) {
+    const dateStr = entry.date.toISOString().slice(0, 10);
+    const result = await storage.readMarkdown(userId, dateStr);
+    if (!result || result.encrypted) continue;
+    for (const key of extractImageKeys(result.content)) {
+      keys.add(key);
+    }
+  }
+
+  return keys;
+}
+
+export async function cleanupOrphanedImages(
+  userId: string,
+  entryId: string,
+  oldMarkdown: string,
+  newMarkdown: string
+): Promise<{ deleted: string[]; skipped: string[] }> {
+  const oldKeys = extractImageKeys(oldMarkdown);
+  const newKeys = new Set(extractImageKeys(newMarkdown));
+  const removedKeys = oldKeys.filter((key) => !newKeys.has(key));
+
+  if (removedKeys.length === 0) return { deleted: [], skipped: [] };
+
+  const referencedElsewhere = await getImageKeysFromOtherEntries(userId, entryId);
+
+  const toDelete = removedKeys.filter((key) => !referencedElsewhere.has(key));
+  const skipped = removedKeys.filter((key) => referencedElsewhere.has(key));
+
+  if (toDelete.length > 0) {
+    await storage.batchDeleteImages(toDelete);
+  }
+
+  return { deleted: toDelete, skipped };
+}
